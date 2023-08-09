@@ -175,4 +175,45 @@ mutable struct BifrostMesh
         mx * my * mz,
       )
     end
+end
+
+function br_fix_mesh(file_name::String)
+  m = BifrostMesh(file_name)
+  m.dxidxdn = 1.0f0 ./ m.dxidxdn;
+  m.dxidxup = 1.0f0 ./ m.dxidxup;
+  
+  m.dyidydn = 1.0f0 ./ m.dyidydn;
+  m.dyidyup = 1.0f0 ./ m.dyidyup;
+  
+  m.dzidzdn = 1.0f0 ./ m.dzidzdn;
+  m.dzidzup = 1.0f0 ./ m.dzidzup;
+  
+  br_mesh2file(m,file_name * ".fixed");
+end
+
+function br_mesh2file(M::BifrostMesh, file_name::String ="bifrost.mesh")
+  open(file_name,"w") do io
+    println(io, @sprintf "%d" M.mx)
+    println(io, join([@sprintf "%e" x for x in M.x], " "))
+    println(io, join([@sprintf "%e" x for x in M.xmdn], " "))
+    println(io, join([@sprintf "%e" x for x in M.dxidxup], " "))
+    println(io, join([@sprintf "%e" x for x in M.dxidxdn], " "))
+    println(io, @sprintf "%d" M.my)
+    println(io, join([@sprintf "%e" x for x in M.y], " "))
+    println(io, join([@sprintf "%e" x for x in M.ymdn], " "))
+    println(io, join([@sprintf "%e" x for x in M.dyidyup], " "))
+    println(io, join([@sprintf "%e" x for x in M.dyidydn], " "))
+    println(io, @sprintf "%d" M.mz)
+    println(io, join([@sprintf "%e" x for x in M.z], " "))
+    println(io, join([@sprintf "%e" x for x in M.zmdn], " "))
+    println(io, join([@sprintf "%e" x for x in M.dzidzup], " "))
+    println(io, join([@sprintf "%e" x for x in M.dzidzdn], " "))
   end
+end
+
+function br_arr_ffile(file_name::String, mesh::BifrostMesh; rpos::Int, rtype=Float32)
+  recl = (rtype == Float32) ? mesh.n * 4 : mesh.n * 8
+  f = FortranFile(file_name, "r", access="direct", recl=recl)
+  var = read(f, rec=rpos, (rtype, (mesh.mx, mesh.my, mesh.mz)))
+  return var
+end
