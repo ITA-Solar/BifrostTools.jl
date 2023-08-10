@@ -271,12 +271,16 @@ The available variables are:
     "bx": x-component of magnetic field
     "by": y-component of magnetic field
     "bz": z-component of magnetic field
+
+Can convert variable to si or cgs units by passing `unit_conversion="si"` or
+`unit_conversion="cgs"`.
 """
 function br_load_snapvariable(
     file_name::String,
     params   ::Dict{String,Any},
     variable ::String,
-    precision::DataType=Float32
+    precision::DataType=Float32;
+    unit_conversion::String="none"
     )
     datadims = 3 # 3 spatial dimensions and 1 variable dimension
 
@@ -291,6 +295,11 @@ function br_load_snapvariable(
     # Use Julia standard-library memory-mapping to extract file values
     snapvariable = mmap(file, Array{precision, datadims}, snapsize, offset)
     close(file)
+
+    if unit_conversion != "none"
+        unit_conversion!(snapvariable, variable, unit_conversion)
+    end
+
     return snapvariable
 end # function br_load_snapvariable
 
@@ -316,13 +325,17 @@ The available variables are:
     "bx": x-component of magnetic field
     "by": y-component of magnetic field
     "bz": z-component of magnetic field
+
+Can convert variable to si or cgs units by passing  `unit_conversion="si"` or
+`unit_conversion="cgs"`.
 """
 function br_load_snapvariable(
     expname ::String,
     snap    ::Vector{T} where {T<:Integer},
     expdir  ::String,
     variable::String,
-    precision::DataType=Float32
+    precision::DataType=Float32;
+    unit_conversion::String="none"
     )
     datadims = 3 # 3 spatial dimensions and 1 variable dimension
 
@@ -354,6 +367,11 @@ function br_load_snapvariable(
                                      offset)
         close(file)
     end
+
+    if unit_conversion != "none"
+        unit_conversion!(snapvariable, variable, unit_conversion)
+    end
+
     return snapvariable
 end # function br_load_snapvariable
 
