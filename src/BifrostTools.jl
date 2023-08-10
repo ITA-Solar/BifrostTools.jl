@@ -15,6 +15,7 @@ include("div_operators.jl")
 include("read_params_snap_aux.jl")
 include("EOS_tables.jl")
 include("plotting.jl")
+include("unit_conversion.jl")
 
 # Exports
 export br_squeeze
