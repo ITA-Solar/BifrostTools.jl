@@ -1,18 +1,29 @@
+"""
+    br_read_params(file_name::String)
 
-
+Reads and returns parameters `params` of a Bifrost simulation snapshot given 
+the path `file_name` to the simulation snapshot. The input file should have the
+format 'name_xxx.idl' where 'name' is the simulation name and 'xxx' is the 
+snapshot number
+"""
 function br_read_params(file_name::String)
-  f = open(file_name, "r")
-  l = readlines(f)
-  l = [strip(i) for i in l if !isempty(strip(i))] # remove empty str
-  l = [strip(i) for i in l if (i[1] != ';')]
-  l = [replace(i, "'" => "\"") for i in l]
-  l = [split(i, '=') for i in l] # remove lines which starts with ';'
+  file = open(file_name, "r")
+  lines = readlines(file)
+  close(file)
+  
+  lines = [strip(i) for i in lines if !isempty(strip(i))] # remove empty str
+  lines = [strip(i) for i in lines if (i[1] != ';')]
+  lines = [replace(i, "'" => "\"") for i in lines]
+  lines = [split(i, '=') for i in lines] # remove lines which starts with ';'
+  
   params = Dict{String,Any}()
-  for x in l
+  
+  for x in lines
     key = strip(x[1])
     val = eval(Meta.parse(x[2]))
     params[key] = val
   end
+  
   return params
 end
 
