@@ -152,6 +152,16 @@ end
 
 # --- stagger operations
 
+"""
+  function br_xup(
+    arr::Array{T,3},
+    periodic::Bool=true,
+    order::Int=6
+  ) where {T<:AbstractFloat}
+
+Stagger operation on `arr` by a 5th order polynomial interpolation, 
+shifting the variable half a grid point upwards in the x-direction
+"""
 function br_xup(
   arr::Array{T,3},
   periodic::Bool=true,
@@ -299,6 +309,16 @@ function br_dxup(
   end
 end
 
+"""
+  function br_xdn(
+    arr::Array{T,3},
+    periodic::Bool=true,
+    order::Int=6
+  ) where {T<:AbstractFloat}
+
+Stagger operation on `arr` by a 5th order polynomial interpolation, 
+shifting the variable half a grid point downwards in the x-direction
+"""
 function br_xdn(
   arr::Array{T,3},
   periodic::Bool=true,
@@ -445,6 +465,16 @@ function br_dxdn(
   end
 end
 
+"""
+  function br_yup(
+    arr::Array{T,3},
+    periodic::Bool=true,
+    order::Int=6
+  ) where {T<:AbstractFloat}
+
+Stagger operation on `arr` by a 5th order polynomial interpolation, 
+shifting the variable half a grid point upwards in the y-direction
+"""
 function br_yup(
   arr::Array{T,3},
   periodic::Bool=true,
@@ -592,6 +622,16 @@ function br_dyup(
   end
 end
 
+"""
+  function br_ydn(
+    arr::Array{T,3},
+    periodic::Bool=true,
+    order::Int=6
+  ) where {T<:AbstractFloat}
+
+Stagger operation on `arr` by a 5th order polynomial interpolation, 
+shifting the variable half a grid point downwards in the y-direction
+"""
 function br_ydn(arr::Array{T,3}, periodic::Bool=true, order::Int=6) where {T<:AbstractFloat}
 
   n = size(arr)
@@ -735,6 +775,16 @@ function br_dydn(
   end
 end
 
+"""
+  function br_zup(
+    arr::Array{T,3},
+    periodic::Bool=true,
+    order::Int=6
+  ) where {T<:AbstractFloat}
+
+Stagger operation on `arr` by a 5th order polynomial interpolation, 
+shifting the variable half a grid point upwards in the z-direction
+"""
 function br_zup(arr::Array{T,3}, periodic::Bool=false, order::Int=6) where {T<:AbstractFloat}
   n = size(arr)
   @assert length(n) == 3
@@ -878,6 +928,16 @@ function br_dzup(
   end
 end
 
+"""
+  function br_zdn(
+    arr::Array{T,3},
+    periodic::Bool=true,
+    order::Int=6
+  ) where {T<:AbstractFloat}
+
+Stagger operation on `arr` by a 5th order polynomial interpolation, 
+shifting the variable half a grid point downwards in the z-direction
+"""
 function br_zdn(arr::Array{T,3}, periodic::Bool=false, order::Int=2) where {T<:AbstractFloat}
   n = size(arr)
   @assert length(n) == 3
