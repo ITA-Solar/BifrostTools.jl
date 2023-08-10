@@ -219,6 +219,19 @@ function br_xup(
   end
 end
 
+"""
+	br_dzup(
+		arr::Array{T,3},
+		dz::Vector{T}, 
+		periodic::Bool=false, 
+		order::Int=6
+		)
+
+Computes the spatial derivative in the x-direction of every entry in `arr` 
+shifted a half grid point upwards. Defaults to the 6th order accurate Bifrost 
+derivative with `order=6`, optional 2nd order accurate derivative with keyword 
+`order=2`
+"""
 function br_dxup(
   arr::Array{T,3},
   dx::Vector{T},
@@ -352,6 +365,19 @@ function br_xdn(
   end
 end
 
+"""
+	br_dxdn(
+		arr::Array{T,3},
+		dz::Vector{T}, 
+		periodic::Bool=false, 
+		order::Int=6
+		)
+
+Computes the spatial derivative in the x-direction of every entry in `arr` 
+shifted a half grid point downwards. Defaults to the 6th order accurate Bifrost 
+derivative with `order=6`, optional 2nd order accurate derivative with keyword 
+`order=2`
+"""
 function br_dxdn(
   arr::Array{T,3},
   dx::Vector{T},
@@ -486,6 +512,19 @@ function br_yup(
   end
 end
 
+"""
+	br_dyup(
+		arr::Array{T,3},
+		dz::Vector{T}, 
+		periodic::Bool=false, 
+		order::Int=6
+		)
+
+Computes the spatial derivative in the y-direction of every entry in `arr` 
+shifted a half grid point upwards. Defaults to the 6th order accurate Bifrost 
+derivative with `order=6`, optional 2nd order accurate derivative with keyword 
+`order=2`
+"""
 function br_dyup(
   arr::Array{T,3},
   dy::Vector{T},
@@ -616,6 +655,19 @@ function br_ydn(arr::Array{T,3}, periodic::Bool=true, order::Int=6) where {T<:Ab
   end
 end
 
+"""
+	br_dydn(
+		arr::Array{T,3},
+		dz::Vector{T}, 
+		periodic::Bool=false, 
+		order::Int=6
+		)
+
+Computes the spatial derivative in the y-direction of every entry in `arr` 
+shifted a half grid point downwards. Defaults to the 6th order accurate Bifrost 
+derivative with `order=6`, optional 2nd order accurate derivative with keyword 
+`order=2`
+"""
 function br_dydn(
   arr::Array{T,3},
   dy::Vector{T},
@@ -746,6 +798,19 @@ function br_zup(arr::Array{T,3}, periodic::Bool=false, order::Int=6) where {T<:A
   end
 end
 
+"""
+	br_dzup(
+		arr::Array{T,3},
+		dz::Vector{T}, 
+		periodic::Bool=false, 
+		order::Int=6
+		)
+
+Computes the spatial derivative in the z-direction of every entry in `arr` 
+shifted a half grid point upwards. Defaults to the 6th order accurate Bifrost
+derivative with `order=6`, optional 2nd order accurate derivative with keyword 
+`order=2`
+"""
 function br_dzup(
   arr::Array{T,3},
   dz::Vector{T},
@@ -875,6 +940,19 @@ function br_zdn(arr::Array{T,3}, periodic::Bool=false, order::Int=2) where {T<:A
   end
 end
 
+"""
+	br_dzdn(
+		arr::Array{T,3},
+		dz::Vector{T}, 
+		periodic::Bool=false, 
+		order::Int=6
+		)
+
+Computes the spatial derivative in the z-direction of every entry in `arr` 
+shifted a half grid point downwards. Defaults to the 6th order accurate Bifrost 
+derivative with `order=6`, optional 2nd order accurate derivative with keyword 
+`order=2`
+"""
 function br_dzdn(
   arr::Array{T,3},
   dz::Vector{T},
