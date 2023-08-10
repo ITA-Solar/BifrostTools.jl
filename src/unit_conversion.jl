@@ -8,5 +8,5 @@ const si_params = Dict(
         # momentum      g/cm^2/s --> kg/m^2/s
         "u_m"  => params["u_r"]*params["u_u"]*10,
         # b field
-        "u_b"  => params["u_b"]*1e-4
+        "u_b"  => params["u_B"]*1e-4
         )
