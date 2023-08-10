@@ -10,7 +10,8 @@ const params = Dict(
         "u_r" => 1e-7,
         "u_u" => 1e6,
         "u_p" => 1e5,
-        "u_e" => 1e5
+        "u_e" => 1e5,
+        "u_B" => 1121.0
         )
 
 # Converts from simulation units to cgs units
