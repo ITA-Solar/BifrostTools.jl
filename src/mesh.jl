@@ -21,7 +21,16 @@ mutable struct BifrostMesh
         dzidzdn::Vector{Float32}
         n::Int64
     
-        function BifrostMesh(mesh_file::String)
+        function BifrostMesh(expdir::String)
+
+			# Check if `expdir` is path to mesh_file or folder of experiment
+			expname = splitpath(expdir)[end]
+			if split(expname, ".")[end] == "mesh"
+				mesh_file = expdir
+			else
+				mesh_file = joinpath(expdir, expname*".mesh")
+			end
+
             f = open(mesh_file, "r")
             l = readlines(f)
             # -- x direction
