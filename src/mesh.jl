@@ -3,7 +3,7 @@
 
 Stores Bifrost grid information in struct
 """
-mutable struct BifrostMesh
+struct BifrostMesh
         mx::Int64
         x::Vector{Float32}
         xmdn::Vector{Float32}
