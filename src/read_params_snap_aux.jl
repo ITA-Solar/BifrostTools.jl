@@ -530,7 +530,7 @@ function br_load_auxvariable(
     end
 
     if unit_conversion != "none"
-        convert_units!(auxdata,auxvar,unit_conversion)
+        convert_units!(auxvariable,auxvar,unit_conversion)
     end
 
     return auxvariable
@@ -585,7 +585,7 @@ function br_load_auxvariable(
     close(file)
 
     if unit_conversion != "none"
-        convert_units!(auxdata,auxvar,unit_conversion)
+        convert_units!(auxvariable,auxvar,unit_conversion)
     end
 
     return auxvariable
@@ -601,7 +601,36 @@ end
         unit_conversion::String="none"
         )
 
-Loads a variable from a simulation snapshot
+Loads a variable from a simulation snapshot. Available variables
+
+The primary variables:
+- "r":  density
+- "px": x-component of momentum
+- "py": y-component of momentum
+- "pz": z-component of momentum
+- "e":  energy
+
+`if params["do_mhd"] == true`
+- "bx": x-component of magnetic field
+- "by": y-component of magnetic field
+- "bz": z-component of magnetic field
+
+auxilliary variables (variables in params["aux"]):
+- "p": pressure
+- "tg": gas temperature
+    ...
+
+Converts variables to "si" or "cgs" units: `unit_conversion="si"` or
+`unit_conversion="cgs"`
+
+Example usage: 
+
+```{julia}
+exp_name = "cb24oi"
+exp_dir = "/mn/stornext/d21/RoCS/matsc/3d/run/cb24oi"
+snap = 700
+pressure = get_var(expname, snap, expdir, "p", unit_conversion="si")
+```
 """
 function get_var(
     expname::String,
@@ -615,18 +644,23 @@ function get_var(
     if variable in keys(primary_vars)
         var = br_load_snapvariable(expname,snap,expdir,variable,precision,
             unit_conversion=unit_conversion)
-    elseif variable in aux_vars
-        var = br_load_auxvariable(expname,snap,expdir,variable,precision,
-            unit_conversion=unit_conversion)        
-    elseif variable == "t"
-        idl_file = expname*"_"*snap*".idl"
-        params = br_read_params(joinpath(expdir,idl_file))
-        var = params["t"]
-        if unit_conversion != "none"
-            var = convert_snaptime(var)
-        end
     else
-        throw(ErrorException("Variable $variable does not exist"))
+        idl_file = string(expname,"_",snap,".idl")
+        params = br_read_params(joinpath(expdir,idl_file))
+
+        aux_vars = split(params["aux"])
+
+        if variable in aux_vars
+            var = br_load_auxvariable(expname,snap,expdir,variable,precision,
+                unit_conversion=unit_conversion)        
+        elseif variable == "t"
+            var = params["t"]
+            if unit_conversion != "none"
+                var = convert_snaptime(var)
+            end
+        else
+            throw(ErrorException("Variable $variable does not exist"))
+        end
     end
     
     return var
