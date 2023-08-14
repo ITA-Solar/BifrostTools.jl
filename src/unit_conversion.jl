@@ -51,7 +51,7 @@ const si_params = Dict(
         )
 
 """
-    unit_conversion!(
+    convert_units!(
         snapvariable, 
         variable::String, 
         unit_conversion::String
@@ -60,8 +60,8 @@ const si_params = Dict(
 Converts the units of `snapvariable` from simulation units to 'si' or 'cgs'
 units
 """
-function unit_conversion!(
-    snapvariable, 
+function convert_units!(
+    snapvariable::AbstractArray, 
     variable::String, 
     unit_conversion::String
     )
@@ -83,4 +83,15 @@ function unit_conversion!(
     else
         throw(ErrorException("Unit conversion $unit_conversion does not exits"))
     end
+end
+
+"""
+    convert_time(t::AbstractFloat)
+
+Converts snapshot time to seconds
+"""
+function convert_snaptime(t::AbstractFloat)
+
+    t*params["u_t"]
+
 end
