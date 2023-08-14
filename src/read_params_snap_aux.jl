@@ -353,7 +353,7 @@ function br_load_snapvariable(
     numsnaps = length(snap)
     snapvariable = zeros(precision, snapsize..., numsnaps)
     for i = 1:numsnaps
-        isnap = "_$(snap[i])"
+        isnap = "_"*lpad(snap[i],3,"0")
         basename = string(expdir, "/", expname, isnap)
         snap_filename = string(basename, ".snap")
         file = open(snap_filename)
@@ -408,7 +408,7 @@ function br_load_snapvariable(
     datadims = 3 # 3 spatial dimensions and 1 variable dimension
 
     # Parse filenames
-    isnap = "_$(snap)"
+    isnap = "_"*lpad(snap,3,"0")
     basename = joinpath(expdir, expname*isnap)
     idl_filename  = string(basename, ".idl")
     params = br_read_params(idl_filename)
@@ -517,7 +517,7 @@ function br_load_auxvariable(
     numsnaps = length(snap)
     auxvariable = zeros(precision, snapsize..., numsnaps)
     for i = 1:numsnaps
-        isnap = "_$(snap[i])"
+        isnap = "_"*lpad(snap[i],3,"0")
         basename = string(expdir, "/", expname, isnap)
         aux_filename = string(basename, ".aux")
         file = open(aux_filename)
@@ -561,7 +561,7 @@ function br_load_auxvariable(
     datadims = 3
 
     # Parse filenames
-    isnap = "_$(snap)"
+    isnap = "_"*lpad(snap,3,"0")
     basename = joinpath(expdir,expname*isnap)
     idl_filename  = string(basename, ".idl")
     params = br_read_params(idl_filename)
