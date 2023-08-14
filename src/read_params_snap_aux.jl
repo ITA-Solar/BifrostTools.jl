@@ -1,3 +1,14 @@
+const primary_vars = Dict(
+    "r" => 1,
+    "px" => 2, 
+    "py" => 3, 
+    "pz" => 4, 
+    "e" => 5, 
+    "bx" => 6, 
+    "by" => 7, 
+    "bz" => 8,  
+)
+
 """
     br_read_params(file_name::String)
 
@@ -204,22 +215,8 @@ function get_snapvarnr(
     variable::String,
     upperlimit::Integer=8
     )
-    if variable == "r"
-        varnr = 1
-    elseif variable == "px"
-        varnr = 2
-    elseif variable == "py"
-        varnr = 3
-    elseif variable == "pz"
-        varnr = 4
-    elseif variable == "e"
-        varnr = 5
-    elseif variable == "bx"
-        varnr = 6
-    elseif variable == "by"
-        varnr = 7
-    elseif variable == "bz"
-        varnr = 8
+    if variable in primary_vars
+        varnr = primary_vars[variable]
     else
         error("Variable name not known.")
     end
@@ -297,7 +294,7 @@ function br_load_snapvariable(
     close(file)
 
     if unit_conversion != "none"
-        unit_conversion!(snapvariable, variable, unit_conversion)
+        convert_units!(snapvariable, variable, unit_conversion)
     end
 
     return snapvariable
@@ -369,7 +366,77 @@ function br_load_snapvariable(
     end
 
     if unit_conversion != "none"
-        unit_conversion!(snapvariable, variable, unit_conversion)
+        convert_units!(snapvariable, variable, unit_conversion)
+    end
+
+    return snapvariable
+end # function br_load_snapvariable
+
+"""
+    br_load_snapvariable(
+        expname ::String,
+        snap    ::Vector{T} where {T<:Integer},
+        expdir  ::String,
+        variable::String,
+        precision::DataType=Float32
+        )
+Reads a single primary `variable` of one simulation snapshot `snap`.
+Assumes single floating point precision as default.
+The available variables are: 
+    "r":  density
+    "px": x-component of momentum
+    "py": y-component of momentum
+    "pz": z-component of momentum
+    "e":  energy
+
+   if params["do_mhd"] == true
+    "bx": x-component of magnetic field
+    "by": y-component of magnetic field
+    "bz": z-component of magnetic field
+
+Can convert variable to si or cgs units by passing  `unit_conversion="si"` or
+`unit_conversion="cgs"`.
+"""
+function br_load_snapvariable(
+    expname ::String,
+    snap    ::Integer,
+    expdir  ::String,
+    variable::String,
+    precision::DataType=Float32;
+    unit_conversion::String="none"
+    )
+    datadims = 3 # 3 spatial dimensions and 1 variable dimension
+
+    # Parse filenames
+    basename = string(expdir, "/", expname, "_$(snap[1])")
+    idl_filename  = string(basename, ".idl")
+    params = br_read_params(idl_filename)
+
+    snapsize, numvars = get_snapsize_and_numvars(params)
+
+    # Get variable number/position in snapdata from argument.
+    varnr = get_snapvarnr(variable)
+
+    # Calculate offset in file
+    offset = get_variable_offset_in_file(precision, snapsize, varnr)
+
+    # Loop through all snapshots and load variable
+    numsnaps = length(snap)
+    snapvariable = zeros(precision, snapsize...)
+
+    isnap = "_$(snap)"
+    basename = string(expdir, "/", expname, isnap)
+    snap_filename = string(basename, ".snap")
+    file = open(snap_filename)
+    # Use Julia standard-library memory-mapping to extract file values
+    snapvariable[:,:,:] = mmap(file,
+                                Array{precision, datadims},
+                                snapsize,
+                                offset)
+    close(file)
+
+    if unit_conversion != "none"
+        convert_units!(snapvariable, variable, unit_conversion)
     end
 
     return snapvariable
@@ -380,17 +447,21 @@ end # function br_load_snapvariable
         file_name::String,
         params   ::Dict{String,Any},
         auxvar   ::String,
-        precision::DataType=Float32
+        precision::DataType=Float32;
+        unit_conversion::String="none"
         )
 Reads a single auxiliary variable from a Bifrost ".aux"-file `file_name`. The
 snapshot parameters must be given together with a string for the aux-variable,
-`auxvar`. Assumes single floating point precision as default.
+`auxvar`. Assumes single floating point precision as default. Can convert 
+variable to si or cgs units by passing  `unit_conversion="si"` or 
+`unit_conversion="cgs"`.
 """
 function br_load_auxvariable(
     file_name::String,
     params   ::Dict{String,Any},
     auxvar   ::String,
-    precision::DataType=Float32
+    precision::DataType=Float32;
+    unit_conversion::String="none"
     )
     datadims = 3
     snapsize, _, numauxvars = get_snapsize_and_numvars(params)
@@ -401,6 +472,11 @@ function br_load_auxvariable(
     # Use Julia standard-library memory-mapping to extract file values
     auxdata = mmap(file, Array{precision, datadims}, snapsize, offset)
     close(file)
+
+    if unit_conversion != "none"
+        convert_units!(auxdata, auxvar, unit_conversion)
+    end
+
     return auxdata
 end # function br_load_auxdata
 
@@ -410,18 +486,21 @@ end # function br_load_auxdata
         snap    ::Vector{T} where {T<:Integer},
         expdir  ::String,
         auxvar  ::String,
-        precision::DataType=Float32
+        precision::DataType=Float32;
+        unit_conversion::String="none"
         )
 Reads a single axiliary variable (`auxvar`) of one or multiple Bifrost
 snapshots. Takes the snapshot-numbers in the vector `snap`.
-Assumes single floating point precision as default.
+Assumes single floating point precision as default. Can convert variable to si 
+or cgs units by passing  `unit_conversion="si"` or `unit_conversion="cgs"`.
 """
 function br_load_auxvariable(
     expname ::String,
     snap    ::Vector{T} where {T<:Integer},
     expdir  ::String,
     auxvar  ::String,
-    precision::DataType=Float32
+    precision::DataType=Float32;
+    unit_conversion::String="none"
     )
     datadims = 3
 
@@ -450,7 +529,107 @@ function br_load_auxvariable(
                                     offset)
         close(file)
     end
+
+    if unit_conversion != "none"
+        convert_units!(auxdata,auxvar,unit_conversion)
+    end
+
     return auxvariable
 end
 
+"""
+    br_load_auxvariable(
+        expname ::String,
+        snap    ::Integer,
+        expdir  ::String,
+        auxvar  ::String,
+        precision::DataType=Float32;
+        unit_conversion::String="none"
+        )
+Reads a single axiliary variable (`auxvar`) of a single simulation
+snapshot `snap`.
+Assumes single floating point precision as default. Can convert variable to si
+or cgs units by passing  `unit_conversion="si"` or `unit_conversion="cgs"`.
+"""
+function br_load_auxvariable(
+    expname ::String,
+    snap    ::Vector{T} where {T<:Integer},
+    expdir  ::String,
+    auxvar  ::String,
+    precision::DataType=Float32;
+    unit_conversion::String="none"
+    )
+    datadims = 3
 
+    # Parse filenames
+    basename = string(expdir, "/", expname, "_$(snap[1])")
+    idl_filename  = string(basename, ".idl")
+    params = br_read_params(idl_filename)
+
+    snapsize, _, numauxvars = get_snapsize_and_numvars(params)
+    auxvarnr = get_auxvarnr(params, auxvar)
+    # Calculate offset in file
+    offset = get_variable_offset_in_file(precision, snapsize, auxvarnr)
+
+    # Loop through all snapshots and load variable
+    numsnaps = length(snap)
+    auxvariable = zeros(precision, snapsize...)
+
+    isnap = "_$(snap)"
+    basename = string(expdir, "/", expname, isnap)
+    aux_filename = string(basename, ".aux")
+    file = open(aux_filename)
+    # Use Julia standard-library memory-mapping to extract file values
+    auxvariable[:,:,:] = mmap(file,
+                              Array{precision, datadims},
+                              snapsize,
+                              offset)
+    close(file)
+
+    if unit_conversion != "none"
+        convert_units!(auxdata,auxvar,unit_conversion)
+    end
+
+    return auxvariable
+end
+
+"""
+    function get_var(
+        expname::String,
+        snap::Integer,
+        expdir::String,
+        variable::String,
+        precision::DataType=Float32;
+        unit_conversion::String="none"
+        )
+
+Loads a variable from a simulation snapshot
+"""
+function get_var(
+    expname::String,
+    snap::Integer,
+    expdir::String,
+    variable::String,
+    precision::DataType=Float32;
+    unit_conversion::String="none"
+    )
+
+    if variable in primary_vars
+        var = br_load_snapvariable(expname,snap,expdir,variable,precision,
+            unit_conversion=unit_conversion)
+    elseif variable in aux_vars
+        var = br_load_auxvariable(expname,snap,expdir,variable,precision,
+            unit_conversion=unit_conversion)        
+    elseif variable == "t"
+        idl_file = expname*"_"*snap*".idl"
+        params = br_read_params(joinpath(expdir,idl_file))
+        var = params["t"]
+        if unit_conversion != "none"
+            var = convert_snaptime(var)
+        end
+    else
+        throw(ErrorException("Variable $variable does not exist"))
+    end
+    
+    return var
+end
