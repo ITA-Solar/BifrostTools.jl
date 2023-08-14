@@ -215,7 +215,7 @@ function get_snapvarnr(
     variable::String,
     upperlimit::Integer=8
     )
-    if variable in primary_vars
+    if variable in keys(primary_vars)
         varnr = primary_vars[variable]
     else
         error("Variable name not known.")
@@ -408,7 +408,8 @@ function br_load_snapvariable(
     datadims = 3 # 3 spatial dimensions and 1 variable dimension
 
     # Parse filenames
-    basename = string(expdir, "/", expname, "_$(snap[1])")
+    isnap = "_$(snap)"
+    basename = joinpath(expdir, expname*isnap)
     idl_filename  = string(basename, ".idl")
     params = br_read_params(idl_filename)
 
@@ -424,8 +425,6 @@ function br_load_snapvariable(
     numsnaps = length(snap)
     snapvariable = zeros(precision, snapsize...)
 
-    isnap = "_$(snap)"
-    basename = string(expdir, "/", expname, isnap)
     snap_filename = string(basename, ".snap")
     file = open(snap_filename)
     # Use Julia standard-library memory-mapping to extract file values
@@ -553,7 +552,7 @@ or cgs units by passing  `unit_conversion="si"` or `unit_conversion="cgs"`.
 """
 function br_load_auxvariable(
     expname ::String,
-    snap    ::Vector{T} where {T<:Integer},
+    snap    ::Integer,
     expdir  ::String,
     auxvar  ::String,
     precision::DataType=Float32;
@@ -562,7 +561,8 @@ function br_load_auxvariable(
     datadims = 3
 
     # Parse filenames
-    basename = string(expdir, "/", expname, "_$(snap[1])")
+    isnap = "_$(snap)"
+    basename = joinpath(expdir,expname*isnap)
     idl_filename  = string(basename, ".idl")
     params = br_read_params(idl_filename)
 
@@ -575,8 +575,6 @@ function br_load_auxvariable(
     numsnaps = length(snap)
     auxvariable = zeros(precision, snapsize...)
 
-    isnap = "_$(snap)"
-    basename = string(expdir, "/", expname, isnap)
     aux_filename = string(basename, ".aux")
     file = open(aux_filename)
     # Use Julia standard-library memory-mapping to extract file values
@@ -614,7 +612,7 @@ function get_var(
     unit_conversion::String="none"
     )
 
-    if variable in primary_vars
+    if variable in keys(primary_vars)
         var = br_load_snapvariable(expname,snap,expdir,variable,precision,
             unit_conversion=unit_conversion)
     elseif variable in aux_vars
