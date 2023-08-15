@@ -42,31 +42,25 @@ end
     br_find_snap_numbers(expdir::String)
 
 Finds all files in the format 'expname_XXX.snap' in the experiment directory
-`exp_dir`, and returns a vector of the snapshots XXX
+`exp_dir`, and returns a vector of the snapshots XXX.
 """
 function br_find_snap_numbers(expdir::String)
 
     expname = splitpath(expdir)[end]
-    ext = ".snap"
+    filenames = readdir(expdir)
 
-    files = readdir(expdir)
-    # Sort only the .snap files
-    files = files[occursin.(ext, files)]
-    # Trims away the file 'expname.snap'
-    files = files[occursin.(expname*"_", files)]
-    
-    snaps = Vector{Integer}(undef, length(files))
-   
-    # Removes expname
-    del_name = [char for char in expname]
-    del_ext = [char for char in ext]
+    # Regex magic to match the filenames
+    pattern = r"^" * expname * r"_(\d+)\.snap$"
 
-    for (i,file) in enumerate(files)
-        if occursin(".snap", file)
-            tmp = lstrip(file, del_name)
-            tmp = lstrip(tmp, '_')
-            tmp = rstrip(tmp, del_ext)
-            snaps[i] = parse(Int64, tmp)
+    # Initialize an empty list to store the XXX numbers
+    snaps = Vector{Int}()
+
+    # Loop through the filenames and extract XXX numbers
+    for filename in filenames
+        match_result = match(pattern, filename)
+        if match_result != nothing
+            isnap = parse(Int, match_result.captures[1])
+            push!(snaps, isnap)
         end
     end
 
