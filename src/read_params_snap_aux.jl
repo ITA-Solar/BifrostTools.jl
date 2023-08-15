@@ -253,7 +253,8 @@ end
         file_name::String,
         params   ::Dict{String,Any},
         variable ::String,
-        precision::DataType=Float32
+        precision::DataType=Float32;
+        units::String="none"
         )
 Reads a single `variable` of the Bifrost snapshot `file_name`.
 Assumes single floating point precision as default.
@@ -269,15 +270,15 @@ The available variables are:
     "by": y-component of magnetic field
     "bz": z-component of magnetic field
 
-Can convert variable to si or cgs units by passing `unit_conversion="si"` or
-`unit_conversion="cgs"`.
+Can convert variable to si or cgs units by passing `units="si"` or
+`units="cgs"`.
 """
 function br_load_snapvariable(
     file_name::String,
     params   ::Dict{String,Any},
     variable ::String,
     precision::DataType=Float32;
-    unit_conversion::String="none"
+    units::String="none"
     )
     datadims = 3 # 3 spatial dimensions and 1 variable dimension
 
@@ -293,8 +294,8 @@ function br_load_snapvariable(
     snapvariable = mmap(file, Array{precision, datadims}, snapsize, offset)
     close(file)
 
-    if unit_conversion != "none"
-        convert_units!(snapvariable, variable, unit_conversion)
+    if units != "none"
+        convert_units!(snapvariable, variable, units)
     end
 
     return snapvariable
@@ -306,7 +307,8 @@ end # function br_load_snapvariable
         snap    ::Vector{T} where {T<:Integer},
         expdir  ::String,
         variable::String,
-        precision::DataType=Float32
+        precision::DataType=Float32;
+        units::String="none"
         )
 Reads a single primary `variable` of one or multiple Bifrost snapshots.
 Takes the snapshot-numbers in the vector `snap`.
@@ -323,8 +325,8 @@ The available variables are:
     "by": y-component of magnetic field
     "bz": z-component of magnetic field
 
-Can convert variable to si or cgs units by passing  `unit_conversion="si"` or
-`unit_conversion="cgs"`.
+Can convert variable to si or cgs units by passing  `units="si"` or
+`units="cgs"`.
 """
 function br_load_snapvariable(
     expname ::String,
@@ -332,7 +334,7 @@ function br_load_snapvariable(
     expdir  ::String,
     variable::String,
     precision::DataType=Float32;
-    unit_conversion::String="none"
+    units::String="none"
     )
     datadims = 3 # 3 spatial dimensions and 1 variable dimension
 
@@ -365,8 +367,8 @@ function br_load_snapvariable(
         close(file)
     end
 
-    if unit_conversion != "none"
-        convert_units!(snapvariable, variable, unit_conversion)
+    if units != "none"
+        convert_units!(snapvariable, variable, units)
     end
 
     return snapvariable
@@ -378,7 +380,8 @@ end # function br_load_snapvariable
         snap    ::Vector{T} where {T<:Integer},
         expdir  ::String,
         variable::String,
-        precision::DataType=Float32
+        precision::DataType=Float32;
+        units::String="none"
         )
 Reads a single primary `variable` of one simulation snapshot `snap`.
 Assumes single floating point precision as default.
@@ -394,8 +397,8 @@ The available variables are:
     "by": y-component of magnetic field
     "bz": z-component of magnetic field
 
-Can convert variable to si or cgs units by passing  `unit_conversion="si"` or
-`unit_conversion="cgs"`.
+Can convert variable to si or cgs units by passing  `units="si"` or
+`units="cgs"`.
 """
 function br_load_snapvariable(
     expname ::String,
@@ -403,7 +406,7 @@ function br_load_snapvariable(
     expdir  ::String,
     variable::String,
     precision::DataType=Float32;
-    unit_conversion::String="none"
+    units::String="none"
     )
     datadims = 3 # 3 spatial dimensions and 1 variable dimension
 
@@ -434,8 +437,8 @@ function br_load_snapvariable(
                                 offset)
     close(file)
 
-    if unit_conversion != "none"
-        convert_units!(snapvariable, variable, unit_conversion)
+    if units != "none"
+        convert_units!(snapvariable, variable, units)
     end
 
     return snapvariable
@@ -447,20 +450,20 @@ end # function br_load_snapvariable
         params   ::Dict{String,Any},
         auxvar   ::String,
         precision::DataType=Float32;
-        unit_conversion::String="none"
+        units::String="none"
         )
 Reads a single auxiliary variable from a Bifrost ".aux"-file `file_name`. The
 snapshot parameters must be given together with a string for the aux-variable,
 `auxvar`. Assumes single floating point precision as default. Can convert 
-variable to si or cgs units by passing  `unit_conversion="si"` or 
-`unit_conversion="cgs"`.
+variable to si or cgs units by passing  `units="si"` or 
+`units="cgs"`.
 """
 function br_load_auxvariable(
     file_name::String,
     params   ::Dict{String,Any},
     auxvar   ::String,
     precision::DataType=Float32;
-    unit_conversion::String="none"
+    units::String="none"
     )
     datadims = 3
     snapsize, _, numauxvars = get_snapsize_and_numvars(params)
@@ -472,8 +475,8 @@ function br_load_auxvariable(
     auxdata = mmap(file, Array{precision, datadims}, snapsize, offset)
     close(file)
 
-    if unit_conversion != "none"
-        convert_units!(auxdata, auxvar, unit_conversion)
+    if units != "none"
+        convert_units!(auxdata, auxvar, units)
     end
 
     return auxdata
@@ -486,12 +489,12 @@ end # function br_load_auxdata
         expdir  ::String,
         auxvar  ::String,
         precision::DataType=Float32;
-        unit_conversion::String="none"
+        units::String="none"
         )
 Reads a single axiliary variable (`auxvar`) of one or multiple Bifrost
 snapshots. Takes the snapshot-numbers in the vector `snap`.
 Assumes single floating point precision as default. Can convert variable to si 
-or cgs units by passing  `unit_conversion="si"` or `unit_conversion="cgs"`.
+or cgs units by passing  `units="si"` or `units="cgs"`.
 """
 function br_load_auxvariable(
     expname ::String,
@@ -499,7 +502,7 @@ function br_load_auxvariable(
     expdir  ::String,
     auxvar  ::String,
     precision::DataType=Float32;
-    unit_conversion::String="none"
+    units::String="none"
     )
     datadims = 3
 
@@ -529,8 +532,8 @@ function br_load_auxvariable(
         close(file)
     end
 
-    if unit_conversion != "none"
-        convert_units!(auxvariable,auxvar,unit_conversion)
+    if units != "none"
+        convert_units!(auxvariable,auxvar,units)
     end
 
     return auxvariable
@@ -543,12 +546,12 @@ end
         expdir  ::String,
         auxvar  ::String,
         precision::DataType=Float32;
-        unit_conversion::String="none"
+        units::String="none"
         )
 Reads a single axiliary variable (`auxvar`) of a single simulation
 snapshot `snap`.
 Assumes single floating point precision as default. Can convert variable to si
-or cgs units by passing  `unit_conversion="si"` or `unit_conversion="cgs"`.
+or cgs units by passing  `units="si"` or `units="cgs"`.
 """
 function br_load_auxvariable(
     expname ::String,
@@ -556,7 +559,7 @@ function br_load_auxvariable(
     expdir  ::String,
     auxvar  ::String,
     precision::DataType=Float32;
-    unit_conversion::String="none"
+    units::String="none"
     )
     datadims = 3
 
@@ -584,8 +587,8 @@ function br_load_auxvariable(
                               offset)
     close(file)
 
-    if unit_conversion != "none"
-        convert_units!(auxvariable,auxvar,unit_conversion)
+    if units != "none"
+        convert_units!(auxvariable,auxvar,units)
     end
 
     return auxvariable
@@ -598,7 +601,7 @@ end
         expdir::String,
         variable::String,
         precision::DataType=Float32;
-        unit_conversion::String="none"
+        units::String="none"
         )
 
 Loads a variable from a simulation snapshot. Available variables
@@ -620,8 +623,8 @@ auxilliary variables (variables in params["aux"]):
 - "tg": gas temperature
     ...
 
-Converts variables to "si" or "cgs" units: `unit_conversion="si"` or
-`unit_conversion="cgs"`
+Converts variables to "si" or "cgs" units: `units="si"` or
+`units="cgs"`
 
 Example usage: 
 
@@ -629,7 +632,7 @@ Example usage:
 exp_name = "cb24oi"
 exp_dir = "/mn/stornext/d21/RoCS/matsc/3d/run/cb24oi"
 snap = 700
-pressure = get_var(expname, snap, expdir, "p", unit_conversion="si")
+pressure = get_var(expname, snap, expdir, "p", units="si")
 ```
 """
 function get_var(
@@ -638,12 +641,12 @@ function get_var(
     expdir::String,
     variable::String,
     precision::DataType=Float32;
-    unit_conversion::String="none"
+    units::String="none"
     )
 
     if variable in keys(primary_vars)
         var = br_load_snapvariable(expname,snap,expdir,variable,precision,
-            unit_conversion=unit_conversion)
+            units=units)
     else
         idl_file = string(expname,"_",snap,".idl")
         params = br_read_params(joinpath(expdir,idl_file))
@@ -652,10 +655,10 @@ function get_var(
 
         if variable in aux_vars
             var = br_load_auxvariable(expname,snap,expdir,variable,precision,
-                unit_conversion=unit_conversion)        
+                units=units)        
         elseif variable == "t"
             var = params["t"]
-            if unit_conversion != "none"
+            if units != "none"
                 var = convert_snaptime(var)
             end
         else
