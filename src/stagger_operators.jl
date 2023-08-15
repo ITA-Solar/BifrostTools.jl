@@ -199,7 +199,7 @@ function br_xup(
                 end
             end
 
-            for k = 1:n[3]
+            Threads.@threads for k = 1:n[3]
                 for j = 1:n[2]
                     @simd for i = 3:n[1]+2
                         @inbounds out[i, j, k] =
@@ -212,7 +212,7 @@ function br_xup(
             return out[3:end-3, :, :]
         else # order 2
             out = zeros(T, (n[1], n[2], n[3]))
-            for k = 1:n[3]
+            Threads.@threads for k = 1:n[3]
                 for j = 1:n[2]
                     @simd for i = 1:n[1]-1
                         @inbounds out[i, j, k] = 0.5f0 * (arr[i, j, k] + arr[i+1, j, k])
@@ -280,7 +280,7 @@ function br_dxup(
                 end
             end
 
-            for k = 1:n[3]
+            Threads.@threads for k = 1:n[3]
                 for j = 1:n[2]
                     @simd for i in 3:n[1]+2
                         @inbounds out[i, j, k] =
@@ -295,7 +295,7 @@ function br_dxup(
             return out[3:end-3, :, :]
         else # oder 2
             out = zeros(T, (n[1], n[2], n[3]))
-            for k = 1:n[3]
+            Threads.@threads for k = 1:n[3]
                 for j = 1:n[2]
                     @simd for i = 1:n[1]-1
                         @inbounds out[i, j, k] = dx[i] * (arr[i+1, j, k] - arr[i, j, k])
@@ -357,7 +357,7 @@ function br_xdn(
                 end
             end
 
-            for k = 1:n[3]
+            Threads.@threads for k = 1:n[3]
                 for j = 1:n[2]
                     @simd for i = 4:n[1]+3
                         @inbounds out[i, j, k] =
@@ -370,7 +370,7 @@ function br_xdn(
             return out[4:end-2, :, :]
         else # order 2
             out = zeros(T, (n[1], n[2], n[3]))
-            for k = 1:n[3]
+            Threads.@threads for k = 1:n[3]
                 for j = 1:n[2]
                     @simd for i = 2:n[1]
                         @inbounds out[i, j, k] = 0.5f0 * (arr[i-1, j, k] + arr[i, j, k])
@@ -438,7 +438,7 @@ function br_dxdn(
                 end
             end
 
-            for k = 1:n[3]
+            Threads.@threads for k = 1:n[3]
                 for j = 1:n[2]
                     @simd for i = 4:n[1]+3
                         @inbounds out[i, j, k] =
@@ -453,7 +453,7 @@ function br_dxdn(
             return out[4:end-2, :, :]
         else # oder 2
             out = zeros(T, (n[1], n[2], n[3]))
-            for k = 1:n[3]
+            Threads.@threads for k = 1:n[3]
                 for j = 1:n[2]
                     @simd for i = 2:n[1]
                         @inbounds out[i, j, k] = dx[i] * (arr[i, j, k] - arr[i-1, j, k])
@@ -516,7 +516,7 @@ function br_yup(
                 end
             end
 
-            for k = 1:n[3]
+            Threads.@threads for k = 1:n[3]
                 for j = 3:n[2]+2
                     @simd for i = 1:n[1]
                         @inbounds out[i, j, k] =
@@ -529,7 +529,7 @@ function br_yup(
             return out[:, 3:end-3, :]
         else # order 2
             out = zeros(T, (n[1], n[2], n[3]))
-            for k = 1:n[3]
+            Threads.@threads for k = 1:n[3]
                 for j = 1:n[2]-1
                     @simd for i = 1:n[1]
                         @inbounds out[i, j, k] = 0.5f0 * (arr[i, j, k] + arr[i, j+1, k])
@@ -597,7 +597,7 @@ function br_dyup(
                 end
             end
 
-            for k = 1:n[3]
+            Threads.@threads for k = 1:n[3]
                 for j = 3:n[2]+2
                     @simd for i = 1:n[1]
                         @inbounds out[i, j, k] =
@@ -612,7 +612,7 @@ function br_dyup(
             return out[:, 3:end-3, :]
         else # order 2
             out = zeros(T, (n[1], n[2], n[3]))
-            for k = 1:n[3]
+            Threads.@threads for k = 1:n[3]
                 for j = 1:n[2]-1
                     @simd for i = 1:n[1]
                         @inbounds out[i, j, k] = dy[j] * (arr[i, j+1, k] - arr[i, j, k])
@@ -674,7 +674,7 @@ function br_ydn(
                 end
             end
 
-            for k = 1:n[3]
+            Threads.@threads for k = 1:n[3]
                 for j = 4:n[2]+3
                     @simd for i = 1:n[1]
                         @inbounds out[i, j, k] =
@@ -687,7 +687,7 @@ function br_ydn(
             return out[:, 4:end-2, :]
         else # order 2
             out = zeros(T, (n[1], n[2], n[3]))
-            for k = 1:n[3]
+            Threads.@threads for k = 1:n[3]
                 for j = 2:n[2]
                     @simd for i = 1:n[1]
                         @inbounds out[i, j, k] = 0.5f0 * (arr[i, j-1, k] + arr[i, j, k])
@@ -755,7 +755,7 @@ function br_dydn(
                 end
             end
 
-            for k = 1:n[3]
+            Threads.@threads for k = 1:n[3]
                 for j = 4:n[2]+3
                     @simd for i = 1:n[1]
                         @inbounds out[i, j, k] =
@@ -770,7 +770,7 @@ function br_dydn(
             return out[:, 4:end-2, :]
         else # order 2
             out = zeros(T, (n[1], n[2], n[3]))
-            for k = 1:n[3]
+            Threads.@threads for k = 1:n[3]
                 for j = 2:n[2]
                     @simd for i = 1:n[1]
                         @inbounds out[i, j, k] = dy[j] * (arr[i, j, k] - arr[i, j-1, k])
@@ -833,7 +833,7 @@ function br_zup(
                 end
             end
 
-            for k = 3:n[3]+2
+            Threads.@threads for k = 3:n[3]+2
                 for j = 1:n[2]
                     @simd for i = 1:n[1]
                         @inbounds out[i, j, k] =
@@ -846,7 +846,7 @@ function br_zup(
             return out[:, :, 3:end-3]
         else # order 2
             out = zeros(T, (n[1], n[2], n[3]))
-            for k = 1:n[3]-1
+            Threads.@threads for k = 1:n[3]-1
                 for j = 1:n[2]
                     @simd for i = 1:n[1]
                         @inbounds out[i, j, k] = 0.5f0 * (arr[i, j, k] + arr[i, j, k+1])
@@ -914,7 +914,7 @@ function br_dzup(
                 end
             end
 
-            for k = 3:n[3]+2
+            Threads.@threads for k = 3:n[3]+2
                 for j = 1:n[2]
                     @simd for i = 1:n[1]
                         @inbounds out[i, j, k] =
@@ -929,7 +929,7 @@ function br_dzup(
             return out[:, :, 3:end-3]
         else # order 2
             out = zeros(T, (n[1], n[2], n[3]))
-            for k = 1:n[3]-1
+            Threads.@threads for k = 1:n[3]-1
                 for j = 1:n[2]
                     @simd for i = 1:n[1]
                         @inbounds out[i, j, k] = dz[k] * (arr[i, j, k+1] - arr[i, j, k])
@@ -991,7 +991,7 @@ function br_zdn(
                 end
             end
 
-            for k = 4:n[3]+3
+            Threads.@threads for k = 4:n[3]+3
                 for j = 1:n[2]
                     @simd for i = 1:n[1]
                         @inbounds out[i, j, k] =
@@ -1004,7 +1004,7 @@ function br_zdn(
             return out[:, :, 4:end-2]
         else # order 2
             out = zeros(T, (n[1], n[2], n[3]))
-            for k = 2:n[3]
+            Threads.@threads for k = 2:n[3]
                 for j = 1:n[2]
                     @simd for i = 1:n[1]
                         @inbounds out[i, j, k] = 0.5f0 * (arr[i, j, k-1] + arr[i, j, k])
@@ -1070,7 +1070,7 @@ function br_dzdn(
                 end
             end
 
-            for k = 4:n[3]+3
+            Threads.@threads for k = 4:n[3]+3
                 for j = 1:n[2]
                     @simd for i = 1:n[1]
                         @inbounds out[i, j, k] =
@@ -1085,7 +1085,7 @@ function br_dzdn(
             return out[:, :, 4:end-2]
         else # order 2
             out = zeros(T, (n[1], n[2], n[3]))
-            for k = 2:n[3]
+            Threads.@threads for k = 2:n[3]
                 for j = 1:n[2]
                     @simd for i = 1:n[1]
                         @inbounds out[i, j, k] = dz[k] * (arr[i, j, k] - arr[i, j, k-1])
