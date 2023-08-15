@@ -39,6 +39,42 @@ function br_read_params(file_name::String)
 end
 
 """
+    br_find_snap_numbers(expdir::String)
+
+Finds all files in the format 'expname_XXX.snap' in the experiment directory
+`exp_dir`, and returns a vector of the snapshots XXX
+"""
+function br_find_snap_numbers(expdir::String)
+
+    expname = splitpath(expdir)[end]
+    ext = ".snap"
+
+    files = readdir(expdir)
+    # Sort only the .snap files
+    files = files[occursin.(ext, files)]
+    # Trims away the file 'expname.snap'
+    files = files[occursin.(expname*"_", files)]
+    
+    snaps = Vector{Integer}(undef, length(files))
+   
+    # Removes expname
+    del_name = [char for char in expname]
+    del_ext = [char for char in ext]
+
+    for (i,file) in enumerate(files)
+        if occursin(".snap", file)
+            tmp = lstrip(file, del_name)
+            tmp = lstrip(tmp, '_')
+            tmp = rstrip(tmp, del_ext)
+            snaps[i] = parse(Int64, tmp)
+        end
+    end
+
+    return snaps
+
+end
+
+"""
     get_snapsize_and_numvars(
         params::Dict{String,Any},
     )
