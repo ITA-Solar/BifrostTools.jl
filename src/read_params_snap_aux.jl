@@ -39,18 +39,28 @@ function br_read_params(file_name::String)
 end
 
 """
-    br_find_snap_numbers(expdir::String)
+    br_find_snap_numbers(expdir::String, expname::String="none")
 
 Finds all files in the format 'expname_XXX.snap' in the experiment directory
-`exp_dir`, and returns a vector of the snapshots XXX.
+`exp_dir`, and returns a vector of the snapshots XXX. If `expname` is not
+given, is is assumed that the directory of the simulation matches the
+experiment name.
 """
-function br_find_snap_numbers(expdir::String)
+function br_find_snap_numbers(expdir::String, expname::String="none", findall::Bool=false)
 
-    expname = splitpath(expdir)[end]
+    if expname=="none"
+        expname = splitpath(expdir)[end]
+    end
+
     filenames = readdir(expdir)
 
-    # Regex magic to match the filenames
-    pattern = r"^" * expname * r"_(\d+)\.snap$"
+    if ! findall
+        # Regex magic to match the filenames with 'expname' and '.snap'
+        pattern = r"^" * expname * r"_(\d+)\.snap$"
+    else
+        # wildcard that finds all files on format 'abXYcd_xyz.snap' 
+        pattern = r"^[a-zA-Z\d]+_(\d+)\.snap$"
+    end
 
     # Initialize an empty list to store the XXX numbers
     snaps = Vector{Int}()
@@ -411,7 +421,10 @@ end # function br_load_snapvariable
         expdir  ::String,
         variable::String,
         precision::DataType=Float32;
-        units::String="none"
+        units::String="none",
+        slicex::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
+        slicey::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
+        slicez::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[]
         )
 Reads a single primary `variable` of one simulation snapshot `snap`.
 Assumes single floating point precision as default.
@@ -436,7 +449,10 @@ function br_load_snapvariable(
     expdir  ::String,
     variable::String,
     precision::DataType=Float32;
-    units::String="none"
+    units::String="none",
+    slicex::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
+    slicey::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
+    slicez::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[]
     )
     datadims = 3 # 3 spatial dimensions and 1 variable dimension
 
@@ -448,6 +464,10 @@ function br_load_snapvariable(
 
     snapsize, numvars = get_snapsize_and_numvars(params)
 
+    isempty(slicex) && ( slicex = 1:snapsize[1] )
+    isempty(slicey) && ( slicey = 1:snapsize[2] )
+    isempty(slicez) && ( slicez = 1:snapsize[3] )
+
     # Get variable number/position in snapdata from argument.
     varnr = get_snapvarnr(variable)
 
@@ -456,7 +476,7 @@ function br_load_snapvariable(
 
     # Loop through all snapshots and load variable
     numsnaps = length(snap)
-    snapvariable = zeros(precision, snapsize...)
+    snapvariable = zeros(precision, length(slicex), length(slicey), length(slicez))
 
     snap_filename = string(basename, ".snap")
     file = open(snap_filename)
@@ -464,7 +484,7 @@ function br_load_snapvariable(
     snapvariable[:,:,:] = mmap(file,
                                 Array{precision, datadims},
                                 snapsize,
-                                offset)
+                                offset)[slicex,slicey,slicez]
     close(file)
 
     if units != "none"
@@ -589,7 +609,10 @@ function br_load_auxvariable(
     expdir  ::String,
     auxvar  ::String,
     precision::DataType=Float32;
-    units::String="none"
+    units::String="none",
+    slicex::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
+    slicey::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
+    slicez::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[]
     )
     datadims = 3
 
@@ -604,9 +627,13 @@ function br_load_auxvariable(
     # Calculate offset in file
     offset = get_variable_offset_in_file(precision, snapsize, auxvarnr)
 
+    isempty(slicex) && ( slicex = 1:snapsize[1] )
+    isempty(slicey) && ( slicey = 1:snapsize[2] )
+    isempty(slicez) && ( slicez = 1:snapsize[3] )
+
     # Loop through all snapshots and load variable
     numsnaps = length(snap)
-    auxvariable = zeros(precision, snapsize...)
+    auxvariable = zeros(precision, length(slicex), length(slicey), length(slicez))
 
     aux_filename = string(basename, ".aux")
     file = open(aux_filename)
@@ -614,7 +641,7 @@ function br_load_auxvariable(
     auxvariable[:,:,:] = mmap(file,
                               Array{precision, datadims},
                               snapsize,
-                              offset)
+                              offset)[slicex,slicey,slicez]
     close(file)
 
     if units != "none"
@@ -631,7 +658,10 @@ end
         expdir::String,
         variable::String,
         precision::DataType=Float32;
-        units::String="none"
+        units::String="none",
+        slicex::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
+        slicey::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
+        slicez::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[]
         )
 
 Loads a variable from a simulation snapshot. Available variables
@@ -653,8 +683,9 @@ auxilliary variables (variables in params["aux"]):
 - "tg": gas temperature
     ...
 
-Converts variables to "si" or "cgs" units: `units="si"` or
-`units="cgs"`
+Converts variables to "si" or "cgs" units: `units="si"` or `units="cgs"`.
+
+To load a slice of the variable, give e.g. `slicex=[32, 410]` or `slicey=40:90`
 
 Example usage: 
 
@@ -662,7 +693,12 @@ Example usage:
 exp_name = "cb24oi"
 exp_dir = "/mn/stornext/d21/RoCS/matsc/3d/run/cb24oi"
 snap = 700
+
+# Load pressude for the full cube in si units
 pressure = get_var(expname, snap, expdir, "p", units="si")
+
+# Load gas density in a slize along the xy-plane in cgs units
+rho = get_var(expname, snap, expdir, "r", units="cgs", slicez=[100])
 ```
 """
 function get_var(
@@ -671,12 +707,15 @@ function get_var(
     expdir::String,
     variable::String,
     precision::DataType=Float32;
-    units::String="none"
+    units::String="none",
+    slicex::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
+    slicey::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
+    slicez::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[]
     )
 
     if variable in keys(primary_vars)
         var = br_load_snapvariable(expname,snap,expdir,variable,precision,
-            units=units)
+            units=units,slicex=slicex,slicey=slicey,slicez=slicez)
     else
         idl_file = string(expname,"_",snap,".idl")
         params = br_read_params(joinpath(expdir,idl_file))
@@ -685,7 +724,7 @@ function get_var(
 
         if variable in aux_vars
             var = br_load_auxvariable(expname,snap,expdir,variable,precision,
-                units=units)        
+                units=units,slicex=slicex,slicey=slicey,slicez=slicez)       
         elseif variable == "t"
             var = params["t"]
             if units != "none"
