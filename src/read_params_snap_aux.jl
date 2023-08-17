@@ -134,7 +134,7 @@ function br_load_snapdata(
     )
     datadims = 4 # 3 spatial dimensions and 1 variable dimension
     # Parse filenames
-    basename = string(expdir, "/", expname, "_$snap")
+    basename = string(expdir, "/", expname, "_$(lpad(snap,3,"0"))")
     idl_filename = string(basename, ".idl")
     snap_filename = string(basename, ".snap")
     params = br_read_params(idl_filename)
@@ -379,7 +379,7 @@ function br_load_snapvariable(
     datadims = 3 # 3 spatial dimensions and 1 variable dimension
 
     # Parse filenames
-    basename = string(expdir, "/", expname, "_$(snap[1])")
+    basename = string(expdir, "/", expname, "_$(lpad(snap[1],3,"0"))")
     idl_filename  = string(basename, ".idl")
     params = br_read_params(idl_filename)
 
@@ -557,7 +557,7 @@ function br_load_auxvariable(
     datadims = 3
 
     # Parse filenames
-    basename = string(expdir, "/", expname, "_$(snap[1])")
+    basename = string(expdir, "/", expname, "_$(lpad(snap[1],3,"0"))")
     idl_filename  = string(basename, ".idl")
     params = br_read_params(idl_filename)
 
@@ -717,7 +717,7 @@ function get_var(
         var = br_load_snapvariable(expname,snap,expdir,variable,precision,
             units=units,slicex=slicex,slicey=slicey,slicez=slicez)
     else
-        idl_file = string(expname,"_",snap,".idl")
+        idl_file = string(expname,"_",lpad(snap,3,"0"),".idl")
         params = br_read_params(joinpath(expdir,idl_file))
 
         aux_vars = split(params["aux"])
