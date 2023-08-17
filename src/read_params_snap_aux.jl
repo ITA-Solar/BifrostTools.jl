@@ -294,7 +294,10 @@ end
         params   ::Dict{String,Any},
         variable ::String,
         precision::DataType=Float32;
-        units::String="none"
+        units::String="none",
+        slicex::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
+        slicey::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
+        slicez::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[]
         )
 Reads a single `variable` of the Bifrost snapshot `file_name`.
 Assumes single floating point precision as default.
@@ -318,11 +321,24 @@ function br_load_snapvariable(
     params   ::Dict{String,Any},
     variable ::String,
     precision::DataType=Float32;
-    units::String="none"
+    units::String="none",
+    slicex::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
+    slicey::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
+    slicez::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[]
     )
     datadims = 3 # 3 spatial dimensions and 1 variable dimension
 
-    snapsize, numvars = get_snapsize_and_numvars(params)
+    snapsize, _, _ = get_snapsize_and_numvars(params)
+
+    # Do slicing or not (returns the mmap)
+    slicing = true
+    ( isempty(slicex) && isempty(slicey) && isempty(slicez) ) && ( slicing = false )
+    
+
+    isempty(slicex) && ( slicex = 1:snapsize[1] )
+    isempty(slicey) && ( slicey = 1:snapsize[2] )
+    isempty(slicez) && ( slicez = 1:snapsize[3] )
+
     # Get variable number/position in snapdata from argument.
     varnr = get_snapvarnr(variable)
 
@@ -330,10 +346,25 @@ function br_load_snapvariable(
     offset = get_variable_offset_in_file(precision, snapsize, varnr)
 
     file = open(file_name)
+
     # Use Julia standard-library memory-mapping to extract file values
-    snapvariable = mmap(file, Array{precision, datadims}, snapsize, offset)
+    if slicing
+        # slice the variable
+        snapvariable = mmap(file,
+                            Array{precision, datadims}, 
+                            snapsize, 
+                            offset)[slicex,slicey,slicez]
+    else
+        # do not slice the variable
+        snapvariable = mmap(file,
+                            Array{precision, datadims}, 
+                            snapsize, 
+                            offset)
+    end
+
     close(file)
 
+    # converts units, this allocates the variable to memory
     if units != "none"
         convert_units!(snapvariable, variable, units)
     end
@@ -415,92 +446,15 @@ function br_load_snapvariable(
 end # function br_load_snapvariable
 
 """
-    br_load_snapvariable(
-        expname ::String,
-        snap    ::Vector{T} where {T<:Integer},
-        expdir  ::String,
-        variable::String,
-        precision::DataType=Float32;
-        units::String="none",
-        slicex::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
-        slicey::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
-        slicez::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[]
-        )
-Reads a single primary `variable` of one simulation snapshot `snap`.
-Assumes single floating point precision as default.
-The available variables are: 
-    "r":  density
-    "px": x-component of momentum
-    "py": y-component of momentum
-    "pz": z-component of momentum
-    "e":  energy
-
-   if params["do_mhd"] == true
-    "bx": x-component of magnetic field
-    "by": y-component of magnetic field
-    "bz": z-component of magnetic field
-
-Can convert variable to si or cgs units by passing  `units="si"` or
-`units="cgs"`.
-"""
-function br_load_snapvariable(
-    expname ::String,
-    snap    ::Integer,
-    expdir  ::String,
-    variable::String,
-    precision::DataType=Float32;
-    units::String="none",
-    slicex::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
-    slicey::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
-    slicez::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[]
-    )
-    datadims = 3 # 3 spatial dimensions and 1 variable dimension
-
-    # Parse filenames
-    isnap = "_"*lpad(snap,3,"0")
-    basename = joinpath(expdir, expname*isnap)
-    idl_filename  = string(basename, ".idl")
-    params = br_read_params(idl_filename)
-
-    snapsize, numvars = get_snapsize_and_numvars(params)
-
-    isempty(slicex) && ( slicex = 1:snapsize[1] )
-    isempty(slicey) && ( slicey = 1:snapsize[2] )
-    isempty(slicez) && ( slicez = 1:snapsize[3] )
-
-    # Get variable number/position in snapdata from argument.
-    varnr = get_snapvarnr(variable)
-
-    # Calculate offset in file
-    offset = get_variable_offset_in_file(precision, snapsize, varnr)
-
-    # Loop through all snapshots and load variable
-    numsnaps = length(snap)
-    snapvariable = zeros(precision, length(slicex), length(slicey), length(slicez))
-
-    snap_filename = string(basename, ".snap")
-    file = open(snap_filename)
-    # Use Julia standard-library memory-mapping to extract file values
-    snapvariable[:,:,:] = mmap(file,
-                                Array{precision, datadims},
-                                snapsize,
-                                offset)[slicex,slicey,slicez]
-    close(file)
-
-    if units != "none"
-        convert_units!(snapvariable, variable, units)
-    end
-
-    return snapvariable
-end # function br_load_snapvariable
-
-"""
     br_load_auxvariable(
         file_name::String,
         params   ::Dict{String,Any},
         auxvar   ::String,
         precision::DataType=Float32;
-        units::String="none"
+        units::String="none",
+        slicex::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
+        slicey::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
+        slicez::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[]
         )
 Reads a single auxiliary variable from a Bifrost ".aux"-file `file_name`. The
 snapshot parameters must be given together with a string for the aux-variable,
@@ -510,26 +464,53 @@ variable to si or cgs units by passing  `units="si"` or
 """
 function br_load_auxvariable(
     file_name::String,
-    params   ::Dict{String,Any},
-    auxvar   ::String,
+    params::Dict{String,Any},
+    auxvar::String,
     precision::DataType=Float32;
-    units::String="none"
+    units::String="none",
+    slicex::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
+    slicey::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
+    slicez::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[]
     )
+
     datadims = 3
-    snapsize, _, numauxvars = get_snapsize_and_numvars(params)
+    snapsize, _, _ = get_snapsize_and_numvars(params)
+
+    # Do slicing or not (returns the mmap)
+    slicing = true
+    ( isempty(slicex) && isempty(slicey) && isempty(slicez) ) && ( slicing = false )
+    
+    isempty(slicex) && ( slicex = 1:snapsize[1] )
+    isempty(slicey) && ( slicey = 1:snapsize[2] )
+    isempty(slicez) && ( slicez = 1:snapsize[3] )
+
     auxvarnr = get_auxvarnr(params, auxvar)
     # Load file and auxvariable
     file = open(file_name)
     offset = get_variable_offset_in_file(precision, snapsize, auxvarnr)
+
     # Use Julia standard-library memory-mapping to extract file values
-    auxdata = mmap(file, Array{precision, datadims}, snapsize, offset)
+    if slicing
+        # slice the variable
+        auxvariable = mmap(file,
+                           Array{precision, datadims}, 
+                           snapsize, 
+                           offset)[slicex,slicey,slicez]
+    else
+        # do not slice the variable
+        auxvariable = mmap(file,
+                           Array{precision, datadims}, 
+                           snapsize, 
+                           offset)
+    end
+
     close(file)
 
     if units != "none"
-        convert_units!(auxdata, auxvar, units)
+        convert_units!(auxvariable, auxvar, units)
     end
 
-    return auxdata
+    return auxvariable
 end # function br_load_auxdata
 
 """
@@ -581,68 +562,6 @@ function br_load_auxvariable(
                                     offset)
         close(file)
     end
-
-    if units != "none"
-        convert_units!(auxvariable,auxvar,units)
-    end
-
-    return auxvariable
-end
-
-"""
-    br_load_auxvariable(
-        expname ::String,
-        snap    ::Integer,
-        expdir  ::String,
-        auxvar  ::String,
-        precision::DataType=Float32;
-        units::String="none"
-        )
-Reads a single axiliary variable (`auxvar`) of a single simulation
-snapshot `snap`.
-Assumes single floating point precision as default. Can convert variable to si
-or cgs units by passing  `units="si"` or `units="cgs"`.
-"""
-function br_load_auxvariable(
-    expname ::String,
-    snap    ::Integer,
-    expdir  ::String,
-    auxvar  ::String,
-    precision::DataType=Float32;
-    units::String="none",
-    slicex::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
-    slicey::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
-    slicez::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[]
-    )
-    datadims = 3
-
-    # Parse filenames
-    isnap = "_"*lpad(snap,3,"0")
-    basename = joinpath(expdir,expname*isnap)
-    idl_filename  = string(basename, ".idl")
-    params = br_read_params(idl_filename)
-
-    snapsize, _, numauxvars = get_snapsize_and_numvars(params)
-    auxvarnr = get_auxvarnr(params, auxvar)
-    # Calculate offset in file
-    offset = get_variable_offset_in_file(precision, snapsize, auxvarnr)
-
-    isempty(slicex) && ( slicex = 1:snapsize[1] )
-    isempty(slicey) && ( slicey = 1:snapsize[2] )
-    isempty(slicez) && ( slicez = 1:snapsize[3] )
-
-    # Loop through all snapshots and load variable
-    numsnaps = length(snap)
-    auxvariable = zeros(precision, length(slicex), length(slicey), length(slicez))
-
-    aux_filename = string(basename, ".aux")
-    file = open(aux_filename)
-    # Use Julia standard-library memory-mapping to extract file values
-    auxvariable[:,:,:] = mmap(file,
-                              Array{precision, datadims},
-                              snapsize,
-                              offset)[slicex,slicey,slicez]
-    close(file)
 
     if units != "none"
         convert_units!(auxvariable,auxvar,units)
@@ -713,26 +632,30 @@ function get_var(
     slicez::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[]
     )
 
+
+    idl_file = string(expname,"_",lpad(snap,3,"0"),".idl")
+    params = br_read_params(joinpath(expdir,idl_file))
+
     if variable in keys(primary_vars)
-        var = br_load_snapvariable(expname,snap,expdir,variable,precision,
+        filename = string(expname,"_",snap,".snap")
+        filename = joinpath(expdir,filename)
+        var = br_load_snapvariable(filename,params,variable,precision,
             units=units,slicex=slicex,slicey=slicey,slicez=slicez)
-    else
-        idl_file = string(expname,"_",lpad(snap,3,"0"),".idl")
-        params = br_read_params(joinpath(expdir,idl_file))
-
-        aux_vars = split(params["aux"])
-
-        if variable in aux_vars
-            var = br_load_auxvariable(expname,snap,expdir,variable,precision,
-                units=units,slicex=slicex,slicey=slicey,slicez=slicez)       
-        elseif variable == "t"
-            var = params["t"]
-            if units != "none"
-                var = convert_snaptime(var)
-            end
-        else
-            throw(ErrorException("Variable $variable does not exist"))
+            
+    elseif variable in split(params["aux"])
+        filename = string(expname,"_",snap,".aux")
+        filename = joinpath(expdir,filename)
+        var = br_load_auxvariable(filename,params,variable,precision,
+            units=units,slicex=slicex,slicey=slicey,slicez=slicez)
+    
+    elseif variable == "t"
+        var = params["t"]
+        if units != "none"
+            var = convert_snaptime(var)
         end
+    
+    else
+        throw(ErrorException("Variable $variable does not exist"))
     end
     
     return var
