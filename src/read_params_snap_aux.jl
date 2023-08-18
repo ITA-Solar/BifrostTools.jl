@@ -295,9 +295,9 @@ end
         variable ::String,
         precision::DataType=Float32;
         units::String="none",
-        slicex::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
-        slicey::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
-        slicez::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[]
+        slicex::AbstractVector{<:Integer}=Int[],
+        slicey::AbstractVector{<:Integer}=Int[],
+        slicez::AbstractVector{<:Integer}=Int[]
         )
 Reads a single `variable` of the Bifrost snapshot `file_name`.
 Assumes single floating point precision as default.
@@ -322,9 +322,9 @@ function br_load_snapvariable(
     variable ::String,
     precision::DataType=Float32;
     units::String="none",
-    slicex::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
-    slicey::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
-    slicez::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[]
+    slicex::AbstractVector{<:Integer}=Int[],
+    slicey::AbstractVector{<:Integer}=Int[],
+    slicez::AbstractVector{<:Integer}=Int[]
     )
     datadims = 3 # 3 spatial dimensions and 1 variable dimension
 
@@ -452,9 +452,9 @@ end # function br_load_snapvariable
         auxvar   ::String,
         precision::DataType=Float32;
         units::String="none",
-        slicex::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
-        slicey::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
-        slicez::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[]
+        slicex::AbstractVector{<:Integer}=Int[],
+        slicey::AbstractVector{<:Integer}=Int[],
+        slicez::AbstractVector{<:Integer}=Int[]
         )
 Reads a single auxiliary variable from a Bifrost ".aux"-file `file_name`. The
 snapshot parameters must be given together with a string for the aux-variable,
@@ -468,9 +468,9 @@ function br_load_auxvariable(
     auxvar::String,
     precision::DataType=Float32;
     units::String="none",
-    slicex::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
-    slicey::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
-    slicez::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[]
+    slicex::AbstractVector{<:Integer}=Int[],
+    slicey::AbstractVector{<:Integer}=Int[],
+    slicez::AbstractVector{<:Integer}=Int[]
     )
 
     datadims = 3
@@ -578,9 +578,9 @@ end
         variable::String,
         precision::DataType=Float32;
         units::String="none",
-        slicex::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
-        slicey::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
-        slicez::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[]
+        slicex::AbstractVector{<:Integer}=Int[],
+        slicey::AbstractVector{<:Integer}=Int[],
+        slicez::AbstractVector{<:Integer}=Int[]
         )
 
 Loads a variable from a simulation snapshot. Available variables
@@ -627,23 +627,24 @@ function get_var(
     variable::String,
     precision::DataType=Float32;
     units::String="none",
-    slicex::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
-    slicey::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[],
-    slicez::Union{Vector{<:Integer}, UnitRange{<:Integer}}=Int[]
+    slicex::AbstractVector{<:Integer}=Int[],
+    slicey::AbstractVector{<:Integer}=Int[],
+    slicez::AbstractVector{<:Integer}=Int[]
     )
 
 
-    idl_file = string(expname,"_",lpad(snap,3,"0"),".idl")
+    isnap = lpad(snap,3,"0")
+    idl_file = string(expname,"_",isnap,".idl")
     params = br_read_params(joinpath(expdir,idl_file))
 
     if variable in keys(primary_vars)
-        filename = string(expname,"_",snap,".snap")
+        filename = string(expname,"_",isnap,".snap")
         filename = joinpath(expdir,filename)
         var = br_load_snapvariable(filename,params,variable,precision,
             units=units,slicex=slicex,slicey=slicey,slicez=slicez)
             
     elseif variable in split(params["aux"])
-        filename = string(expname,"_",snap,".aux")
+        filename = string(expname,"_",isnap,".aux")
         filename = joinpath(expdir,filename)
         var = br_load_auxvariable(filename,params,variable,precision,
             units=units,slicex=slicex,slicey=slicey,slicez=slicez)
