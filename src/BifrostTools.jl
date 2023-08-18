@@ -24,7 +24,7 @@ export br_load_snapdata
 export br_load_auxdata
 export br_load_snapvariable
 export br_load_auxvariable
-export get_var
+export get_var, get_staggered_var
 
 export br_arr_ffile
 export br_heatmap_xy

@@ -333,11 +333,6 @@ function br_load_snapvariable(
     # Do slicing or not (returns the mmap)
     slicing = true
     ( isempty(slicex) && isempty(slicey) && isempty(slicez) ) && ( slicing = false )
-    
-
-    isempty(slicex) && ( slicex = 1:snapsize[1] )
-    isempty(slicey) && ( slicey = 1:snapsize[2] )
-    isempty(slicez) && ( slicez = 1:snapsize[3] )
 
     # Get variable number/position in snapdata from argument.
     varnr = get_snapvarnr(variable)
@@ -349,25 +344,32 @@ function br_load_snapvariable(
 
     # Use Julia standard-library memory-mapping to extract file values
     if slicing
+        isempty(slicex) && ( slicex = 1:snapsize[1] )
+        isempty(slicey) && ( slicey = 1:snapsize[2] )
+        isempty(slicez) && ( slicez = 1:snapsize[3] )
         # slice the variable
         snapvariable = mmap(file,
                             Array{precision, datadims}, 
                             snapsize, 
                             offset)[slicex,slicey,slicez]
+        
+        if units != "none"
+            convert_units!(snapvariable, variable, units)
+        end
     else
         # do not slice the variable
         snapvariable = mmap(file,
                             Array{precision, datadims}, 
                             snapsize, 
                             offset)
+        
+        if units != "none"
+            # Allocate the variable before changing units
+            convert_units!(snapvariable[:,:,:], variable, units)
+        end
     end
 
     close(file)
-
-    # converts units, this allocates the variable to memory
-    if units != "none"
-        convert_units!(snapvariable, variable, units)
-    end
 
     return snapvariable
 end # function br_load_snapvariable
@@ -479,10 +481,6 @@ function br_load_auxvariable(
     # Do slicing or not (returns the mmap)
     slicing = true
     ( isempty(slicex) && isempty(slicey) && isempty(slicez) ) && ( slicing = false )
-    
-    isempty(slicex) && ( slicex = 1:snapsize[1] )
-    isempty(slicey) && ( slicey = 1:snapsize[2] )
-    isempty(slicez) && ( slicez = 1:snapsize[3] )
 
     auxvarnr = get_auxvarnr(params, auxvar)
     # Load file and auxvariable
@@ -491,24 +489,32 @@ function br_load_auxvariable(
 
     # Use Julia standard-library memory-mapping to extract file values
     if slicing
+        isempty(slicex) && ( slicex = 1:snapsize[1] )
+        isempty(slicey) && ( slicey = 1:snapsize[2] )
+        isempty(slicez) && ( slicez = 1:snapsize[3] )
         # slice the variable
         auxvariable = mmap(file,
                            Array{precision, datadims}, 
                            snapsize, 
                            offset)[slicex,slicey,slicez]
+        
+        if units != "none"
+            convert_units!(auxvariable, auxvar, units)
+        end
     else
         # do not slice the variable
         auxvariable = mmap(file,
                            Array{precision, datadims}, 
                            snapsize, 
                            offset)
+        
+        if units != "none"
+            # Allocate the variable before changing units
+            convert_units!(auxvariable[:,:,:], auxvar, units)
+        end
     end
 
     close(file)
-
-    if units != "none"
-        convert_units!(auxvariable, auxvar, units)
-    end
 
     return auxvariable
 end # function br_load_auxdata
@@ -660,4 +666,82 @@ function get_var(
     end
     
     return var
+end
+
+"""
+    function get_staggered_var(expname::String,
+        snap::Integer,
+        expdir::String,
+        variable::String,
+        precision::DataType=Float32;
+        units::String="none",
+        direction::String="zup",
+        periodic::Bool=false,
+        order::Int=6,
+        slicex::AbstractVector{<:Integer}=Int[],
+        slicey::AbstractVector{<:Integer}=Int[],
+        slicez::AbstractVector{<:Integer}=Int[]
+        )
+"""
+function get_staggered_var(expname::String,
+    snap::Integer,
+    expdir::String,
+    variable::String,
+    precision::DataType=Float32;
+    units::String="none",
+    direction::String="zup",
+    periodic::Bool=false,
+    order::Int=6,
+    slicex::AbstractVector{<:Integer}=Int[],
+    slicey::AbstractVector{<:Integer}=Int[],
+    slicez::AbstractVector{<:Integer}=Int[]
+    )
+
+    shift_functions = Dict(
+        "xdn" => br_xup, 
+        "xup" => br_xdn,
+        "ydn" => br_yup, 
+        "yup" => br_ydn, 
+        "zdn" => br_zup, 
+        "zup" => br_zdn
+    )
+
+    allowed_directions = collect(keys(shift_functions))
+    if ! ( direction in allowed_directions )
+        throw(ErrorException("$direction not a valid keyword argument, use "*
+        "one of the following: $((allowed_directions[1:end-1] .* ", ")...)"*
+        "$(allowed_directions[end])."))
+    end
+
+    shift = shift_functions[direction]
+
+    if ! ( variable in keys(primary_vars) )
+        throw(ErrorException("Variable $variable is not a primary variable"))
+    end
+
+
+    # io stuff
+    isnap = lpad(snap,3,"0")
+    idl_file = string(expname,"_",isnap,".idl")
+    params = br_read_params(joinpath(expdir,idl_file))
+    filename = string(expname,"_",isnap,".snap")
+    filename = joinpath(expdir,filename)
+
+    # Do slicing or not (returns the mmap)
+    slicing = true
+    ( isempty(slicex) && isempty(slicey) && isempty(slicez) ) && ( slicing = false )
+    
+    if slicing == false
+        # load the entire variable and shift it in the desired direction
+        var = br_load_snapvariable(filename,params,variable,precision,
+            units=units)
+        var = shift(var,periodic,order)
+    else
+        isempty(slicex) && ( slicex = 1:snapsize[1] )
+        isempty(slicey) && ( slicey = 1:snapsize[2] )
+        isempty(slicez) && ( slicez = 1:snapsize[3] )
+    end
+
+    return var
+
 end
