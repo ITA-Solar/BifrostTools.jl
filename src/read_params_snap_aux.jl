@@ -698,12 +698,12 @@ function get_staggered_var(expname::String,
     )
 
     shift_functions = Dict(
-        "xdn" => br_xup, 
-        "xup" => br_xdn,
-        "ydn" => br_yup, 
-        "yup" => br_ydn, 
-        "zdn" => br_zup, 
-        "zup" => br_zdn
+        "xdn" => br_xdn, 
+        "xup" => br_xup,
+        "ydn" => br_ydn, 
+        "yup" => br_yup, 
+        "zdn" => br_zdn, 
+        "zup" => br_zup
     )
 
     allowed_directions = collect(keys(shift_functions))
@@ -719,7 +719,6 @@ function get_staggered_var(expname::String,
         throw(ErrorException("Variable $variable is not a primary variable"))
     end
 
-
     # io stuff
     isnap = lpad(snap,3,"0")
     idl_file = string(expname,"_",isnap,".idl")
@@ -727,19 +726,45 @@ function get_staggered_var(expname::String,
     filename = string(expname,"_",isnap,".snap")
     filename = joinpath(expdir,filename)
 
-    # Do slicing or not (returns the mmap)
     slicing = true
     ( isempty(slicex) && isempty(slicey) && isempty(slicez) ) && ( slicing = false )
     
-    if slicing == false
+    if slicing
+        if ( direction == "xup" ) || ( direction == "xdn" )
+            if isempty(slicex)
+                # All indices in 'x' are loaded, don't worry about slicing
+                var = br_load_snapvariable(filename,params,variable,precision,
+                    units=units,slicey=slicey,slicez=slicez)
+                var = shift(var,periodic,order)
+            else
+                throw(ErrorException("Loading a plane and interpolating in the plane's normal direction is not implemented"))
+            end
+        elseif ( direction == "yup" ) || ( direction == "ydn" )
+            if isempty(slicey)
+                # All indices in 'y' are loaded, don't worry about slicing
+                var = br_load_snapvariable(filename,params,variable,precision,
+                    units=units,slicex=slicex,slicez=slicez)
+                var = shift(var,periodic,order)
+            else
+                throw(ErrorException("Loading a plane and interpolating in the plane's normal direction is not implemented"))
+            end
+        else
+            if isempty(slicez)
+                # All indices in 'z' are loaded, don't worry about slicing
+                var = br_load_snapvariable(filename,params,variable,precision,
+                    units=units,slicex=slicex,slicey=slicey)
+                var = shift(var,periodic,order)
+            else
+                var = br_load_snapvariable(filename,params,variable,precision,
+                    units=units,slicex=slicex,slicey=slicey)
+                var = shift(var,slicez,periodic,order)
+            end
+        end
+    else
         # load the entire variable and shift it in the desired direction
         var = br_load_snapvariable(filename,params,variable,precision,
             units=units)
         var = shift(var,periodic,order)
-    else
-        isempty(slicex) && ( slicex = 1:snapsize[1] )
-        isempty(slicey) && ( slicey = 1:snapsize[2] )
-        isempty(slicez) && ( slicez = 1:snapsize[3] )
     end
 
     return var
