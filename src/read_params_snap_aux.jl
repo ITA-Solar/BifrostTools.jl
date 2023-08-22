@@ -364,7 +364,6 @@ function br_load_snapvariable(
                             offset)
         
         if units != "none"
-            println("convert")
             # Allocate the variable before changing units
             snapvariable = convert_units(snapvariable, variable, units)
         end
@@ -661,7 +660,7 @@ function get_var(
     
     elseif variable == "t"
         var = params["t"]
-        if units == "si" && units == "cgs"
+        if units == "si" || units == "cgs"
             var = convert_snaptime(var)
         end
     
@@ -809,7 +808,10 @@ function get_staggered_var(expname::String,
                     units=units,slicey=slicey,slicez=slicez)
                 var = shift(var,periodic,order)
             else
-                throw(ErrorException("Loading a plane and interpolating in the plane's normal direction is not implemented"))
+                var = br_load_snapvariable(filename,params,variable,precision,
+                    units="none",slicez=slicez,slicey=slicey)
+                var = shift(var,slicez,periodic,order)
+                convert_units!(var,variable,units)
             end
         elseif ( direction == "yup" ) || ( direction == "ydn" )
             if isempty(slicey)
@@ -828,8 +830,9 @@ function get_staggered_var(expname::String,
                 var = shift(var,periodic,order)
             else
                 var = br_load_snapvariable(filename,params,variable,precision,
-                    units=units,slicex=slicex,slicey=slicey)
+                    units="none",slicex=slicex,slicey=slicey)
                 var = shift(var,slicez,periodic,order)
+                convert_units!(var,variable,units)
             end
         end
     else
