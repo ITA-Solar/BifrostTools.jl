@@ -220,17 +220,94 @@ function br_xup(
                 end
             end
             if periodic
-                out[:, :, end] .= 0.5f0 .* (arr[:, :, 1] .+ arr[:, :, end])
+                out[end, :, :] .= 0.5f0 .* (arr[1, :, ;] .+ arr[end, :, :])
             else
-                out[:, :, end] .= arr[:, :, end]
+                out[end, :, :] .= arr[end, :, :]
             end
             return out
         end
     end
 end
 
+function br_xup(
+    arr::Array{T,3},
+    slicex::AbstractVector{<:Integer},
+    periodic::Bool=true,
+    order::Int=6
+) where {T<:AbstractFloat}
+
+    n = size(arr)
+    @assert length(n) == 3
+    if (n[1] == 1)
+        return arr[:, :, :]
+    else
+        if order == 6
+
+            c = 3.0 / 256.0
+            b = -25.0 / 256.0
+            a = 0.5 - b - c
+
+            # inflate matrix in x direction
+
+            out = similar(arr, (length(slicex), n[2], n[3]))
+            tmp = zeros(T, (n[1] + 5, n[2], n[3]))
+            tmp[3:n[1]+2, :, :] .= arr[:, :, :]
+
+            if periodic
+                tmp[1:2, :, :] .= arr[end-1:end, :, :]
+                tmp[n[1]+3:end, :, :] .= arr[1:3, :, :]
+            else
+                # extrapolate bottom
+                for i = 1:2
+                    @inbounds tmp[3-i, :, :] = 2.0 .* tmp[3, :, :] .- tmp[3+i, :, :]
+                end
+                # extrapolate top
+                for i = 1:3
+                    @inbounds tmp[n[1]+2+i, :, :] = 2.0 .* tmp[n[1]+2, :, :] .- tmp[n[1]+2-i, :, :]
+                end
+            end
+
+            slicex = slicex .+ 2
+            Threads.@threads for k = 1:n[3]
+                for j = 1:n[2]
+                    for (i,slice) in collect(enumerate(slicex))
+                        @inbounds out[i, j, k] =
+                            a * (tmp[slice, j, k] + tmp[slice+1, j, k]) +
+                            b * (tmp[slice-1, j, k] + tmp[slice+2, j, k]) +
+                            c * (tmp[slice-2, j, k] + tmp[slice+3, j, k])
+                    end
+                end
+            end
+            return out
+        else # order 2
+            out = similar(arr, (length(slicex), n[2], n[3]))
+            
+            if n[1] in slicex
+                index = findfirst(x->x==n[1], slicex)
+                if periodic
+                    out[index, :, :] .= 0.5f0 .* (arr[1, :, ;] .+ arr[end, :, :])
+                else
+                    out[index, :, :] .= arr[end, :, :]
+                end
+            end
+                
+            Threads.@threads for k = 1:n[3]
+                for j = 1:n[2]
+                    for (i,slice) in collect(enumerate(slicex))
+                        if i < n[1]
+                            @inbounds out[i, j, k] = 0.5f0 * (arr[slice, j, k] + arr[slice+1, j, k])
+                        end
+                    end
+                end
+            end
+            return out
+        end
+    end
+end
+
+
 """
-	br_dzup(
+	br_dxup(
 		arr::Array{T,3},
 		dz::Vector{T}, 
 		periodic::Bool=false, 
@@ -303,7 +380,7 @@ function br_dxup(
                 end
             end
             if periodic
-                out[:, :, end] .= dx[end] .* (arr[:, :, 1] .- arr[:, :, end])
+                out[end, :, ;] .= dx[end] .* (arr[1, :, :] .- arr[end, :, :])
             end
             return out
         end
@@ -378,14 +455,91 @@ function br_xdn(
                 end
             end
             if periodic
-                out[:, :, 1] .= 0.5f0 .* (arr[:, :, end] .+ arr[:, :, 1])
+                out[1, :, :] .= 0.5f0 .* (arr[end, :, :] .+ arr[1, :, :])
             else
-                out[:, :, 1] .= arr[:, :, 1]
+                out[1, :, :] .= arr[1, :, :]
             end
             return out
         end
     end
 end
+
+function br_xdn(
+    arr::Array{T,3},
+    slicex::AbstractVector{<:Integer},
+    periodic::Bool=true,
+    order::Int=6
+) where {T<:AbstractFloat}
+
+    n = size(arr)
+    @assert length(n) == 3
+    if (n[1] == 1)
+        return arr[:, :, :]
+    else
+
+        if order == 6
+            c = 3.0 / 256.0
+            b = -25.0 / 256.0
+            a = 0.5 - b - c
+
+            # inflate matrix in x direction
+
+            out = similar(arr, (length(slicex), n[2], n[3]))
+            tmp = zeros(T, (n[1] + 5, n[2], n[3]))
+            tmp[4:n[1]+3, :, :] .= arr[:, :, :]
+
+            if periodic
+                tmp[1:3, :, :] .= arr[end-2:end, :, :]
+                tmp[n[1]+4:end, :, :] .= arr[1:2, :, :]
+            else
+                # extrapolate bottom
+                for i = 1:3
+                    @inbounds tmp[4-i, :, :] = 2.0 .* tmp[4, :, :] .- tmp[4+i, :, :]
+                end
+                # extrapolate top
+                for i = 1:2
+                    @inbounds tmp[n[1]+3+i, :, :] = 2.0 .* tmp[n[1]+3, :, :] .- tmp[n[1]+3-i, :, :]
+                end
+            end
+
+            slicex = slicex .+ 3
+            Threads.@threads for k=1:n[3]
+                for j = 1:n[2]
+                    for (i,slice) in collect(enumerate(slicex))
+                        @inbounds out[i, j, k] =
+                            a * (tmp[slice-1, j, k] + tmp[slice, j, k]) +
+                            b * (tmp[slice-2, j, k] + tmp[slice+1, j, k]) +
+                            c * (tmp[slice-3, j, k] + tmp[slice+2, j, k])
+                    end
+                end
+            end
+            return out
+        else # order 2
+            out = similar(arr, (length(slicex), n[2], n[3]))
+
+            if 1 in slicex
+                index = findfirst(x->x==1, slicex)
+                if periodic
+                    out[index, :, :] .= 0.5f0 .* (arr[end, :, :] .+ arr[1, :, :])
+                else
+                    out[index, :, :] .= arr[1, :, :]
+                end
+            end
+
+            Threads.@threads for (k,slice) in collect(enumerate(slicex))
+                for j = 1:n[2]
+                    for (i,slice) in collect(enumerate(slicex))
+                        if i > 1
+                            @inbounds out[i, j, k] = 0.5f0 * (arr[slice-1, j, k] + arr[slice, j, k])
+                        end
+                    end
+                end
+            end
+            return out
+        end
+    end
+end
+
 
 """
 	br_dxdn(
@@ -546,6 +700,83 @@ function br_yup(
     end
 end
 
+function br_yup(
+    arr::Array{T,3},
+    slicey::AbstractVector{<:Integer},
+    periodic::Bool=true,
+    order::Int=6
+) where {T<:AbstractFloat}
+
+    n = size(arr)
+    @assert length(n) == 3
+    if (n[2] == 1)
+        return arr[:, :, :]
+    else
+
+        if order == 6
+
+            c = 3.0 / 256.0
+            b = -25.0 / 256.0
+            a = 0.5 - b - c
+
+            # inflate matrix in x direction
+
+            out = similar(arr, (n[1], length(slicey), n[3]))
+            tmp = zeros(T, (n[1], n[2] + 5, n[3]))
+            tmp[:, 3:n[2]+2, :] .= arr[:, :, :]
+
+            if periodic
+                tmp[:, 1:2, :] .= arr[:, end-1:end, :]
+                tmp[:, n[2]+3:end, :] .= arr[:, 1:3, :]
+            else
+                # extrapolate bottom
+                for j = 1:2
+                    @inbounds tmp[:, 3-j, :] = 2.0 .* tmp[:, 3, :] .- tmp[:, 3+j, :]
+                end
+                # extrapolate top
+                for j = 1:3
+                    @inbounds tmp[:, n[2]+2+j, :] = 2.0 .* tmp[:, n[2]+2, :] .- tmp[:, n[2]+2-j, :]
+                end
+            end
+
+            slicey = slicey .+ 2
+            Threads.@threads for k = 1:n[3]
+                for (j,slice) in collect(enumerate(slicey))
+                    for i = 1:n[1]
+                        @inbounds out[i, j, k] =
+                            a * (tmp[i, slice, k] + tmp[i, slice+1, k]) +
+                            b * (tmp[i, slice-1, k] + tmp[i, slice+2, k]) +
+                            c * (tmp[i, slice-2, k] + tmp[i, slice+3, k])
+                    end
+                end
+            end
+            return out
+        else # order 2
+            out = similar(arr, (n[1], length(slicey), n[3]))
+            
+            if n[2] in slicey
+                index = findfirst(x->x==n[2], slicey)
+                if periodic
+                    out[:, index, :] .= 0.5f0 .* (arr[:, end, :] .+ arr[:, 1, :])
+                else
+                    out[:, index, :] .= arr[:, end, :]
+                end
+            end
+
+            Threads.@threads for k = 1:n[3]
+                for (j,slice) in collect(enumerate(slicey))
+                    if j < n[2]
+                        for i = 1:n[1]
+                            @inbounds out[i, j, k] = 0.5f0 * (arr[i, slice, k] + arr[i, slice+1, k])
+                        end
+                    end
+                end
+            end
+            return out
+        end
+    end
+end
+
 """
 	br_dyup(
 		arr::Array{T,3},
@@ -699,6 +930,84 @@ function br_ydn(
             else
                 out[:, 1, :] .= arr[:, 1, :]
             end
+            return out
+        end
+    end
+end
+
+
+function br_ydn(
+	arr::Array{T,3}, 
+    slicey::AbstractVector{<:Integer},
+	periodic::Bool=true, 
+	order::Int=6
+) where {T<:AbstractFloat}
+
+    n = size(arr)
+    @assert length(n) == 3
+    if (n[2] == 1)
+        return arr[:, :, :]
+    else
+        if order == 6
+
+            c = 3.0 / 256.0
+            b = -25.0 / 256.0
+            a = 0.5 - b - c
+
+            # inflate matrix in x direction
+
+            out = similar(arr, (n[1], length(slicey), n[3]))
+            tmp = zeros(T, (n[1], n[2] + 5, n[3]))
+            tmp[:, 4:n[2]+3, :] .= arr[:, :, :]
+
+            if periodic
+                tmp[:, 1:3, :] .= arr[:, end-2:end, :]
+                tmp[:, n[2]+4:end, :] .= arr[:, 1:2, :]
+            else
+                # extrapolate bottom
+                for j = 1:3
+                    @inbounds tmp[:, 4-j, :] .= 2.0 .* tmp[:, 4, :] .- tmp[:, 4+j, :]
+                end
+                # extrapolate top
+                for j = 1:2
+                    @inbounds tmp[:, n[2]+3+j, :] .= 2.0 .* tmp[:, n[2]+3, :] .- tmp[:, n[2]+3-j, :]
+                end
+            end
+
+            slicey = slicey .+ 3
+            Threads.@threads for k = 1:n[3]
+                for j = 4:n[2]+3
+                    @simd for i = 1:n[1]
+                        @inbounds out[i, j, k] =
+                            a * (tmp[i, j-1, k] + tmp[i, j, k]) +
+                            b * (tmp[i, j-2, k] + tmp[i, j+1, k]) +
+                            c * (tmp[i, j-3, k] + tmp[i, j+2, k])
+                    end
+                end
+            end
+            return out[:, 4:end-2, :]
+        else # order 2
+            out = similar(arr, (n[1], length(slicey), n[3]))
+            
+            if 1 in slicey
+                index = findfirst(x->x==n[2], slicey)
+                if periodic
+                    out[:, index, :] .= 0.5f0 .* (arr[:, end, :] .+ arr[:, 1, :])
+                else
+                    out[:, index, :] .= arr[:, end, :]
+                end
+            end
+
+            Threads.@threads for k = 1:n[3]
+                for (j,slice) in collect(enumerate(slicey))
+                    if j > 1
+                        for i = 1:n[1]
+                            @inbounds out[i, j, k] = 0.5f0 * (arr[i, slice-1, k] + arr[i, slice, k])
+                        end
+                    end
+                end
+            end
+
             return out
         end
     end
@@ -926,9 +1235,11 @@ function br_zup(
             end
             
             Threads.@threads for (k,slice) in collect(enumerate(slicez))
-                for j = 1:n[2]
-                    @simd for i = 1:n[1]
-                        @inbounds out[i, j, k] = 0.5f0 * (arr[i, j, slice] + arr[i, j, slice+1])
+                if k < n[3]
+                    for j = 1:n[2]
+                        @simd for i = 1:n[1]
+                            @inbounds out[i, j, k] = 0.5f0 * (arr[i, j, slice] + arr[i, j, slice+1])
+                        end
                     end
                 end
             end
@@ -1147,7 +1458,7 @@ function br_zdn(
             out = similar(arr, (n[1], n[2], length(slicez)))
             
             if 1 in slicez
-                index = findfirst(x->x==n[3], slicez)
+                index = findfirst(x->x==1, slicez)
                 if periodic
                     out[:, :, index] .= 0.5f0 .* (arr[:, :, end] .+ arr[:, :, 1])
                 else
@@ -1157,9 +1468,11 @@ function br_zdn(
             end
             
             Threads.@threads for (k,slice) in collect(enumerate(slicez))
-                for j = 1:n[2]
-                    @simd for i = 1:n[1]
-                        @inbounds out[i, j, k] = 0.5f0 * (arr[i, j, slice-1] + arr[i, j, slice])
+                if k > 1
+                    for j = 1:n[2]
+                        @simd for i = 1:n[1]
+                            @inbounds out[i, j, k] = 0.5f0 * (arr[i, j, slice-1] + arr[i, j, slice])
+                        end
                     end
                 end
             end
