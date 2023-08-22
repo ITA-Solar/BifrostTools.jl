@@ -364,8 +364,9 @@ function br_load_snapvariable(
                             offset)
         
         if units != "none"
+            println("convert")
             # Allocate the variable before changing units
-            convert_units!(snapvariable[:,:,:], variable, units)
+            snapvariable = convert_units(snapvariable, variable, units)
         end
     end
 
@@ -509,8 +510,8 @@ function br_load_auxvariable(
                            offset)
         
         if units != "none"
-            # Allocate the variable before changing units
-            convert_units!(auxvariable[:,:,:], auxvar, units)
+            # Allocate the variable to change units
+            auxvariable = convert_units!(auxvariable, auxvar, units)
         end
     end
 
@@ -589,7 +590,10 @@ end
         slicez::AbstractVector{<:Integer}=Int[]
         )
 
-Loads a variable from a simulation snapshot. Available variables
+Loads a variable from a simulation snapshot. `snap` can either be an integer 
+snapshot or an integer list of snapshots. 
+
+Available variables
 
 The primary variables:
 - "r":  density
@@ -657,12 +661,80 @@ function get_var(
     
     elseif variable == "t"
         var = params["t"]
-        if units != "none"
+        if units == "si" && units == "cgs"
             var = convert_snaptime(var)
         end
     
     else
         throw(ErrorException("Variable $variable does not exist"))
+    end
+    
+    return var
+end
+
+function get_var(
+    expname::String,
+    snaps::AbstractVector{<:Integer},
+    expdir::String,
+    variable::String,
+    precision::DataType=Float32;
+    units::String="none",
+    slicex::AbstractVector{<:Integer}=Int[],
+    slicey::AbstractVector{<:Integer}=Int[],
+    slicez::AbstractVector{<:Integer}=Int[]
+    )
+
+    isnap = lpad(snaps[1],3,"0")
+    idl_file = string(expname,"_",isnap,".idl")
+    params = br_read_params(joinpath(expdir,idl_file))
+
+    filename = joinpath(expdir,expname*"_")
+    
+    if variable in keys(primary_vars)
+        load_var = br_load_snapvariable
+        file_ext = ".snap"
+    elseif variable in split(params["aux"])
+        load_var = br_load_auxvariable
+        file_ext = ".aux"
+    elseif variable == "t"
+        var = Vector{Float64}(undef, length(snaps))
+        file_ext = ".idl"
+        
+        # Load the variable directly from params
+        Threads.@threads for (i,snap) in collect(enumerate(snaps))
+            
+            isnap = lpad(snap,3,"0")
+            idl_file = string(filename,isnap,file_ext)
+            params = br_read_params(idl_file) 
+            
+            time = params["t"]
+            
+            if ( units == "si" ) || ( units == "cgs" )
+                time = convert_snaptime(time)
+            end
+            var[i] = time
+        end
+
+        return var
+    else
+        throw(ErrorException("Variable $variable does not exist"))
+    end
+    
+    # Get spatial size
+    mx, my, mz = get_dims(slicex, slicey, slicez, params)
+    
+    # Allocate space for variable
+    var = Array{precision}(undef, mx, my, mz, length(snaps))
+
+    # Loop over snapshots
+    Threads.@threads for (i,snap) in collect(enumerate(snaps))
+        isnap = lpad(snap,3,"0")
+        idl_file = string(filename,isnap,".idl")
+        params = br_read_params(idl_file)        
+        tmp_file = string(filename,isnap,file_ext)
+
+        var[:,:,:,i] = load_var(tmp_file,params,variable,precision,
+            units=units,slicex=slicex,slicey=slicey,slicez=slicez)
     end
     
     return var

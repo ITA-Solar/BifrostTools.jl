@@ -85,6 +85,27 @@ function convert_units!(
     end
 end
 
+function convert_units(
+    snapvariable::AbstractArray, 
+    variable::String, 
+    unit_conversion::String
+    )
+
+    if unit_conversion=="cgs"
+        if variable != "tg"
+            snapvariable = snapvariable .* cgs_params[variable]
+        end
+        
+    elseif unit_conversion=="si"
+        if variable != "tg"
+            snapvariable = snapvariable .* si_params[variable]
+        end
+    
+    else
+        throw(ErrorException("Unit conversion $unit_conversion does not exits"))
+    end
+end
+
 """
     convert_time(t::AbstractFloat)
 
