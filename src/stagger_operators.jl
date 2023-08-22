@@ -220,7 +220,7 @@ function br_xup(
                 end
             end
             if periodic
-                out[end, :, :] .= 0.5f0 .* (arr[1, :, ;] .+ arr[end, :, :])
+                out[end, :, :] .= 0.5f0 .* (arr[1, :, :] .+ arr[end, :, :])
             else
                 out[end, :, :] .= arr[end, :, :]
             end
@@ -285,7 +285,7 @@ function br_xup(
             if n[1] in slicex
                 index = findfirst(x->x==n[1], slicex)
                 if periodic
-                    out[index, :, :] .= 0.5f0 .* (arr[1, :, ;] .+ arr[end, :, :])
+                    out[index, :, :] .= 0.5f0 .* (arr[1, :, :] .+ arr[end, :, :])
                 else
                     out[index, :, :] .= arr[end, :, :]
                 end
@@ -380,7 +380,7 @@ function br_dxup(
                 end
             end
             if periodic
-                out[end, :, ;] .= dx[end] .* (arr[1, :, :] .- arr[end, :, :])
+                out[end, :, :] .= dx[end] .* (arr[1, :, :] .- arr[end, :, :])
             end
             return out
         end
