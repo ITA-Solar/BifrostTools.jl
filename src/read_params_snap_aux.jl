@@ -518,19 +518,12 @@ function br_load_auxvariable(
 end
 
 """
-    function get_var(
-        expname::String,
-        snap::Integer,
-        expdir::String,
-        variable::String,
-        precision::DataType=Float32;
-        units::String="none",
-        slicex::AbstractVector{<:Integer}=Int[],
-        slicey::AbstractVector{<:Integer}=Int[],
-        slicez::AbstractVector{<:Integer}=Int[]
+    get_var(
+        xp::BifrostExperiment,
+        snap::Union{<:Integer, AbstractVector{<:Integer}},
+        variable::String
         )
-
-Loads a variable from a simulation snapshot. `snap` can either be an integer 
+ Loads a variable from a simulation snapshot. `snap` can either be an integer 
 snapshot or an integer list of snapshots. 
 
 Available variables
@@ -551,7 +544,8 @@ auxilliary variables (variables in params["aux"]):
 - "p": pressure
 - "tg": gas temperature
     ...
-
+___
+OPTIONAL KEYWORD-ARGUMENTS
 Converts variables to "si" or "cgs" units: `units="si"` or `units="cgs"`.
 
 To load a slice of the variable, give e.g. `slicex=[32, 410]` or `slicey=40:90`
@@ -563,19 +557,31 @@ exp_name = "cb24oi"
 exp_dir = "/mn/stornext/d21/RoCS/matsc/3d/run/cb24oi"
 snap = 700
 
+xp = BifrostExperiment(expname, expdir)
+
 # Load pressude for the full cube in si units
-pressure = get_var(expname, snap, expdir, "p", units="si")
+pressure = get_var(xp, snap, "p"; units="si")
 
 # Load gas density in a slize along the xy-plane in cgs units
-rho = get_var(expname, snap, expdir, "r", units="cgs", slicez=[100])
+rho = get_var(xp, snap, "r"; units="cgs", slicez=[100])
 ```
 """
+function get_var(
+    xp::BifrostExperiment,
+    snap::Union{<:Integer, AbstractVector{<:Integer}},
+    variable::String,
+    kwargs...
+    )
+    return get_var(xp.expname, snap, xp.expdir, variable, kwargs...)
+end
+
 function get_var(
     expname::String,
     snap::Integer,
     expdir::String,
-    variable::String,
-    precision::DataType=Float32;
+    variable::String
+    ;
+    precision::DataType=Float32,
     units::String="none",
     slicex::AbstractVector{<:Integer}=Int[],
     slicey::AbstractVector{<:Integer}=Int[],
@@ -616,8 +622,9 @@ function get_var(
     expname::String,
     snaps::AbstractVector{<:Integer},
     expdir::String,
-    variable::String,
-    precision::DataType=Float32;
+    variable::String
+    ;
+    precision::DataType=Float32,
     units::String="none",
     slicex::AbstractVector{<:Integer}=Int[],
     slicey::AbstractVector{<:Integer}=Int[],
@@ -684,8 +691,9 @@ end
     function get_staggered_var(expname::String,
         snap::Integer,
         expdir::String,
-        variable::String,
-        precision::DataType=Float32;
+        variable::String
+        ;
+        precision::DataType=Float32,
         units::String="none",
         direction::String="zup",
         periodic::Bool=false,
@@ -698,8 +706,9 @@ end
 function get_staggered_var(expname::String,
     snap::Integer,
     expdir::String,
-    variable::String,
-    precision::DataType=Float32;
+    variable::String
+    ;
+    precision::DataType=Float32,
     units::String="none",
     direction::String="zup",
     periodic::Bool=false,

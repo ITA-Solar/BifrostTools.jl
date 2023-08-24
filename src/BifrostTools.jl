@@ -12,6 +12,7 @@ using Mmap
 include("utils.jl")
 include("stagger_operators.jl")
 include("mesh.jl")
+include("experiment.jl")
 include("div_operators.jl")
 include("read_params_snap_aux.jl")
 include("EOS_tables.jl")
@@ -51,9 +52,10 @@ export br_mesh2file
 export br_fix_mesh 
 
 export BifrostMesh
+export BifrostExperiment
 export EOS_tables
 
-# debuggi
+# debugging
 
 export spitzer_debug_file
 
