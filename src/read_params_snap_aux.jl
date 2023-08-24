@@ -845,3 +845,79 @@ function get_staggered_var(expname::String,
     return var
 
 end
+
+function get_electron_density(
+    expname::String,
+    snap::Integer,
+    expdir::String,
+    precision::DataType=Float32;
+    units::String="si",
+    slicex::AbstractVector{<:Integer}=Int[],
+    slicey::AbstractVector{<:Integer}=Int[],
+    slicez::AbstractVector{<:Integer}=Int[],
+    rho::Array{T,3}=Float32[;;;],
+    e::Array{T,3}=Float32[;;;],
+    tabfile::String="tabparam.in"
+    ) where {T<:AbstractFloat}
+
+    qdict = Dict("ne" => "lnne",
+                 "tg" => "tgt",
+                 "pg" => "lnpg", 
+                 "kr" => "lnkr",
+                 "eps" => "epstab", 
+                 "opa" => "opatab", 
+                 "temp" => "temtab",
+                 "ent" => "enttab")
+
+    # rho in g/cm^3
+    ( isempty(rho) ) && ( rho = get_var(expname,snap,expdir,"r",
+    units="cgs",slicex=slicex,slicey=slicey,
+    slicez=slicez) )
+    
+    # internal energy in ergs 
+    ( isempty(e) ) && ( e = get_var(expname,snap,expdir,"e",
+    units="cgs",slicex=slicex,slicey=slicey,
+    slicez=slicez) )
+
+    # Calculate internal energy per mass
+    ee = e ./ rho
+    
+    # construct the EOS tables for interpolation of electron density
+    tabfile = joinpath(expdir,tabfile)
+    eos = EOS_tables(tabfile)
+
+    if maximum(rho) > eos.params["RhoMax"]
+        @printf """tab_interp: density outside table bounds.
+        Table rho max=%.3e, requested rho max=%.3e""" eos.params["RhoMax"] maximum(rho)
+    end        
+    if minimum(rho) < eos.params["RhoMin"]
+        @printf """tab_interp: density outside table bounds.
+        Table rho min=%.3e, requested rho min=%.3e""" eos.params["RhoMin"] minimum(rho)
+    end
+    
+    if maximum(ee) > eos.params["EiMax"]
+        @printf """tab_interp: density outside table bounds.
+        Table rho max=%.3e, requested rho max=%.3e""" eos.params["EiMax"] maximum(Ei)
+    end        
+    if minimum(ee) < eos.params["EiMin"]
+        @printf """tab_interp: density outside table bounds.
+        Table rho min=%.3e, requested rho min=%.3e""" eos.params["EiMin"] minimum(Ei)
+    end
+    
+    # Create interpolation table, takes the log of coordinates
+    itp_table = br_eos_interpolate(eos,3)
+
+    x = log.(ee)
+    y = log.(rho)
+
+    ne = itp_table.(x, y)
+    # take exp to remove log
+    ne = exp.(ne)
+
+    # Convert to si on request
+    if units == "si"
+        ne .*= 1f3
+    end
+
+    return ne
+end
