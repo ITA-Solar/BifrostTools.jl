@@ -5,13 +5,13 @@ Consult https://github.com/ITA-Solar/Bifrost/blob/develop/IDL/util/br_make_fits.
 
 # Simulation units
 const params = Dict(
-        "u_l" => 1e8,
-        "u_t" => 1e2,
-        "u_r" => 1e-7,
-        "u_u" => 1e6,
-        "u_p" => 1e5,
-        "u_e" => 1e5,
-        "u_B" => 1121.0
+        "u_l" => 1f8,
+        "u_t" => 1f2,
+        "u_r" => 1f-7,
+        "u_u" => 1f6,
+        "u_p" => 1f5,
+        "u_e" => 1f5,
+        "u_B" => Float32(1121)
         )
 
 # Converts from simulation units to cgs units
@@ -35,19 +35,19 @@ const cgs_params = Dict(
 # Converts from simulation units to cgs units
 const si_params = Dict(
         # pressure
-        "p" => params["u_p"]*0.1,
+        "p" => params["u_p"]*1f-1,
         # gas density
-        "r" => params["u_r"]*1e3,
+        "r" => params["u_r"]*1f3,
         # momentum
-        "px" => params["u_r"]*params["u_u"]*10,
-        "py" => params["u_r"]*params["u_u"]*10,
-        "pz" => params["u_r"]*params["u_u"]*10,
+        "px" => params["u_r"]*params["u_u"]*1f1,
+        "py" => params["u_r"]*params["u_u"]*1f1,
+        "pz" => params["u_r"]*params["u_u"]*1f1,
         # energy
-        "e" => params["u_e"]*0.1,
+        "e" => params["u_e"]*1f-1,
         # B-field
-        "bx"  => params["u_B"]*1e-4,
-        "by"  => params["u_B"]*1e-4,
-        "bz"  => params["u_B"]*1e-4
+        "bx"  => params["u_B"]*1f-4,
+        "by"  => params["u_B"]*1f-4,
+        "bz"  => params["u_B"]*1f-4
         )
 
 """
@@ -68,16 +68,12 @@ function convert_units!(
 
     if unit_conversion=="cgs"
         if variable != "tg"
-            for i in eachindex(snapvariable)
-                snapvariable[i] *= cgs_params[variable]
-            end
+            snapvariable .*= cgs_params[variable]
         end
         
     elseif unit_conversion=="si"
         if variable != "tg"
-            for i in eachindex(snapvariable)
-                snapvariable[i] *= si_params[variable]
-            end
+            snapvariable .*= si_params[variable]
         end
     
     else
