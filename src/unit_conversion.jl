@@ -77,7 +77,7 @@ function convert_units!(
         end
     
     else
-        throw(ErrorException("Unit conversion $unit_conversion does not exits"))
+        throw(ErrorException("Unit conversion '$unit_conversion' does not exits"))
     end
 end
 
@@ -98,7 +98,7 @@ function convert_units(
         end
     
     else
-        throw(ErrorException("Unit conversion $unit_conversion does not exits"))
+        throw(ErrorException("Unit conversion '$unit_conversion' does not exits"))
     end
 end
 

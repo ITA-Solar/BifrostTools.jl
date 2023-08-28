@@ -782,7 +782,9 @@ function get_staggered_var(expname::String,
                 var = br_load_snapvariable(filename,params,variable,precision,
                     units="none",slicex=slicex,slicey=slicey)
                 var = shift(var,slicez,periodic,order)
-                convert_units!(var,variable,units)
+                if units != "none"
+                    convert_units!(var,variable,units)
+                end
             end
         end
     else
@@ -864,9 +866,9 @@ function get_electron_density(
     # take exp to remove log
     ne = exp.(ne)
 
-    # Convert to si on request
+    # Convert to si on request (cm^-3 --> m^-3)
     if units == "si"
-        ne .*= 1f3
+        ne .*= 1f6
     end
 
     return ne
