@@ -48,7 +48,7 @@ struct BifrostExperiment
         params = br_read_params(params_file)
         snapsize, num_primary_vars = get_snapsize_and_numvars(params)
         
-        new(mesh, expname, expdir, snaps, snapsize, length(snaps),
+        new(mesh, expname, expdir, sort(snaps), snapsize, length(snaps),
             num_primary_vars
             )
     end
