@@ -226,3 +226,17 @@ function br_arr_ffile(file_name::String, mesh::BifrostMesh; rpos::Int, rtype=Flo
     var = read(f, rec=rpos, (rtype, (mesh.mx, mesh.my, mesh.mz)))
     return var
 end
+
+
+function make_uniform_axes(
+    mesh  ::BifrostMesh,
+    new_mx::Integer,
+    new_my::Integer,
+    new_mz::Integer,
+    )
+    # Get new mesh-axes
+    new_x = collect(LinRange(mesh.x[1], mesh.x[end], new_mx))
+    new_y = collect(LinRange(mesh.y[1], mesh.y[end], new_my))
+    new_z = collect(LinRange(mesh.z[1], mesh.z[end], new_mz))
+    return new_x, new_y, new_z
+end

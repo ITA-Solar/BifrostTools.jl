@@ -5,7 +5,7 @@ using Plots: heatmap
 using OffsetArrays
 using DelimitedFiles
 using Printf
-using Interpolations: CubicSplineInterpolation, Line
+using Interpolations
 using Base
 using Mmap
 
@@ -15,6 +15,7 @@ include("mesh.jl")
 include("experiment.jl")
 include("div_operators.jl")
 include("read_params_snap_aux.jl")
+include("write_params_snap_aux.jl")
 include("EOS_tables.jl")
 include("plotting.jl")
 include("unit_conversion.jl")
@@ -27,6 +28,9 @@ export br_load_auxdata
 export br_load_snapvariable
 export br_load_auxvariable
 export get_var, get_staggered_var, get_snap_numbers, get_electron_density
+export br_change_snap_resolution
+
+export make_uniform_axes
 
 export br_arr_ffile
 export br_heatmap_xy
