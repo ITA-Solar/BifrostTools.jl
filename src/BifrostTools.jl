@@ -1,7 +1,6 @@
 module BifrostTools
 
 using FortranFiles: FortranFile, read, readlines
-using Plots: heatmap
 using OffsetArrays
 using DelimitedFiles
 using Printf
@@ -17,7 +16,6 @@ include("div_operators.jl")
 include("read_params_snap_aux.jl")
 include("write_params_snap_aux.jl")
 include("EOS_tables.jl")
-include("plotting.jl")
 include("unit_conversion.jl")
 
 # Exports
