@@ -569,10 +569,10 @@ rho = get_var(xp, snap, "r"; units="cgs", slicez=[100])
 function get_var(
     xp::BifrostExperiment,
     snap::Union{<:Integer, AbstractVector{<:Integer}},
-    variable::String,
+    variable::String;
     kwargs...
     )
-    return get_var(xp.expname, snap, xp.expdir, variable, kwargs...)
+    return get_var(xp.expname, snap, xp.expdir, variable; kwargs...)
 end
 
 function get_var(
@@ -798,11 +798,53 @@ function get_staggered_var(expname::String,
 
 end
 
+"""
+    function get_electron_density(
+        xp::BifrostExperiment,
+        snap::Integer,
+        variable::String,
+        kwargs...)
+
+Function to calculate the electron density from a snapshot `snap`. Supports
+slicing. Gas density `rho` and internal energy `e` are optional arguments and
+can be passed (but they MUST be in cgs units). If these quantities already 
+exist, passing them will speed up the calculation of electron density.
+
+`kwargs`:
+    units::String="si",
+    slicex::AbstractVector{<:Integer}=Int[],
+    slicey::AbstractVector{<:Integer}=Int[],
+    slicez::AbstractVector{<:Integer}=Int[],
+    rho::Array{AbstractFloat,3}=Float32[;;;],
+    e::Array{AbstractFloat,3}=Float32[;;;],
+    tabfile::String="tabparam.in"
+"""
+function get_electron_density(
+    xp::BifrostExperiment,
+    snap::Integer;
+    kwargs...)
+
+    return get_electron_density(xp.expname,snap,xp.expdir;kwargs...)
+end
+
+"""
+    function get_electron_density(
+        expname::String,
+        snap::Integer,
+        expdir::String;
+        units::String="si",
+        slicex::AbstractVector{<:Integer}=Int[],
+        slicey::AbstractVector{<:Integer}=Int[],
+        slicez::AbstractVector{<:Integer}=Int[],
+        rho::Array{T,3}=Float32[;;;],
+        e::Array{T,3}=Float32[;;;],
+        tabfile::String="tabparam.in"
+        ) where {T<:AbstractFloat}
+"""
 function get_electron_density(
     expname::String,
     snap::Integer,
-    expdir::String,
-    precision::DataType=Float32;
+    expdir::String;
     units::String="si",
     slicex::AbstractVector{<:Integer}=Int[],
     slicey::AbstractVector{<:Integer}=Int[],
