@@ -863,6 +863,7 @@ function get_electron_density(
     y = log.(rho)
 
     ne = itp_table.(x, y)
+
     # take exp to remove log
     ne = exp.(ne)
 

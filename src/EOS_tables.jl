@@ -199,10 +199,11 @@ end
 # --- interpolate from eos
 
 function br_eos_interpolate(eos::EOS_tables, nvar::Int)
-    lnRho = log(eos.params["RhoMax"] / eos.params["RhoMin"])
-    dlnRho = lnRho / real(eos.params["nRhoBin"] - 1)
+    
+    lnRho = log(Float32(eos.params["RhoMax"]) / Float32(eos.params["RhoMin"]))
+    dlnRho = lnRho / Float32(eos.params["nRhoBin"] - 1)
 
-    lnEi = log(eos.params["EiMax"] / eos.params["EiMin"])
+    lnEi = log(Float32(eos.params["EiMax"]) / Float32(eos.params["EiMin"]))
     dlnEi = lnEi / real(eos.params["nEiBin"] - 1)
 
     eia = eos.EiAxis[1]:dlnEi:eos.EiAxis[end]
