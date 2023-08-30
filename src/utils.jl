@@ -32,14 +32,14 @@ function get_snap_numbers(
     expname::String="none"
     ;
     findall::Bool=false, 
-    filenames::Vector{String}=nothing
+    filenames::Vector{String}=String[]
     )
 
     if expname=="none"
-        expname = basename(expdir)
+        expname = splitpath(expdir)[end]
     end 
 
-    if filenames == nothing 
+    if isempty(filenames)
         filenames = readdir(expdir)
     end
 

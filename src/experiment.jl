@@ -13,7 +13,7 @@ struct BifrostExperiment
         expdir::String=pwd(),
         )
         if expname=="none"
-            expname = basename(expdir)
+            expname = splitpath(expdir)[end]
         end
 
         filenames = readdir(expdir)
