@@ -688,6 +688,38 @@ function get_var(
 end
 
 """
+    function get_staggered_var(
+        xp::BifrostExperiment,
+        snap::Integer,
+        variable::String,
+        kwargs...)
+
+Function to load a staggered variable and interpolate it to cell center.
+The staggered variables that typically need to be interpolated are the velocity
+and magnetic field components. Normally you need to use `direction="zup"` for 
+vz and bz with `periodic=false` (these are the default arguments), and 
+`direction="xup"` for vx and bx with `periodic=true` (same for y direction).
+
+`kwargs`:
+    precision::DataType=Float32,
+    units::String="none",
+    direction::String="zup",
+    periodic::Bool=false,
+    order::Int=6,
+    slicex::AbstractVector{<:Integer}=Int[],
+    slicey::AbstractVector{<:Integer}=Int[],
+    slicez::AbstractVector{<:Integer}=Int[]
+"""
+function get_staggered_var(
+    xp::BifrostExperiment,
+    snap::Integer,
+    variable::String;
+    kwargs...)
+
+    return get_staggered_var(xp.expname,snap,xp.expdir,variable;kwargs...)
+end
+
+"""
     function get_staggered_var(expname::String,
         snap::Integer,
         expdir::String,
@@ -703,7 +735,8 @@ end
         slicez::AbstractVector{<:Integer}=Int[]
         )
 """
-function get_staggered_var(expname::String,
+function get_staggered_var(
+    expname::String,
     snap::Integer,
     expdir::String,
     variable::String
@@ -802,7 +835,6 @@ end
     function get_electron_density(
         xp::BifrostExperiment,
         snap::Integer,
-        variable::String,
         kwargs...)
 
 Function to calculate the electron density from a snapshot `snap`. Supports
