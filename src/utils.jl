@@ -94,3 +94,30 @@ function get_dims(slicex::AbstractVector{<:Integer},
     return mx, my, mz
 
 end
+
+function get_dims(slicex::AbstractVector{<:Integer},
+    slicey::AbstractVector{<:Integer},
+    slicez::AbstractVector{<:Integer},
+    mesh::BifrostMesh)
+
+    if isempty(slicex)
+        mx = mesh.mx
+    else
+        mx = length(slicex)
+    end
+
+    if isempty(slicey)
+        my = mesh.my
+    else
+        my = length(slicey)
+    end
+
+    if isempty(slicez)
+        mz = mesh.mz
+    else
+        mz = length(slicez)
+    end
+
+    return mx, my, mz
+
+end

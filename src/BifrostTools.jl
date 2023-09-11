@@ -7,10 +7,11 @@ using Printf
 using Interpolations
 using Base
 using Mmap
+using Base.Threads
 
+include("mesh.jl")
 include("utils.jl")
 include("stagger_operators.jl")
-include("mesh.jl")
 include("experiment.jl")
 include("div_operators.jl")
 include("read_params_snap_aux.jl")

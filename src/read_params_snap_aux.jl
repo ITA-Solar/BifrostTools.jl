@@ -648,7 +648,7 @@ function get_var(
         file_ext = ".idl"
         
         # Load the variable directly from params
-        Threads.@threads for (i,snap) in collect(enumerate(snaps))
+        @threads for (i,snap) in collect(enumerate(snaps))
             
             isnap = lpad(snap,3,"0")
             idl_file = string(filename,isnap,file_ext)
@@ -674,7 +674,7 @@ function get_var(
     var = Array{precision}(undef, mx, my, mz, length(snaps))
 
     # Loop over snapshots
-    Threads.@threads for (i,snap) in collect(enumerate(snaps))
+    @threads for (i,snap) in collect(enumerate(snaps))
         isnap = lpad(snap,3,"0")
         idl_file = string(filename,isnap,".idl")
         params = br_read_params(idl_file)        
@@ -691,7 +691,11 @@ end
     function get_staggered_var(
         xp::BifrostExperiment,
         snap::Integer,
-        variable::String,
+        variable::String
+        ;
+        slicex::AbstractVector{<:Integer}=Int[],
+        slicey::AbstractVector{<:Integer}=Int[],
+        slicez::AbstractVector{<:Integer}=Int[]
         kwargs...)
 
 Function to load a staggered variable and interpolate it to cell center.
@@ -712,11 +716,26 @@ vz and bz with `periodic=false` (these are the default arguments), and
 """
 function get_staggered_var(
     xp::BifrostExperiment,
-    snap::Integer,
+    snaps::Union{<:Integer, AbstractVector{<:Integer}},
     variable::String;
+    slicex::AbstractVector{<:Integer}=Int[],
+    slicey::AbstractVector{<:Integer}=Int[],
+    slicez::AbstractVector{<:Integer}=Int[],
     kwargs...)
 
-    return get_staggered_var(xp.expname,snap,xp.expdir,variable;kwargs...)
+    if typeof(snaps) <: Integer
+        return get_staggered_var(xp.expname,snaps,xp.expdir,variable;
+                slicex=slicex,slicey=slicey,slicez=slicez,kwargs...)
+    elseif typeof(snaps) <: AbstractVector{<:Integer}
+        mx, my, mz = get_dims(slicex, slicey, slicez, xp.mesh)
+        var = Array{Float32}(undef, mx, my, mz, length(snaps))
+
+        @threads for (i,snap) in collect(enumerate(snaps))
+            var[:,:,:,i] = get_staggered_var(xp.expname,snap,xp.expdir,variable;
+                            slicex=slicex,slicey=slicey,slicez=slicez,kwargs...)
+        end
+        return var
+    end
 end
 
 """
