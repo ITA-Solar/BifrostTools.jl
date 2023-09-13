@@ -648,7 +648,7 @@ function get_var(
         file_ext = ".idl"
         
         # Load the variable directly from params
-        @threads for (i,snap) in collect(enumerate(snaps))
+        for (i,snap) in collect(enumerate(snaps))
             
             isnap = lpad(snap,3,"0")
             idl_file = string(filename,isnap,file_ext)
@@ -674,7 +674,7 @@ function get_var(
     var = Array{precision}(undef, mx, my, mz, length(snaps))
 
     # Loop over snapshots
-    @threads for (i,snap) in collect(enumerate(snaps))
+    for (i,snap) in collect(enumerate(snaps))
         isnap = lpad(snap,3,"0")
         idl_file = string(filename,isnap,".idl")
         params = br_read_params(idl_file)        
@@ -730,7 +730,7 @@ function get_staggered_var(
         mx, my, mz = get_dims(slicex, slicey, slicez, xp.mesh)
         var = Array{Float32}(undef, mx, my, mz, length(snaps))
 
-        @threads for (i,snap) in collect(enumerate(snaps))
+        for (i,snap) in collect(enumerate(snaps))
             var[:,:,:,i] = get_staggered_var(xp.expname,snap,xp.expdir,variable;
                             slicex=slicex,slicey=slicey,slicez=slicez,kwargs...)
         end
@@ -811,9 +811,11 @@ function get_staggered_var(
                 var = shift(var,periodic,order)
             else
                 var = br_load_snapvariable(filename,params,variable,precision,
-                    units="none",slicez=slicez,slicey=slicey)
-                var = shift(var,slicez,periodic,order)
-                convert_units!(var,variable,units)
+                    units="none",slicey=slicey,slicez=slicez)
+                var = shift(var,slicex,periodic,order)
+                if units != "none"
+                    convert_units!(var,variable,units)
+                end
             end
         elseif ( direction == "yup" ) || ( direction == "ydn" )
             if isempty(slicey)
@@ -822,7 +824,12 @@ function get_staggered_var(
                     units=units,slicex=slicex,slicez=slicez)
                 var = shift(var,periodic,order)
             else
-                throw(ErrorException("Loading a plane and interpolating in the plane's normal direction is not implemented"))
+                var = br_load_snapvariable(filename,params,variable,precision,
+                    units="none",slicex=slicex,slicez=slicez)
+                var = shift(var,slicey,periodic,order)
+                if units != "none"
+                    convert_units!(var,variable,units)
+                end
             end
         else
             if isempty(slicez)
