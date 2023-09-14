@@ -5,9 +5,7 @@ using OffsetArrays
 using DelimitedFiles
 using Printf
 using Interpolations
-using Base
 using Mmap
-using Base.Threads
 
 include("mesh.jl")
 include("utils.jl")
