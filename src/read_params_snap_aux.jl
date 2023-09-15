@@ -672,15 +672,16 @@ function get_var(
     
     # Allocate space for variable
     var = Array{precision}(undef, mx, my, mz, length(snaps))
-
+    
     # Loop over snapshots
-    for (i,snap) in collect(enumerate(snaps))
-        isnap = lpad(snap,3,"0")
-        idl_file = string(filename,isnap,".idl")
-        params = br_read_params(idl_file)        
-        tmp_file = string(filename,isnap,file_ext)
+    Threads.@threads for (i,snap) in collect(enumerate(snaps))
+        # !! Create thread-local variables to avoid race conditions !!
+        isnap_local = lpad(snap,3,"0")
+        idl_file_local = string(filename,isnap_local,".idl")
+        params_local = br_read_params(idl_file_local)        
+        tmp_file = string(filename,isnap_local,file_ext)
 
-        var[:,:,:,i] = load_var(tmp_file,params,variable,precision,
+        var[:,:,:,i] = load_var(tmp_file,params_local,variable,precision,
             units=units,slicex=slicex,slicey=slicey,slicez=slicez)
     end
     
@@ -730,7 +731,7 @@ function get_staggered_var(
         mx, my, mz = get_dims(slicex, slicey, slicez, xp.mesh)
         var = Array{Float32}(undef, mx, my, mz, length(snaps))
 
-        for (i,snap) in collect(enumerate(snaps))
+        Threads.@threads for (i,snap) in collect(enumerate(snaps))
             var[:,:,:,i] = get_staggered_var(xp.expname,snap,xp.expdir,variable;
                             slicex=slicex,slicey=slicey,slicez=slicez,kwargs...)
         end
@@ -911,15 +912,6 @@ function get_electron_density(
     e::Array{T,3}=Float32[;;;],
     tabfile::String="tabparam.in"
     ) where {T<:AbstractFloat}
-
-    qdict = Dict("ne" => "lnne",
-                 "tg" => "tgt",
-                 "pg" => "lnpg", 
-                 "kr" => "lnkr",
-                 "eps" => "epstab", 
-                 "opa" => "opatab", 
-                 "temp" => "temtab",
-                 "ent" => "enttab")
 
     # rho in g/cm^3
     ( isempty(rho) ) && ( rho = get_var(expname,snap,expdir,"r",
