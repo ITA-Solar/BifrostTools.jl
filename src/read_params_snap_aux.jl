@@ -451,7 +451,7 @@ function br_load_auxvariable(
         
         if units != "none"
             # Allocate the variable to change units
-            auxvariable = convert_units!(auxvariable, auxvar, units)
+            auxvariable = convert_units(auxvariable, auxvar, units)
         end
     end
 
@@ -730,10 +730,12 @@ function get_staggered_var(
     elseif typeof(snaps) <: AbstractVector{<:Integer}
         mx, my, mz = get_dims(slicex, slicey, slicez, xp.mesh)
         var = Array{Float32}(undef, mx, my, mz, length(snaps))
-
         Threads.@threads for (i,snap) in collect(enumerate(snaps))
             var[:,:,:,i] = get_staggered_var(xp.expname,snap,xp.expdir,variable;
                             slicex=slicex,slicey=slicey,slicez=slicez,kwargs...)
+            
+            # Need manual call to run garbage collector within threads
+            GC.safepoint()
         end
         return var
     end
