@@ -28,6 +28,46 @@ function br_change_snap_resolution(
     ;
     filename::String="out.snap"
     )
+    primaries, params = br_load_snapdata(xp.expname, isnap, xp.expdir)
+    snapsize, numvars, _ = get_snapsize_and_numvars(params)
+    br_change_snap_resolution(primaries, xp.mesh, numvars, 
+                                new_x, new_y, new_z, itp_bc;
+                                filename
+                                )
+end
+
+function br_change_snap_resolution(
+    snapname::String,
+    meshname::String,
+    new_x   ::Vector{<:Real},
+    new_y   ::Vector{<:Real},
+    new_z   ::Vector{<:Real},
+    itp_bc  ::Interpolations.BoundaryCondition,
+    ;
+    filename::String="out.snap"
+    )
+    params_filename = snapname[1:end-4]*"idl"
+    params = br_read_params(params_filename)
+    primaries = br_load_snapdata(snapname, params)
+    snapsize, numvars, _ = get_snapsize_and_numvars(params)
+    mesh = BifrostMesh(meshname)
+    br_change_snap_resolution(primaries, mesh, numvars,
+                                new_x, new_y, new_z, itp_bc;
+                                filename
+                                )
+end 
+
+function br_change_snap_resolution(
+    primaries::Array{<:Real, 4},
+    mesh     ::BifrostMesh,
+    numvars  ::Int64,
+    new_x    ::Vector{<:Real},
+    new_y    ::Vector{<:Real},
+    new_z    ::Vector{<:Real},
+    itp_bc   ::Interpolations.BoundaryCondition,
+    ;
+    filename::String="out.snap"
+    )
     # Interpolation through the package Interpolations.jl. Currently this
     # function only uses gridded linear interpolation because the BSpline 
     # interoplation in Interpolations.jl requires the axes to be 
@@ -37,16 +77,14 @@ function br_change_snap_resolution(
     # However, one may choose from the boundary conditions available 
     # through Interpolations.jl e.g. Periodic() or Flat().
     itp_type = Gridded(Linear())
-    primaries, params = br_load_snapdata(xp.expname, isnap, xp.expdir)
-    snapsize, numvars, _ = get_snapsize_and_numvars(params)
 
     # Interpolations don't like meshes where axes have length 1.
     # So we check if we are dealing with a 2D snap or not.
-    if length(xp.mesh.x) == 1
+    if length(mesh.x) == 1
         dims = "yz"
-    elseif length(xp.mesh.y) == 1
+    elseif length(mesh.y) == 1
         dims = "xz"
-    elseif length(xp.mesh.z) == 1
+    elseif length(mesh.z) == 1
         dims = "xy"
     else
         dims = "3D"
@@ -54,7 +92,7 @@ function br_change_snap_resolution(
 
     # Construct an interpolation object for each primary.
     itp = Array{AbstractInterpolation}(undef, numvars)
-    get_primary_interpolators!(itp, xp.mesh.x, xp.mesh.y, xp.mesh.z,
+    get_primary_interpolators!(itp, mesh.x, mesh.y, mesh.z,
                                 numvars, primaries, itp_type, itp_bc,
                                 dims
                                 )
