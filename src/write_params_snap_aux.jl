@@ -142,3 +142,66 @@ function get_primary_interpolators!(
         itp[var] = extrapolate(itp[var], itp_bc)
     end
 end
+
+
+"""
+    br_duplicate_xz_plane(
+        xp      ::BifrostExperiment,
+        isnap   ::Integer,
+        ny      ::Integer,
+        ;
+        filename::String="out.snap"
+        )
+Duplicates the xz-plane into `ny` gridpoints in the y-axis. Used for creating
+3D snapshots from a 2D xy-snapshot. 
+"""
+function br_duplicate_xz_plane(
+    xp      ::BifrostExperiment,
+    isnap   ::Integer,
+    ny      ::Int64,
+    ;
+    filename::String="out.snap"
+    )
+    primaries, params = br_load_snapdata(xp.expname, isnap, xp.expdir)
+    br_duplicate_xz_plane(primaries, ny; filename=filename)
+end
+
+function br_duplicate_xz_plane(
+    snapname::String,
+    ny      ::Int64,
+    ;
+    filename::String="out.snap"
+    )
+    params_filename = snapname[1:end-4]*"idl"
+    params = br_read_params(params_filename)
+    primaries = br_load_snapdata(snapname, params)
+    br_duplicate_xz_plane(primaries, ny; filename=filename)
+end 
+
+function br_duplicate_xz_plane(
+    primaries::Array{<:Real, 4},
+    ny       ::Int64,
+    ;
+    filename::String="out.snap"
+    )
+
+    # Construct array to hold interpolated primaries
+    nx, _, nz, numvars = size(primaries)
+    working_precision = typeof(primaries[1])
+    new_primaries = Array{working_precision}(undef, nx, ny, nz, numvars)
+
+    # fill in values
+    for var = 1:numvars
+        for i = 1:nx
+            for k = 1:nz
+                new_primaries[i,:,k,var] .= primaries[i,1,k,var]
+            end
+        end
+    end
+
+    println("Writing snap to $filename...")
+    file = open(filename, "w+")
+    write(file, new_primaries)
+    close(file)
+    return new_primaries
+end 

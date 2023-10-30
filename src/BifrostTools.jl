@@ -25,7 +25,7 @@ export br_load_auxdata
 export br_load_snapvariable
 export br_load_auxvariable
 export get_var, get_staggered_var, get_snap_numbers, get_electron_density
-export br_change_snap_resolution
+export br_change_snap_resolution, br_duplicate_xz_plane
 
 export make_uniform_axes
 
