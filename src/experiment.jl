@@ -10,7 +10,9 @@ struct BifrostExperiment
 
     function BifrostExperiment(
         expname::String="none",
-        expdir::String=pwd(),
+        expdir::String=pwd()
+        ;
+        mesh_file=nothing
         )
         if expname=="none"
             expname = splitpath(expdir)[end]
@@ -18,18 +20,22 @@ struct BifrostExperiment
 
         filenames = readdir(expdir)
         # Find mesh-file
-        mesh_match = false
-        mesh_file = ""
-        for filename in filenames
-            match_result = match(r"^" * expname * r".*\.mesh$", filename)
-            if match_result != nothing
-                if mesh_match
-                    error("Found multiple mesh files.")
-                else
-                    mesh_file *= match_result.match
-                    mesh_match = true 
+        if mesh_file == nothing
+            mesh_file = ""
+            mesh_match = false
+            for filename in filenames
+                match_result = match(r"^" * expname * r".*\.mesh$", filename)
+                if match_result != nothing
+                    if mesh_match
+                        error("Found multiple mesh files.")
+                    else
+                        mesh_file *= match_result.match
+                        mesh_match = true 
+                    end
                 end
             end
+        else
+            mesh_match = true
         end
         if mesh_match 
             mesh = BifrostMesh(string(expdir, "/", mesh_file))
