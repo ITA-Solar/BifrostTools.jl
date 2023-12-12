@@ -683,6 +683,9 @@ function get_var(
 
         var[:,:,:,i] = load_var(tmp_file,params_local,variable,precision,
             units=units,slicex=slicex,slicey=slicey,slicez=slicez)
+        
+        # Need manual call to run garbage collector within threads
+        GC.safepoint()
     end
     
     return var
@@ -734,8 +737,6 @@ function get_staggered_var(
             var[:,:,:,i] = get_staggered_var(xp.expname,snap,xp.expdir,variable;
                             slicex=slicex,slicey=slicey,slicez=slicez,kwargs...)
             
-            # Need manual call to run garbage collector within threads
-            GC.safepoint()
         end
         return var
     end
@@ -856,6 +857,7 @@ function get_staggered_var(
         var = shift(var,periodic,order)
     end
 
+    GC.safepoint()
     return var
 
 end
@@ -882,10 +884,27 @@ exist, passing them will speed up the calculation of electron density.
 """
 function get_electron_density(
     xp::BifrostExperiment,
-    snap::Integer;
+    snaps::Union{<:Integer, AbstractVector{<:Integer}};
+    slicex::AbstractVector{<:Integer}=Int[],
+    slicey::AbstractVector{<:Integer}=Int[],
+    slicez::AbstractVector{<:Integer}=Int[],
     kwargs...)
 
-    return get_electron_density(xp.expname,snap,xp.expdir;kwargs...)
+    if typeof(snaps) <: Integer
+        return get_electron_density(xp.expname,snaps,xp.expdir;kwargs...)
+    elseif typeof(snaps) <: AbstractVector{<:Integer}
+        mx, my, mz = get_dims(slicex, slicey, slicez, xp.mesh)
+        var = Array{Float32}(undef, mx, my, mz, length(snaps))
+        Threads.@threads for (i,snap) in collect(enumerate(snaps))
+            var[:,:,:,i] = get_electron_density(xp.expname,snap,xp.expdir;
+                            slicex=slicex,slicey=slicey,slicez=slicez,kwargs...)
+            
+            # Need manual call to run garbage collector within threads
+            GC.safepoint()
+        end
+        return var
+    end
+
 end
 
 """
