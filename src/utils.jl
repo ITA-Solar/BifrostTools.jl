@@ -48,7 +48,7 @@ function get_snap_numbers(
         pattern = r"^" * expname * r"_(\d+)\.snap$"
     else
         # wildcard that finds all files on format 'abXYcd_xyz.snap' 
-        pattern = r"^[a-zA-Z\d]+_(\d+)\.snap$"
+        pattern = r"^.*_(\d+)\.snap$"
     end
 
     # Initialize an empty list to store the XXX numbers
@@ -57,7 +57,7 @@ function get_snap_numbers(
     # Loop through the filenames and extract XXX numbers
     for filename in filenames
         match_result = match(pattern, filename)
-        if match_result != nothing
+        if match_result ≠ nothing
             isnap = Meta.parse(match_result.captures[1])
             push!(snaps, isnap)
         end
