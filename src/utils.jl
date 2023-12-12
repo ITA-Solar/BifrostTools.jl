@@ -63,7 +63,7 @@ function get_snap_numbers(
         end
     end
 
-    return snaps
+    return sort(snaps)
 
 end
 
