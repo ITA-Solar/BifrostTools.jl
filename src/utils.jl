@@ -13,8 +13,8 @@ function get_snapsize_and_numvars(
     else
         numvars = 5
     end
-    numauxvars = length(split(params["aux"]))
-    snapsize = params["mx"], params["my"], params["mz"]
+    numauxvars::Int64 = length(split(params["aux"]))
+    snapsize::Tuple{Int64, Int64, Int64} = params["mx"], params["my"], params["mz"]
     return snapsize, numvars, numauxvars
 end
 
