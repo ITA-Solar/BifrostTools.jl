@@ -2,7 +2,7 @@
 struct EOS_tables
     tabparamsf::String
     tabparamsf_root::String
-    params::Dict{String,Any}
+    params::Dict{String,String}
     nRhoBin::Int32
     RhoAxis::Vector{Float32}
     nEiBin::Int32
@@ -22,29 +22,30 @@ struct EOS_tables
 
         p = br_read_params(tabparams)
 
-        RhoMin = log(p["RhoMin"])
-        lnRhor = log(p["RhoMax"]) - RhoMin
-        nRhoBin = p["nRhoBin"]
+        RhoMin = log(parse(Float64, p["RhoMin"]))
+        lnRhor = log(parse(Float64, p["RhoMax"])) - RhoMin
+        nRhoBin = parse(Int, p["nRhoBin"])
         lnRho = [RhoMin + Float32(i - 1) / Float32(nRhoBin - 1) * lnRhor for i = 1:nRhoBin]
 
-        EiMin = log(p["EiMin"])
-        lnEir = log(p["EiMax"]) - EiMin
+        EiMin = parse(Float64, log(p["EiMin"]))
+        lnEir = parse(Float64, log(p["EiMax"])) - EiMin
         nEiBin = p["nEiBin"]
         lnEi = [EiMin + Float32(i - 1) / Float32(nEiBin - 1) * lnEir for i = 1:nEiBin]
 
+        nRadBins = parse(Int, p["nRadBins"])
+        
         RhoEi_recl = nEiBin * nRhoBin * 4
-        RhoEiRadTable_recl = nEiBin * nRhoBin * p["nRadBins"]
+        RhoEiRadTable_recl = nEiBin * nRhoBin * nRadBins
 
-        nRadBins = p["nRadBins"]
 
         nTBin = -1
         lnTg = [-1]
 
         if haskey(p, "TMin") && haskey(p, "TMax")
 
-            TMin = log(p["TMin"])
-            lnTgr = log(p["TMax"]) - TMin
-            nTBin = p["nTBin"]
+            TMin = log(parse(Float64, p["TMin"]))
+            lnTgr = log(parse(Float64, p["TMax"])) - TMin
+            nTBin = parse(Int, p["nTBin"])
             lnTg = [TMin + Float32(i - 1) / Float32(nTBin - 1) * lnTgr for i = 1:nTBin]
 
         end
@@ -55,9 +56,9 @@ struct EOS_tables
 
         if haskey(p, "NeMin") && haskey(p, "NeMax")
 
-            NeMin = log(p["NeMin"])
-            lnNer = log(p["NeMax"]) - NeMin
-            nNeBin = p["nNeBin"]
+            NeMin = log(parse(Float64, p["NeMin"]))
+            lnNer = log(parse(Float64, p["NeMax"])) - NeMin
+            nNeBin = parse(Int, p["nNeBin"])
             lnNe = [NeMin + Float32(i - 1) / Float32(nNeBin - 1) * lnNer for i = 1:nNeBin]
             NeTgRadTable_recl = nNeBin * nTBin * nRadBins * 2
 
