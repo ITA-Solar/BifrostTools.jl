@@ -23,15 +23,15 @@ function br_read_params(file_name::String)
   close(file)
   
   lines = [strip(i) for i in lines if !isempty(strip(i))] # remove empty str
-  lines = [strip(i) for i in lines if (i[1] != ';')]
+  lines = [strip(i) for i in lines if (i[1] ≠ ';')]
   lines = [replace(i, "'" => "\"") for i in lines]
   lines = [split(i, '=') for i in lines] # remove lines which starts with ';'
   
-  params = Dict{String,Any}()
+  params = Dict{String,String}()
   
   for x in lines
     key = strip(x[1])
-    val = eval(Meta.parse(x[2]))
+    val = strip(x[2])
     params[key] = val
   end
   
@@ -92,7 +92,7 @@ end # function br_load_snapdata
 """
     br_load_snapdata(
         file_name::String,
-        params   ::Dict{String,Any}
+        params   ::Dict{String,String}
         )
 
 Reads Bifrost *.snap binary file as an Array in dimension: (mx,my,mz,nvar).
@@ -117,7 +117,7 @@ Warning:
 """
 function br_load_snapdata(
     file_name::String,
-    params   ::Dict{String,Any},
+    params   ::Dict{String,String},
     precision::DataType=Float32
     )
     datadims = 4 # 3 spatial dimensions and 1 variable dimension
@@ -134,7 +134,7 @@ end # function br_load_snapdata
 """
     br_load_auxdata(
         file_name::String,
-        params   ::Dict{String,Any}
+        params   ::Dict{String,String}
     )
 Reads Bifrost *.aux binary file using memory-mapping. The returned
 `auxdata` array will have dimensions (mx,my,mz,nvars) where nvars is the
@@ -142,7 +142,7 @@ number of aux-variables. Assumes single floating point precision by default.
 """
 function br_load_auxdata(
     file_name::String,
-    params   ::Dict{String,Any},
+    params   ::Dict{String,String},
     precision::DataType=Float32
     )
     datadims = 4
@@ -210,29 +210,29 @@ end # function find_snapvarnr
 
 """
     get_auxvarnr(
-        params::Dict{String,Any},
+        params::Dict{String,String},
         auxvar::String
         )
 Given the snapshot `params` and an auxiliary variable (in string format), return
 its index in the ".aux"-array.
 """
 function get_auxvarnr(
-    params::Dict{String,Any},
+    params::Dict{String,String},
     auxvar::String
     )
-    indexes = findall(x -> x == auxvar, split(params["aux"]))
-    if length(indexes) > 1
+    indices = findall(x -> x == auxvar, split(params["aux"]))
+    if length(indices) > 1
         error("Multiple matches for given aux variable name.")
-    elseif length(indexes) == 0
+    elseif length(indices) == 0
         error("Auxiliary variable not found in file.")
     end
-    return indexes[1]
+    return indices[1]
 end
 
 """
     br_load_snapvariable(
         file_name::String,
-        params   ::Dict{String,Any},
+        params   ::Dict{String,String},
         variable ::String,
         precision::DataType=Float32;
         units::String="none",
@@ -259,7 +259,7 @@ Can convert variable to si or cgs units by passing `units="si"` or
 """
 function br_load_snapvariable(
     file_name::String,
-    params   ::Dict{String,Any},
+    params   ::Dict{String,String},
     variable ::String,
     precision::DataType=Float32;
     units::String="none",
@@ -294,7 +294,7 @@ function br_load_snapvariable(
                             snapsize, 
                             offset)[slicex,slicey,slicez]
         
-        if units != "none"
+        if units ≠ "none"
             convert_units!(snapvariable, variable, units)
         end
     else
@@ -304,7 +304,7 @@ function br_load_snapvariable(
                             snapsize, 
                             offset)
         
-        if units != "none"
+        if units ≠ "none"
             # Allocate the variable before changing units
             snapvariable = convert_units(snapvariable, variable, units)
         end
@@ -374,14 +374,14 @@ function br_load_snapvariable(
         snap_filename = string(basename, ".snap")
         file = open(snap_filename)
         # Use Julia standard-library memory-mapping to extract file values
-        snapvariable[:,:,:,i] = mmap(file,
+        snapvariable[:,:,:,i] .= mmap(file,
                                      Array{precision, datadims},
                                      snapsize,
                                      offset)
         close(file)
     end
 
-    if units != "none"
+    if units ≠ "none"
         convert_units!(snapvariable, variable, units)
     end
 
@@ -391,7 +391,7 @@ end # function br_load_snapvariable
 """
     br_load_auxvariable(
         file_name::String,
-        params   ::Dict{String,Any},
+        params   ::Dict{String,String},
         auxvar   ::String,
         precision::DataType=Float32;
         units::String="none",
@@ -407,7 +407,7 @@ variable to si or cgs units by passing  `units="si"` or
 """
 function br_load_auxvariable(
     file_name::String,
-    params::Dict{String,Any},
+    params::Dict{String,String},
     auxvar::String,
     precision::DataType=Float32;
     units::String="none",
@@ -439,7 +439,7 @@ function br_load_auxvariable(
                            snapsize, 
                            offset)[slicex,slicey,slicez]
         
-        if units != "none"
+        if units ≠ "none"
             convert_units!(auxvariable, auxvar, units)
         end
     else
@@ -449,7 +449,7 @@ function br_load_auxvariable(
                            snapsize, 
                            offset)
         
-        if units != "none"
+        if units ≠ "none"
             # Allocate the variable to change units
             auxvariable = convert_units(auxvariable, auxvar, units)
         end
@@ -510,7 +510,7 @@ function br_load_auxvariable(
         close(file)
     end
 
-    if units != "none"
+    if units ≠ "none"
         convert_units!(auxvariable,auxvar,units)
     end
 
@@ -572,16 +572,17 @@ function get_var(
     variable::String;
     kwargs...
     )
-    return get_var(xp.expname, snap, xp.expdir, variable; kwargs...)
+    
+    get_var(xp.expname, snap, xp.expdir, variable; kwargs...)
 end
 
 function get_var(
     expname::String,
     snap::Integer,
     expdir::String,
-    variable::String
+    variable::String,
+    precision::DataType=Float32
     ;
-    precision::DataType=Float32,
     units::String="none",
     slicex::AbstractVector{<:Integer}=Int[],
     slicey::AbstractVector{<:Integer}=Int[],
@@ -596,35 +597,36 @@ function get_var(
     if variable in keys(primary_vars)
         filename = string(expname,"_",isnap,".snap")
         filename = joinpath(expdir,filename)
-        var = br_load_snapvariable(filename,params,variable,precision,
+        return br_load_snapvariable(filename,params,variable,precision,
             units=units,slicex=slicex,slicey=slicey,slicez=slicez)
             
     elseif variable in split(params["aux"])
         filename = string(expname,"_",isnap,".aux")
         filename = joinpath(expdir,filename)
-        var = br_load_auxvariable(filename,params,variable,precision,
+        return br_load_auxvariable(filename,params,variable,precision,
             units=units,slicex=slicex,slicey=slicey,slicez=slicez)
     
     elseif variable == "t"
-        var = params["t"]
+        var = parse(Float64, params["t"])
         if units == "si" || units == "cgs"
             var = convert_snaptime(var)
         end
     
+        return var
+
     else
         throw(ErrorException("Variable $variable does not exist"))
     end
-    
-    return var
+
 end
 
 function get_var(
     expname::String,
     snaps::AbstractVector{<:Integer},
     expdir::String,
-    variable::String
+    variable::String,
+    precision::DataType=Float32
     ;
-    precision::DataType=Float32,
     units::String="none",
     slicex::AbstractVector{<:Integer}=Int[],
     slicey::AbstractVector{<:Integer}=Int[],
@@ -654,7 +656,7 @@ function get_var(
             idl_file = string(filename,isnap,file_ext)
             params = br_read_params(idl_file) 
             
-            time = params["t"]
+            time = parse(Float64, params["t"])
             
             if ( units == "si" ) || ( units == "cgs" )
                 time = convert_snaptime(time)
@@ -681,7 +683,7 @@ function get_var(
         params_local = br_read_params(idl_file_local)        
         tmp_file = string(filename,isnap_local,file_ext)
 
-        var[:,:,:,i] = load_var(tmp_file,params_local,variable,precision,
+        var[:,:,:,i] .= load_var(tmp_file,params_local,variable,
             units=units,slicex=slicex,slicey=slicey,slicez=slicez)
         
         # Need manual call to run garbage collector within threads
@@ -734,7 +736,7 @@ function get_staggered_var(
         mx, my, mz = get_dims(slicex, slicey, slicez, xp.mesh)
         var = Array{Float32}(undef, mx, my, mz, length(snaps))
         Threads.@threads for (i,snap) in collect(enumerate(snaps))
-            var[:,:,:,i] = get_staggered_var(xp.expname,snap,xp.expdir,variable;
+            var[:,:,:,i] .= get_staggered_var(xp.expname,snap,xp.expdir,variable;
                             slicex=slicex,slicey=slicey,slicez=slicez,kwargs...)
             
         end
@@ -762,9 +764,9 @@ function get_staggered_var(
     expname::String,
     snap::Integer,
     expdir::String,
-    variable::String
+    variable::String,
+    precision::DataType=Float32
     ;
-    precision::DataType=Float32,
     units::String="none",
     direction::String="zup",
     periodic::Bool=false,
@@ -817,7 +819,7 @@ function get_staggered_var(
                 var = br_load_snapvariable(filename,params,variable,precision,
                     units="none",slicey=slicey,slicez=slicez)
                 var = shift(var,slicex,periodic,order)
-                if units != "none"
+                if units ≠ "none"
                     convert_units!(var,variable,units)
                 end
             end
@@ -831,7 +833,7 @@ function get_staggered_var(
                 var = br_load_snapvariable(filename,params,variable,precision,
                     units="none",slicex=slicex,slicez=slicez)
                 var = shift(var,slicey,periodic,order)
-                if units != "none"
+                if units ≠ "none"
                     convert_units!(var,variable,units)
                 end
             end
@@ -845,7 +847,7 @@ function get_staggered_var(
                 var = br_load_snapvariable(filename,params,variable,precision,
                     units="none",slicex=slicex,slicey=slicey)
                 var = shift(var,slicez,periodic,order)
-                if units != "none"
+                if units ≠ "none"
                     convert_units!(var,variable,units)
                 end
             end
@@ -896,7 +898,7 @@ function get_electron_density(
         mx, my, mz = get_dims(slicex, slicey, slicez, xp.mesh)
         var = Array{Float32}(undef, mx, my, mz, length(snaps))
         Threads.@threads for (i,snap) in collect(enumerate(snaps))
-            var[:,:,:,i] = get_electron_density(xp.expname,snap,xp.expdir;
+            var[:,:,:,i] .= get_electron_density(xp.expname,snap,xp.expdir;
                             slicex=slicex,slicey=slicey,slicez=slicez,kwargs...)
             
             # Need manual call to run garbage collector within threads

@@ -85,7 +85,7 @@ function convert_units(
     snapvariable::AbstractArray, 
     variable::String, 
     unit_conversion::String
-    )
+    )::Array{Float32, 3}
 
     if unit_conversion=="cgs"
         if variable != "tg"
@@ -99,6 +99,7 @@ function convert_units(
     
     else
         throw(ErrorException("Unit conversion '$unit_conversion' does not exits"))
+        snapvariable = snapvariable .* 0f0
     end
 end
 
@@ -107,7 +108,7 @@ end
 
 Converts snapshot time to seconds
 """
-function convert_snaptime(t::AbstractFloat)
+function convert_snaptime(t::AbstractFloat)::Float64
 
     t*params["u_t"]
 

@@ -1,20 +1,24 @@
 """
     get_snapsize_and_numvars(
-        params::Dict{String,Any},
+        params::Dict{String,String},
     )
 Returns snapsize (nx, ny, nz), number of primary variables and number of
 auxiliary variables, given the snapshot-parameters.
 """
 function get_snapsize_and_numvars(
-    params::Dict{String,Any},
+    params::Dict{String,String},
     )
-    if params["do_mhd"] == 1
+    if parse(Int, params["do_mhd"]) == 1
         numvars = 8
     else
         numvars = 5
     end
     numauxvars::Int64 = length(split(params["aux"]))
-    snapsize::Tuple{Int64, Int64, Int64} = params["mx"], params["my"], params["mz"]
+    
+    mx = parse(Int, params["mx"])
+    my = parse(Int, params["my"])
+    mz = parse(Int, params["mz"])
+    snapsize::Tuple{Int64, Int64, Int64} = mx, my, mz
     return snapsize, numvars, numauxvars
 end
 
@@ -71,22 +75,22 @@ end
 function get_dims(slicex::AbstractVector{<:Integer},
                   slicey::AbstractVector{<:Integer},
                   slicez::AbstractVector{<:Integer},
-                  params::Dict{String, Any})
+                  params::Dict{String, String})
 
     if isempty(slicex)
-        mx = params["mx"]
+        mx = parse(Int, params["mx"])
     else
         mx = length(slicex)
     end
 
     if isempty(slicey)
-        my = params["my"]
+        my = parse(Int, params["my"])
     else
         my = length(slicey)
     end
 
     if isempty(slicez)
-        mz = params["mz"]
+        mz = parse(Int, params["mz"])
     else
         mz = length(slicez)
     end
