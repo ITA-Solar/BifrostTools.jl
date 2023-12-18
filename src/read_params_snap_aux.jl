@@ -18,24 +18,21 @@ format 'name_xxx.idl' where 'name' is the simulation name and 'xxx' is the
 snapshot number
 """
 function br_read_params(file_name::String)
-  file = open(file_name, "r")
-  lines = readlines(file)
-  close(file)
+    
+    params = Dict{String,String}()
   
-  lines = [strip(i) for i in lines if !isempty(strip(i))] # remove empty str
-  lines = [strip(i) for i in lines if (i[1] ≠ ';')]
-  lines = [replace(i, "'" => "\"") for i in lines]
-  lines = [split(i, '=') for i in lines] # remove lines which starts with ';'
-  
-  params = Dict{String,String}()
-  
-  for x in lines
-    key = strip(x[1])
-    val = strip(x[2])
-    params[key] = val
-  end
-  
-  return params
+    open(file_name, "r") do file
+        for line in eachline(file)
+            line = strip(line)
+            if !isempty(line) && line[1] ≠ ';'
+                line = replace(line, "\"" => "")
+                key, val = split(strip(line), '=')
+                params[strip(key)] = strip(val)
+            end
+        end
+    end
+    
+    return params
 end
 
 
