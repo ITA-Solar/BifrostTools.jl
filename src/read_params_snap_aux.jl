@@ -26,6 +26,7 @@ function br_read_params(file_name::String)
             line = strip(line)
             if !isempty(line) && line[1] ≠ ';'
                 line = replace(line, "\"" => "")
+                line = replace(line, "'" => "")
                 key, val = split(strip(line), '=')
                 params[strip(key)] = strip(val)
             end
@@ -950,20 +951,20 @@ function get_electron_density(
     tabfile = joinpath(expdir,tabfile)
     eos = EOS_tables(tabfile)
 
-    if maximum(rho) > eos.params["RhoMax"]
+    if maximum(rho) > parse(Float64,eos.params["RhoMax"])
         @printf """tab_interp: density outside table bounds.
         Table rho max=%.3e, requested rho max=%.3e""" eos.params["RhoMax"] maximum(rho)
     end        
-    if minimum(rho) < eos.params["RhoMin"]
+    if minimum(rho) <parse(Float64,eos.params["RhoMin"])
         @printf """tab_interp: density outside table bounds.
         Table rho min=%.3e, requested rho min=%.3e""" eos.params["RhoMin"] minimum(rho)
     end
     
-    if maximum(ee) > eos.params["EiMax"]
+    if maximum(ee) > parse(Float64,eos.params["EiMax"])
         @printf """tab_interp: density outside table bounds.
         Table rho max=%.3e, requested rho max=%.3e""" eos.params["EiMax"] maximum(Ei)
     end        
-    if minimum(ee) < eos.params["EiMin"]
+    if minimum(ee) < parse(Float64,eos.params["EiMin"])
         @printf """tab_interp: density outside table bounds.
         Table rho min=%.3e, requested rho min=%.3e""" eos.params["EiMin"] minimum(Ei)
     end

@@ -27,9 +27,9 @@ struct EOS_tables
         nRhoBin = parse(Int, p["nRhoBin"])
         lnRho = [RhoMin + Float32(i - 1) / Float32(nRhoBin - 1) * lnRhor for i = 1:nRhoBin]
 
-        EiMin = parse(Float64, log(p["EiMin"]))
-        lnEir = parse(Float64, log(p["EiMax"])) - EiMin
-        nEiBin = p["nEiBin"]
+        EiMin = log(parse(Float64, p["EiMin"]))
+        lnEir = log(parse(Float64, p["EiMax"])) - EiMin
+        nEiBin = parse(Int,p["nEiBin"])
         lnEi = [EiMin + Float32(i - 1) / Float32(nEiBin - 1) * lnEir for i = 1:nEiBin]
 
         nRadBins = parse(Int, p["nRadBins"])
@@ -201,11 +201,11 @@ end
 
 function br_eos_interpolate(eos::EOS_tables, nvar::Int)
     
-    lnRho = log(Float32(eos.params["RhoMax"]) / Float32(eos.params["RhoMin"]))
-    dlnRho = lnRho / Float32(eos.params["nRhoBin"] - 1)
+    lnRho = log(parse(Float32,eos.params["RhoMax"]) / parse(Float32,eos.params["RhoMin"]))
+    dlnRho = lnRho / (parse(Float32,eos.params["nRhoBin"]) - 1)
 
-    lnEi = log(Float32(eos.params["EiMax"]) / Float32(eos.params["EiMin"]))
-    dlnEi = lnEi / real(eos.params["nEiBin"] - 1)
+    lnEi = log(parse(Float32,eos.params["EiMax"]) / parse(Float32,eos.params["EiMin"]))
+    dlnEi = lnEi / (parse(Float32,eos.params["nEiBin"]) - 1)
 
     eia = eos.EiAxis[1]:dlnEi:eos.EiAxis[end]
     rhoa = eos.RhoAxis[1]:dlnRho:eos.RhoAxis[end]
