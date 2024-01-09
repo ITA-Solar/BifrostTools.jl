@@ -891,7 +891,8 @@ function get_electron_density(
     kwargs...)
 
     if typeof(snaps) <: Integer
-        return get_electron_density(xp.expname,snaps,xp.expdir;kwargs...)
+        return get_electron_density(xp.expname,snaps,xp.expdir;
+		slicex=slicex,slicey=slicey,slicez=slicez,kwargs...)
     elseif typeof(snaps) <: AbstractVector{<:Integer}
         mx, my, mz = get_dims(slicex, slicey, slicez, xp.mesh)
         var = Array{Float32}(undef, mx, my, mz, length(snaps))
