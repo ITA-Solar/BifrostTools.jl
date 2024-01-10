@@ -32,6 +32,11 @@ function br_read_params(file_name::String)
             end
         end
     end
+
+    # special case for the ixy1 variable, lives in a separate file
+    if "aux" in keys(params)
+        params["aux"] = replace(params["aux"], " ixy1" => "")
+    end
     
     return params
 end
