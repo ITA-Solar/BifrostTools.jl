@@ -46,12 +46,13 @@ function convert_units(
     params  ::Dict{String,String},
     units   ::String,
     )
-    if units == "SI"
+    if lowercase(units) == "si"
         return code_to_SI(data, variable, params)
-    elseif units == "cgs"
+    elseif lowercase(units) == "cgs"
         return code_to_cgs(data, variable, params)
-    elseif units == "code"
+    elseif lowercase(units) == "code"
         # Do nothing
+        nothing
     else
         throw(ErrorException("Unit conversion '$units' does not exits"))
     end
