@@ -299,6 +299,13 @@ function get_var(
     end
 
     #
+    # ORIENTATION: Rotate coordinate system
+    #
+    if :rotate_about_x in kwarg_keys && kwarg_values.rotate_about_x
+        data = rotate(data, variable, "x")
+    end
+
+    #
     # Add more kwargs here
     #
     # -------------------------------------------------------------------------
@@ -641,6 +648,39 @@ function destagger(
         return br_xup(br_yup(data)) # not 100% sure about this operation
     else
         error("Destaggering of variable $variable is not implemented.")
+    end
+end
+
+
+"""
+    rotate(
+        data         ::AbstractArray,
+        variable     ::String,
+        rotation_axis::String,
+        )
+Rotate the data about an `rotation_axis`.
+"""
+function rotate(
+    data         ::AbstractArray,
+    variable     ::String,
+    rotation_axis::String,
+    )
+    xcomponents = ("px", "bx", "ex", "ix")
+    ycomponents = ("py", "by", "ey", "iy")
+    zcomponents = ("pz", "bz", "ez", "iz")
+
+    if variable in ("r", "p", "tg")
+        return data # Scalar fields, do nothing
+    else
+        if rotation_axis == "x"
+            if variable in xcomponents
+                return data
+            elseif variable in ycomponents || variable in zcomponents
+                return -data
+            end
+        else
+            error("Rotation about $rotation_axis-axis is not implemented")
+        end
     end
 end
 
