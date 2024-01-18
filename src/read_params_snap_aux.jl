@@ -248,10 +248,10 @@ function get_var(
     # data
     if nsnaps == 1
         data = get_var(
-            string(basename_isnap, file_ext), 
+            string(basename_isnap, file_ext),
             params, 
-            varnr, 
-            args...
+            varnr; 
+            kwargs...
             )
     else
         data = get_var(
@@ -259,8 +259,8 @@ function get_var(
             snap,
             params,
             varnr, 
-            file_ext, 
-            args...
+            file_ext;
+            kwargs...
             )
     end
     # -------------------------------------------------------------------------
@@ -329,11 +329,13 @@ precision snapshot by default.
 function get_var(
     filename       ::String,
     params         ::Dict{String,String},
-    varnr          ::Integer,
+    varnr          ::Integer
+    ;
     precision      ::DataType=Float32,
     slicex         ::AbstractVector{<:Integer}=Int[],
     slicey         ::AbstractVector{<:Integer}=Int[],
-    slicez         ::AbstractVector{<:Integer}=Int[]
+    slicez         ::AbstractVector{<:Integer}=Int[],
+    kwargs...
     )
     datadims = 3 # 3 spatial dimensions and 1 variable dimension
     snapsize = get_snapsize(params)
@@ -387,11 +389,13 @@ function get_var(
     snaps    ::AbstractVector{<:Integer},
     params   ::Dict{String, String},
     varnr    ::Integer,
-    file_ext ::String,
-    precision::DataType=Float32;
+    file_ext ::String
+    ;
+    precision::DataType=Float32,
     slicex   ::AbstractVector{<:Integer}=Int[],
     slicey   ::AbstractVector{<:Integer}=Int[],
-    slicez   ::AbstractVector{<:Integer}=Int[]
+    slicez   ::AbstractVector{<:Integer}=Int[],
+    kwargs...
     )
     # Get spatial size
     mx, my, mz = get_snapsize(params, slicex, slicey, slicez)
@@ -409,10 +413,10 @@ function get_var(
             tmp_file,
             params_local,
             varnr,
-            precision,
-            slicex,
-            slicey,
-            slicez
+            precision=precision,
+            slicex=slicex,
+            slicey=slicey,
+            slicez=slicez
             )
         
         # Need manual call to run garbage collector within threads
