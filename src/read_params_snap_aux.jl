@@ -282,6 +282,22 @@ function get_var(
     if :units in kwarg_keys
         data = convert_units(data, variable, params, kwarg_values.units)
     end
+
+    #
+    # DESTAGGERING: Destagger variable to cell centres
+    #
+    if :destagger in kwarg_keys && kwarg_values.destagger
+        if nsnaps > 1
+            for i = 1:nsnaps
+                data[:,:,:,i] = destagger(data[:,:,:,i], variable)
+                # Would be faster if we avoid checking which operation is 
+                # needed for the variable for each snapshot.
+            end
+        else
+            data = destagger(data, variable)
+        end
+    end
+
     #
     # Add more kwargs here
     #
@@ -598,6 +614,36 @@ function get_staggered_var(
     return var
 
 end
+
+
+"""
+    destagger(data::AbstractArray, variable::String)
+De-stagger the Bifrost `data` of type `variable` to cell centre. The input may 
+be read-only, so return a copy
+"""
+function destagger(
+    data    ::AbstractArray{<:Real, 3},
+    variable::String,
+    )
+    if variable in ("r", "e", "tg", "p")
+        return data # nothing to do, already cell centred
+    elseif variable in ("px", "bx")
+        return br_xup(data)
+    elseif variable in ("py", "by")
+        return br_yup(data)        # not sure about the minus sign
+    elseif variable in ("pz", "bz")
+        return br_zup(data)        # not sure about the minus sign
+    elseif variable in ("ex", "ix")
+        return br_yup(br_zup(data)) # not 100% sure about this operation
+    elseif variable in ("ey", "iy")
+        return br_zup(br_xup(data)) # not 100% sure about this operation
+    elseif variable in ("ez", "iz")
+        return br_xup(br_yup(data)) # not 100% sure about this operation
+    else
+        error("Destaggering of variable $variable is not implemented.")
+    end
+end
+
 
 """
     function get_electron_density(
