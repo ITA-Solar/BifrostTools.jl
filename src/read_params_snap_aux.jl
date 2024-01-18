@@ -273,6 +273,15 @@ function get_var(
     kwarg_keys = keys(kwargs)
     kwarg_values = values(kwargs)
     # -------------------------------------------------------------------------
+
+    #
+    # UNITS: Scale from code units to something else
+    # 
+    #   If multiple snapshots: Assumes the same conversion factor for all
+    #
+    if :units in kwarg_keys
+        data = convert_units(data, variable, params, kwarg_values.units)
+    end
     #
     # Add more kwargs here
     #
