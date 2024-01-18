@@ -1,13 +1,4 @@
-const primary_vars = Dict(
-    "r" => 1,
-    "px" => 2, 
-    "py" => 3, 
-    "pz" => 4, 
-    "e" => 5, 
-    "bx" => 6, 
-    "by" => 7, 
-    "bz" => 8,  
-)
+
 
 """
     br_read_params(file_name::String)
@@ -162,30 +153,6 @@ function br_load_auxdata(
         return auxdata
     end
 end # function br_load_auxdata
-
-"""
-    get_variable_offset_in_file(
-        precision::DataType,
-        snapsize::Tuple{Integer, Integer, Integer},
-        varnr   ::Integer
-        )
-Given the precision and size of a snapshot, find the offset for reading the
-variable with index `varnr` directly from file. Offset given in number of bytes.
-"""
-function get_variable_offset_in_file(
-    precision::DataType,
-    snapsize::Tuple{Integer, Integer, Integer},
-    varnr   ::Integer
-    )
-    if precision == Float32
-        bytes_per_value = 4
-    elseif precision == Float64
-        bytes_per_value = 8
-    end 
-    values_per_variable = snapsize[1]*snapsize[2]*snapsize[3]
-    offset = bytes_per_value*values_per_variable*(varnr - 1)
-    return offset
-end
 
 
 """
