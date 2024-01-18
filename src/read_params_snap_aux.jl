@@ -34,7 +34,7 @@ end
 
 
 """
-    br_load_snapdata(
+    get_snap(
         expname::String,
         snap   ::Int,
         expdir ::String,
@@ -61,30 +61,22 @@ Variables of `snapdata`:
 Warning:
     variables in code units.ts
 """
-function br_load_snapdata(
+function get_snap(
     expname  ::String,
     snap     ::Int,
     expdir   ::String,
     precision::DataType=Float32
     )
-    datadims = 4 # 3 spatial dimensions and 1 variable dimension
     # Parse filenames
     basename = string(expdir, "/", expname, "_$(lpad(snap,3,"0"))")
     idl_filename = string(basename, ".idl")
     snap_filename = string(basename, ".snap")
     params = br_read_params(idl_filename)
-    
-    snapsize, numvars, _ = get_snapsize_and_numvars(params)
-
-    file = open(snap_filename)
-    # Use Julia standard-library memory-mapping to extract file values
-    snapdata = mmap(file, Array{precision, 4}, (snapsize..., numvars))
-    close(file)
-    return snapdata, params
-end # function br_load_snapdata
+    get_snap(snap_filename, params, precision)
+end
 
 """
-    br_load_snapdata(
+    get_snap(
         file_name::String,
         params   ::Dict{String,String}
         )
@@ -109,7 +101,7 @@ Variables of `snapdata`:
 Warning:
     variables in code units.
 """
-function br_load_snapdata(
+function get_snap(
     file_name::String,
     params   ::Dict{String,String},
     precision::DataType=Float32
@@ -126,7 +118,7 @@ function br_load_snapdata(
 end # function br_load_snapdata
 
 """
-    br_load_auxdata(
+    get_aux(
         file_name::String,
         params   ::Dict{String,String}
     )
@@ -134,7 +126,7 @@ Reads Bifrost *.aux binary file using memory-mapping. The returned
 `auxdata` array will have dimensions (mx,my,mz,nvars) where nvars is the
 number of aux-variables. Assumes single floating point precision by default.
 """
-function br_load_auxdata(
+function get_aux(
     file_name::String,
     params   ::Dict{String,String},
     precision::DataType=Float32
