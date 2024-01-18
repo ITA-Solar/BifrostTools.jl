@@ -103,13 +103,19 @@ function convert_units(
     end
 end
 
+
 """
-    convert_time(t::AbstractFloat)
+    convert_timeunits!(
+    t     ::AbstractArray,
+    params::Dict{String,String}
+    )     ::Float64
 
 Converts snapshot time to seconds
 """
-function convert_snaptime(t::AbstractFloat)::Float64
-
-    t*params["u_t"]
-
+function convert_timeunits!(
+    t     ::Union{AbstractArray, AbstractFloat},
+    params::Dict{String,String}
+    )     ::Float64
+    t *= params["u_t"]
 end
+
