@@ -955,7 +955,7 @@ function get_electron_density(
     
     # construct the EOS tables for interpolation of electron density
     tabfile = joinpath(expdir,tabfile)
-    eos = EOS_tables(tabfile)
+    eos = EOS_Tables(tabfile)
 
     if maximum(rho) > parse(Float64,eos.params["RhoMax"])
         @printf """tab_interp: density outside table bounds.
