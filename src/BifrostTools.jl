@@ -54,7 +54,7 @@ export fix_mesh
 
 export BifrostMesh
 export BifrostExperiment
-export EOS_Tables
+export EOSTables
 
 # debugging
 
