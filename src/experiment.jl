@@ -51,7 +51,7 @@ struct BifrostExperiment
         params_file = string(expdir, "/", expname, "_", string(snaps[1], pad=3),
                              ".idl"
                              )
-        params = br_read_params(params_file)
+        params = read_params(params_file)
         snapsize, num_vars = get_snapsize_and_numvars(params)
    
         new(mesh, expname, expdir, sort(snaps), snapsize, length(snaps),

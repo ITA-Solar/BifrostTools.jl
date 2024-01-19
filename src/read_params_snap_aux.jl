@@ -71,7 +71,7 @@ function get_snap(
     basename = string(expdir, "/", expname, "_$(lpad(snap,3,"0"))")
     idl_filename = string(basename, ".idl")
     snap_filename = string(basename, ".snap")
-    params = br_read_params(idl_filename)
+    params = read_params(idl_filename)
     get_snap(snap_filename, params, precision)
 end
 
@@ -236,7 +236,7 @@ function get_var(
     )
     nsnaps = length(snap)
     basename, basename_isnap = get_basename(expname, snap, expdir)
-    params = br_read_params(string(basename_isnap, ".idl"))
+    params = read_params(string(basename_isnap, ".idl"))
 
     if variable == "t"
         # The special case of getting the snapshot time
@@ -407,7 +407,7 @@ function get_var(
         # !! Create thread-local variables to avoid race conditions !!
         isnap_local = lpad(snap,3,"0")
         idl_file_local = string(basename, "_", isnap_local, ".idl")
-        params_local = br_read_params(idl_file_local)        
+        params_local = read_params(idl_file_local)
         tmp_file = string(basename, "_", isnap_local, file_ext)
 
         var[:,:,:,i] .= get_var(
@@ -445,7 +445,7 @@ function get_time(
         for (i,snap) in enumerate(snap)
             isnap = lpad(snap,3,"0")
             idl_file = string(filename_prefix, isnap, file_ext)
-            params = br_read_params(idl_file) 
+            params = read_params(idl_file)
             time = parse(Float64, params["t"])
             var[i] = time
         end
@@ -640,17 +640,17 @@ function destagger(
     if variable in ("r", "e", "tg", "p")
         return data # nothing to do, already cell centred
     elseif variable in ("px", "bx")
-        return br_xup(data)
+        return xup(data)
     elseif variable in ("py", "by")
-        return br_yup(data)        # not sure about the minus sign
+        return yup(data)
     elseif variable in ("pz", "bz")
-        return br_zup(data)        # not sure about the minus sign
+        return zup(data)
     elseif variable in ("ex", "ix")
-        return br_yup(br_zup(data)) # not 100% sure about this operation
+        return yup(zup(data)) # not 100% sure about this operation
     elseif variable in ("ey", "iy")
-        return br_zup(br_xup(data)) # not 100% sure about this operation
+        return zup(xup(data)) # not 100% sure about this operation
     elseif variable in ("ez", "iz")
-        return br_xup(br_yup(data)) # not 100% sure about this operation
+        return xup(yup(data)) # not 100% sure about this operation
     else
         error("Destaggering of variable $variable is not implemented.")
     end
