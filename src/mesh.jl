@@ -137,9 +137,9 @@ struct BifrostMesh
         function BifrostMesh(x::Vector{T},y::Vector{T},z::Vector{T}) where {T<:AbstractFloat}
             
             mx = size(x)[1]
-            xd = br_dn(x)
-            xddn = 1.0 ./ br_ddn(x)
-            xdup = 1.0 ./ br_dup(x)
+            xd = dn(x)
+            xddn = 1.0 ./ ddn(x)
+            xdup = 1.0 ./ dup(x)
     
             if (mx == 1)
                 xddn[:] = 1.0
@@ -147,9 +147,9 @@ struct BifrostMesh
             end 
     
             my = size(y)[1]
-            yd = br_dn(y)
-            yddn = 1.0 ./ br_ddn(y)
-            ydup = 1.0 ./ br_dup(y)
+            yd = dn(y)
+            yddn = 1.0 ./ ddn(y)
+            ydup = 1.0 ./ dup(y)
     
             if (my == 1)
                 yddn[:] = 1.0
@@ -157,9 +157,9 @@ struct BifrostMesh
             end
     
             mz = size(z)[1]
-            zd = br_dn(z)
-            zddn = 1.0 ./ br_ddn(z)
-            zdup = 1.0 ./ br_dup(z)
+            zd = dn(z)
+            zddn = 1.0 ./ ddn(z)
+            zdup = 1.0 ./ dup(z)
     
             if (mz == 1)
                 zddn[:] = 1.0
@@ -186,7 +186,7 @@ struct BifrostMesh
         end
 end
 
-function br_fix_mesh(file_name::String)
+function fix_mesh(file_name::String)
     m = BifrostMesh(file_name)
     m.dxidxdn = 1.0f0 ./ m.dxidxdn;
     m.dxidxup = 1.0f0 ./ m.dxidxup;
@@ -197,10 +197,10 @@ function br_fix_mesh(file_name::String)
     m.dzidzdn = 1.0f0 ./ m.dzidzdn;
     m.dzidzup = 1.0f0 ./ m.dzidzup;
     
-    br_mesh2file(m,file_name * ".fixed");
+    mesh2file(m,file_name * ".fixed");
 end
 
-function br_mesh2file(M::BifrostMesh, file_name::String ="bifrost.mesh")
+function mesh2file(M::BifrostMesh, file_name::String ="bifrost.mesh")
     open(file_name,"w") do io
         println(io, @sprintf "%d" M.mx)
         println(io, join([@sprintf "%e" x for x in M.x], " "))
@@ -220,7 +220,7 @@ function br_mesh2file(M::BifrostMesh, file_name::String ="bifrost.mesh")
     end
 end
 
-function br_arr_ffile(file_name::String, mesh::BifrostMesh; rpos::Int, rtype=Float32)
+function arr_ffile(file_name::String, mesh::BifrostMesh; rpos::Int, rtype=Float32)
     recl = (rtype == Float32) ? mesh.n * 4 : mesh.n * 8
     f = FortranFile(file_name, "r", access="direct", recl=recl)
     var = read(f, rec=rpos, (rtype, (mesh.mx, mesh.my, mesh.mz)))

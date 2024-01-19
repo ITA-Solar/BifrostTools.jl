@@ -14,47 +14,47 @@ include("experiment.jl")
 include("div_operators.jl")
 include("read_params_snap_aux.jl")
 include("write_params_snap_aux.jl")
-include("EOS_tables.jl")
+include("eos_tables.jl")
 include("unit_conversion.jl")
 
 # Exports
-export br_squeeze
-export br_read_params
-export br_load_snapdata
-export br_load_auxdata
-export br_load_snapvariable
-export br_load_auxvariable
+export squeeze
+export read_params
+export load_snapdata
+export load_auxdata
+export load_snapvariable
+export load_auxvariable
 export get_var, get_staggered_var, get_snap_numbers, get_electron_density
-export br_change_snap_resolution, br_duplicate_xz_plane
+export change_snap_resolution, duplicate_xz_plane
 
 export make_uniform_axes
 
-export br_arr_ffile
-export br_heatmap_xy
-export br_heatmap_xz
-export br_heatmap_yz
+export arr_ffile
+export heatmap_xy
+export heatmap_xz
+export heatmap_yz
 
-export br_get_eostable
-export br_get_expieos_err
+export get_eostable
+export get_expieos_err
 
-export br_get_epstable
-export br_get_temtable
-export br_get_opatable
+export get_epstable
+export get_temtable
+export get_opatable
 
-export br_get_ne_epstable
-export br_get_ne_temtable
-export br_get_ne_opatable
+export get_ne_epstable
+export get_ne_temtable
+export get_ne_opatable
 
-export br_get_lndlnT_table
-export br_get_theta_rho_table
+export get_lndlnT_table
+export get_theta_rho_table
 
-export br_eos_interpolate
-export br_mesh2file 
-export br_fix_mesh 
+export eos_interpolate
+export mesh2file 
+export fix_mesh 
 
 export BifrostMesh
 export BifrostExperiment
-export EOS_tables
+export EOSTables
 
 # debugging
 
@@ -62,68 +62,68 @@ export spitzer_debug_file
 
 # Basic stagger operations with optional BC extrapolation
 
-export br_up
-export br_dup
+export up
+export dup
 
-export br_dn
-export br_ddn 
+export dn
+export ddn 
 
-export br_xup
-export br_dxup
+export xup
+export dxup
 
-export br_xdn
-export br_dxdn
+export xdn
+export dxdn
 
-export br_yup
-export br_dyup
+export yup
+export dyup
 
-export br_ydn
-export br_dydn
+export ydn
+export dydn
 
-export br_zup
-export br_dzup
+export zup
+export dzup
 
-export br_zdn
-export br_dzdn
+export zdn
+export dzdn
 
 # fast stagger operations using circular shift
 
-export br_cdxup
-export br_cdxdn
+export cdxup
+export cdxdn
 
-export br_cdyup
-export br_cdydn
+export cdyup
+export cdydn
 
-export br_cdzup
-export br_cdzdn
+export cdzup
+export cdzdn
 
-export br_cdivup
-export br_cdivdn
+export cdivup
+export cdivdn
 
-export br_cgrad_dn
-export br_cgrad_up
+export cgrad_dn
+export cgrad_up
 
-export br_claplace_du
-export br_claplace_ud
+export claplace_du
+export claplace_ud
 
-export br_cdivB_clean_du
+export cdivB_clean_du
 
 # special functions
 
-export br_divup
-export br_divdn
+export divup
+export divdn
 
-export br_gradup
-export br_graddn
+export gradup
+export graddn
 
-export br_laplacedu
-export br_laplaceud
+export laplacedu
+export laplaceud
 
-export br_poissondu
-export br_poissonud
+export poissondu
+export poissonud
 
-export br_divB_clean_ud
-export br_divB_clean_du
+export divB_clean_ud
+export divB_clean_du
 
 
 

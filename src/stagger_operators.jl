@@ -1,6 +1,6 @@
 # --- generic stagger operations for vectors
 
-function br_up(vec::Vector{T}) where {T<:AbstractFloat}
+function up(vec::Vector{T}) where {T<:AbstractFloat}
     n = size(vec)
     if (n[1] == 1)
         return vec
@@ -24,7 +24,7 @@ function br_up(vec::Vector{T}) where {T<:AbstractFloat}
     end
 end
 
-function br_dup(vec::Vector{T}) where {T<:AbstractFloat}
+function dup(vec::Vector{T}) where {T<:AbstractFloat}
     n = size(vec)
     if (n[1] == 1)
         return vec
@@ -50,7 +50,7 @@ function br_dup(vec::Vector{T}) where {T<:AbstractFloat}
     end
 end
 
-function br_dn(vec::Vector{T}) where {T<:AbstractFloat}
+function dn(vec::Vector{T}) where {T<:AbstractFloat}
     n = size(vec)
     if (n[1] == 1)
         return vec
@@ -74,7 +74,7 @@ function br_dn(vec::Vector{T}) where {T<:AbstractFloat}
     end
 end
 
-function br_ddn(vec::Vector{T}) where {T<:AbstractFloat}
+function ddn(vec::Vector{T}) where {T<:AbstractFloat}
     n = size(vec)
     if (n[1] == 1)
         return vec
@@ -102,58 +102,58 @@ end
 
 # --- fast stagger operations
 
-function br_cdxdn(arr::Array{T,3}) where {T<:AbstractFloat}
+function cdxdn(arr::Array{T,3}) where {T<:AbstractFloat}
     return arr .- circshift(arr,[1,0,0])
 end
 
-function br_cdydn(arr::Array{T,3}) where {T<:AbstractFloat}
+function cdydn(arr::Array{T,3}) where {T<:AbstractFloat}
     return arr .- circshift(arr,[0,1,0])
 end
 
-function br_cdzdn(arr::Array{T,3}) where {T<:AbstractFloat}
+function cdzdn(arr::Array{T,3}) where {T<:AbstractFloat}
     return arr .- circshift(arr,[0,0,1])
 end
 
-function br_cdxup(arr::Array{T,3}) where {T<:AbstractFloat}
+function cdxup(arr::Array{T,3}) where {T<:AbstractFloat}
     return -(arr .- circshift(arr,[-1,0,0]))
 end
 
-function br_cdyup(arr::Array{T,3}) where {T<:AbstractFloat}
+function cdyup(arr::Array{T,3}) where {T<:AbstractFloat}
     return -(arr .- circshift(arr,[0,-1,0]))
 end
 
-function br_cdzup(arr::Array{T,3}) where {T<:AbstractFloat}
+function cdzup(arr::Array{T,3}) where {T<:AbstractFloat}
     return -(arr .- circshift(arr,[0,0,-1]))
 end
 
-function br_cdivup(varr::Vector{Array{T,3}}) where {T<:AbstractFloat}
-    return br_cdxup(varr[1]) .+ br_cdyup(varr[2]) .+ br_cdzup(varr[3])
+function cdivup(varr::Vector{Array{T,3}}) where {T<:AbstractFloat}
+    return cdxup(varr[1]) .+ cdyup(varr[2]) .+ cdzup(varr[3])
 end
 
-function br_cdivdn(varr::Vector{Array{T,3}}) where {T<:AbstractFloat}
-    return br_cdxdn(varr[1]) .+ br_cdydn(varr[2]) .+ br_cdzdn(varr[3])
+function cdivdn(varr::Vector{Array{T,3}}) where {T<:AbstractFloat}
+    return cdxdn(varr[1]) .+ cdydn(varr[2]) .+ cdzdn(varr[3])
 end
 
-function br_cgrad_dn(arr::Array{T,3}) where {T<:AbstractFloat}
-    return [br_cdxdn(arr),br_cdydn(arr),br_cdzdn(arr)]
+function cgrad_dn(arr::Array{T,3}) where {T<:AbstractFloat}
+    return [cdxdn(arr),cdydn(arr),cdzdn(arr)]
 end
 
-function br_cgrad_up(arr::Array{T,3}) where {T<:AbstractFloat}
-    return [br_cdxup(arr),br_cdyup(arr),br_cdzup(arr)]
+function cgrad_up(arr::Array{T,3}) where {T<:AbstractFloat}
+    return [cdxup(arr),cdyup(arr),cdzup(arr)]
 end
 
-function br_claplace_du(arr::Array{T,3}) where {T<:AbstractFloat}
-    return br_cdivdn(br_cgrad_up(arr))
+function claplace_du(arr::Array{T,3}) where {T<:AbstractFloat}
+    return cdivdn(cgrad_up(arr))
 end
 
-function br_claplace_ud(arr::Array{T,3}) where {T<:AbstractFloat}
-    return br_cdivup(br_cgrad_dn(arr))
+function claplace_ud(arr::Array{T,3}) where {T<:AbstractFloat}
+    return cdivup(cgrad_dn(arr))
 end
 
 # --- stagger operations
 
 """
-    function br_xup(
+    function xup(
         arr::Array{T,3},
         periodic::Bool=true,
         order::Int=6
@@ -162,7 +162,7 @@ end
 Stagger operation on `arr` by a 5th order polynomial interpolation, 
 shifting the variable half a grid point upwards in the x-direction
 """
-function br_xup(
+function xup(
     arr::Array{T,3},
     periodic::Bool=true,
     order::Int=6
@@ -229,7 +229,7 @@ function br_xup(
     end
 end
 
-function br_xup(
+function xup(
     arr::Array{T,3},
     slicex::AbstractVector{<:Integer},
     periodic::Bool=true,
@@ -307,7 +307,7 @@ end
 
 
 """
-	br_dxup(
+	dxup(
 		arr::Array{T,3},
 		dz::Vector{T}, 
 		periodic::Bool=false, 
@@ -319,7 +319,7 @@ shifted a half grid point upwards. Defaults to the 6th order accurate Bifrost
 derivative with `order=6`, optional 2nd order accurate derivative with keyword 
 `order=2`
 """
-function br_dxup(
+function dxup(
     arr::Array{T,3},
     dx::Vector{T},
     periodic::Bool=true,
@@ -388,7 +388,7 @@ function br_dxup(
 end
 
 """
-    function br_xdn(
+    function xdn(
         arr::Array{T,3},
         periodic::Bool=true,
         order::Int=6
@@ -397,7 +397,7 @@ end
 Stagger operation on `arr` by a 5th order polynomial interpolation, 
 shifting the variable half a grid point downwards in the x-direction
 """
-function br_xdn(
+function xdn(
     arr::Array{T,3},
     periodic::Bool=true,
     order::Int=6
@@ -464,7 +464,7 @@ function br_xdn(
     end
 end
 
-function br_xdn(
+function xdn(
     arr::Array{T,3},
     slicex::AbstractVector{<:Integer},
     periodic::Bool=true,
@@ -542,7 +542,7 @@ end
 
 
 """
-	br_dxdn(
+	dxdn(
 		arr::Array{T,3},
 		dz::Vector{T}, 
 		periodic::Bool=false, 
@@ -554,7 +554,7 @@ shifted a half grid point downwards. Defaults to the 6th order accurate Bifrost
 derivative with `order=6`, optional 2nd order accurate derivative with keyword 
 `order=2`
 """
-function br_dxdn(
+function dxdn(
     arr::Array{T,3},
     dx::Vector{T},
     periodic::Bool=true,
@@ -623,7 +623,7 @@ function br_dxdn(
 end
 
 """
-    function br_yup(
+    function yup(
         arr::Array{T,3},
         periodic::Bool=true,
         order::Int=6
@@ -632,7 +632,7 @@ end
 Stagger operation on `arr` by a 5th order polynomial interpolation, 
 shifting the variable half a grid point upwards in the y-direction
 """
-function br_yup(
+function yup(
     arr::Array{T,3},
     periodic::Bool=true,
     order::Int=6
@@ -700,7 +700,7 @@ function br_yup(
     end
 end
 
-function br_yup(
+function yup(
     arr::Array{T,3},
     slicey::AbstractVector{<:Integer},
     periodic::Bool=true,
@@ -778,7 +778,7 @@ function br_yup(
 end
 
 """
-	br_dyup(
+	dyup(
 		arr::Array{T,3},
 		dz::Vector{T}, 
 		periodic::Bool=false, 
@@ -790,7 +790,7 @@ shifted a half grid point upwards. Defaults to the 6th order accurate Bifrost
 derivative with `order=6`, optional 2nd order accurate derivative with keyword 
 `order=2`
 """
-function br_dyup(
+function dyup(
     arr::Array{T,3},
     dy::Vector{T},
     periodic::Bool=true,
@@ -859,7 +859,7 @@ function br_dyup(
 end
 
 """
-    function br_ydn(
+    function ydn(
         arr::Array{T,3},
         periodic::Bool=true,
         order::Int=6
@@ -868,7 +868,7 @@ end
 Stagger operation on `arr` by a 5th order polynomial interpolation, 
 shifting the variable half a grid point downwards in the y-direction
 """
-function br_ydn(
+function ydn(
 	arr::Array{T,3}, 
 	periodic::Bool=true, 
 	order::Int=6
@@ -936,7 +936,7 @@ function br_ydn(
 end
 
 
-function br_ydn(
+function ydn(
 	arr::Array{T,3}, 
     slicey::AbstractVector{<:Integer},
 	periodic::Bool=true, 
@@ -1014,7 +1014,7 @@ function br_ydn(
 end
 
 """
-	br_dydn(
+	dydn(
 		arr::Array{T,3},
 		dz::Vector{T}, 
 		periodic::Bool=false, 
@@ -1026,7 +1026,7 @@ shifted a half grid point downwards. Defaults to the 6th order accurate Bifrost
 derivative with `order=6`, optional 2nd order accurate derivative with keyword 
 `order=2`
 """
-function br_dydn(
+function dydn(
     arr::Array{T,3},
     dy::Vector{T},
     periodic::Bool=true,
@@ -1095,7 +1095,7 @@ function br_dydn(
 end
 
 """
-    function br_zup(
+    function zup(
         arr::Array{T,3},
         periodic::Bool=true,
         order::Int=6
@@ -1104,7 +1104,7 @@ end
 Stagger operation on `arr` by a 5th order polynomial interpolation, 
 shifting the variable half a grid point upwards in the z-direction
 """
-function br_zup(
+function zup(
 	arr::Array{T,3}, 
 	periodic::Bool=false, 
 	order::Int=6
@@ -1172,7 +1172,7 @@ function br_zup(
     end
 end
 
-function br_zup(
+function zup(
 	arr::Array{T,3}, 
     slicez::AbstractVector{<:Integer},
 	periodic::Bool=false, 
@@ -1249,7 +1249,7 @@ function br_zup(
 end
 
 """
-	br_dzup(
+	dzup(
 		arr::Array{T,3},
 		dz::Vector{T}, 
 		periodic::Bool=false, 
@@ -1261,7 +1261,7 @@ shifted a half grid point upwards. Defaults to the 6th order accurate Bifrost
 derivative with `order=6`, optional 2nd order accurate derivative with keyword 
 `order=2`
 """
-function br_dzup(
+function dzup(
     arr::Array{T,3},
     dz::Vector{T},
     periodic::Bool=false,
@@ -1330,7 +1330,7 @@ function br_dzup(
 end
 
 """
-    function br_zdn(
+    function zdn(
         arr::Array{T,3},
         periodic::Bool=true,
         order::Int=6
@@ -1339,7 +1339,7 @@ end
 Stagger operation on `arr` by a 5th order polynomial interpolation, 
 shifting the variable half a grid point downwards in the z-direction
 """
-function br_zdn(
+function zdn(
 	arr::Array{T,3}, 
 	periodic::Bool=false, 
 	order::Int=6
@@ -1406,7 +1406,7 @@ function br_zdn(
     end
 end
 
-function br_zdn(
+function zdn(
 	arr::Array{T,3},
     slicez::AbstractVector{<:Integer},
 	periodic::Bool=false, 
@@ -1482,7 +1482,7 @@ function br_zdn(
 end
 
 """
-	br_dzdn(
+	dzdn(
 		arr::Array{T,3},
 		dz::Vector{T}, 
 		periodic::Bool=false, 
@@ -1494,7 +1494,7 @@ shifted a half grid point downwards. Defaults to the 6th order accurate Bifrost
 derivative with `order=6`, optional 2nd order accurate derivative with keyword 
 `order=2`
 """
-function br_dzdn(
+function dzdn(
     arr::Array{T,3},
     dz::Vector{T},
     periodic::Bool=false,

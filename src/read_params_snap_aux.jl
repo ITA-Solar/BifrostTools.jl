@@ -1,14 +1,14 @@
 
 
 """
-    br_read_params(file_name::String)
+    read_params(file_name::String)
 
 Reads and returns parameters `params` of a Bifrost simulation snapshot given 
 the path `file_name` to the simulation snapshot. The input file should have the
 format 'name_xxx.idl' where 'name' is the simulation name and 'xxx' is the 
 snapshot number
 """
-function br_read_params(file_name::String)
+function read_params(file_name::String)
     
     params = Dict{String,String}()
   
@@ -75,6 +75,7 @@ function get_snap(
     get_snap(snap_filename, params, precision)
 end
 
+
 """
     get_snap(
         file_name::String,
@@ -115,7 +116,7 @@ function get_snap(
     snapdata = mmap(file, Array{precision, datadims}, (snapsize..., numvars))
     close(file)
     return snapdata
-end # function br_load_snapdata
+end # function load_snapdata
 
 """
     get_aux(
@@ -144,7 +145,7 @@ function get_aux(
         close(file)
         return auxdata
     end
-end # function br_load_auxdata
+end # function load_auxdata
 
 
 """
@@ -539,12 +540,12 @@ function get_staggered_var(
     )
 
     shift_functions = Dict(
-        "xdn" => br_xdn, 
-        "xup" => br_xup,
-        "ydn" => br_ydn, 
-        "yup" => br_yup, 
-        "zdn" => br_zdn, 
-        "zup" => br_zup
+        "xdn" => xdn, 
+        "xup" => xup,
+        "ydn" => ydn, 
+        "yup" => yup, 
+        "zdn" => zdn, 
+        "zup" => zup
     )
 
     allowed_directions = collect(keys(shift_functions))
@@ -563,7 +564,7 @@ function get_staggered_var(
     # io stuff
     isnap = lpad(snap,3,"0")
     idl_file = string(expname,"_",isnap,".idl")
-    params = br_read_params(joinpath(expdir,idl_file))
+    params = read_params(joinpath(expdir,idl_file))
     filename = string(expname,"_",isnap,".snap")
     filename = joinpath(expdir,filename)
 
@@ -777,7 +778,7 @@ function get_electron_density(
     
     # construct the EOS tables for interpolation of electron density
     tabfile = joinpath(expdir,tabfile)
-    eos = EOS_tables(tabfile)
+    eos = EOSTables(tabfile)
 
     if maximum(rho) > parse(Float64,eos.params["RhoMax"])
         @printf """tab_interp: density outside table bounds.
@@ -798,7 +799,7 @@ function get_electron_density(
     end
     
     # Create interpolation table, takes the log of coordinates
-    itp_table = br_eos_interpolate(eos,3)
+    itp_table = eos_interpolate(eos,3)
 
     x = log.(ee)
     y = log.(rho)

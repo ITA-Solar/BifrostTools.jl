@@ -1,5 +1,5 @@
 
-struct EOS_tables
+struct EOSTables
     tabparamsf::String
     tabparamsf_root::String
     params::Dict{String,String}
@@ -15,12 +15,12 @@ struct EOS_tables
     NeAxis::Vector{Float32}
     NeTgRadTable_recl::Int
     nRadBins::Int32
-    function EOS_tables(tabparams::String)
+    function EOSTables(tabparams::String)
 
         tabparamsf = normpath(tabparams)
         tabparamsf_root = dirname(tabparamsf)
 
-        p = br_read_params(tabparams)
+        p = read_params(tabparams)
 
         RhoMin = log(parse(Float64, p["RhoMin"]))
         lnRhor = log(parse(Float64, p["RhoMax"])) - RhoMin
@@ -84,7 +84,7 @@ struct EOS_tables
     end
 end
 
-function br_get_ne_epstable(t::EOS_tables)
+function get_ne_epstable(t::EOSTables)
     f = FortranFile(
         joinpath(t.tabparamsf_root, t.params["NeTgRadTableFile"]),
         "r",
@@ -95,7 +95,7 @@ function br_get_ne_epstable(t::EOS_tables)
     return var
 end
 
-function br_get_ne_temtable(t::EOS_tables)
+function get_ne_temtable(t::EOSTables)
     f = FortranFile(
         joinpath(t.tabparamsf_root, t.params["NeTgRadTableFile"]),
         "r",
@@ -106,7 +106,7 @@ function br_get_ne_temtable(t::EOS_tables)
     return var
 end
 
-function br_get_ne_opatable(t::EOS_tables)
+function get_ne_opatable(t::EOSTables)
     f = FortranFile(
         joinpath(t.tabparamsf_root, t.params["NeTgRadTableFile"]),
         "r",
@@ -117,7 +117,7 @@ function br_get_ne_opatable(t::EOS_tables)
     return var
 end
 
-function br_get_epstable(t::EOS_tables)
+function get_epstable(t::EOSTables)
     f = FortranFile(
         joinpath(t.tabparamsf_root, t.params["RhoEiRadTableFile"]),
         "r",
@@ -128,7 +128,7 @@ function br_get_epstable(t::EOS_tables)
     return var
 end
 
-function br_get_temtable(t::EOS_tables)
+function get_temtable(t::EOSTables)
     f = FortranFile(
         joinpath(t.tabparamsf_root, t.params["RhoEiRadTableFile"]),
         "r",
@@ -139,7 +139,7 @@ function br_get_temtable(t::EOS_tables)
     return var
 end
 
-function br_get_opatable(t::EOS_tables)
+function get_opatable(t::EOSTables)
     f = FortranFile(
         joinpath(t.tabparamsf_root, t.params["RhoEiRadTableFile"]),
         "r",
@@ -150,7 +150,7 @@ function br_get_opatable(t::EOS_tables)
     return var
 end
 
-function br_get_eostable(t::EOS_tables)
+function get_eostable(t::EOSTables)
     f = FortranFile(
         joinpath(t.tabparamsf_root, t.params["EOSTableFile"]),
         "r",
@@ -161,19 +161,19 @@ function br_get_eostable(t::EOS_tables)
     return var
 end
 
-function br_get_expieos_err(t::EOS_tables)
+function get_expieos_err(t::EOSTables)
     f = FortranFile("expieos_err.dat", "r", access="direct", recl=t.RhoEi_recl * 4)
     var = read(f, rec=1, (Float32, (t.nEiBin, t.nRhoBin, 4)))
     return var
 end
 
-function br_get_lndlnT_table(t::EOS_tables, file_name="lndlnT.dat")
+function get_lndlnT_table(t::EOSTables, file_name="lndlnT.dat")
     f = FortranFile(file_name, "r", access="direct", recl=t.nTgBin * t.nRhoBin * 4 * 4)
     var = read(f, rec=1, (Float32, (t.nTgBin, t.nRhoBin, 4)))
     return var
 end
 
-function br_get_theta_rho_table(t::EOS_tables, file_name="theta_rho_table.dat")
+function get_theta_rho_table(t::EOSTables, file_name="theta_rho_table.dat")
     f = FortranFile(file_name, "r", access="direct", recl=t.nTgBin * t.nRhoBin * 4 * 8)
     var = read(f, rec=1, (Float64, (t.nTgBin, t.nRhoBin, 4)))
     return var
@@ -183,7 +183,7 @@ end
 
 function debug_cell(idl_filename::String, i::Int, j::Int, k::Int, rpos::Int)
     @sprintf "[dbg] i = %04d, j = %04d, k = %04d :: var = %d" i j k rpos
-    p = br_read_params(idl_filename)
+    p = read_params(idl_filename)
     return p
 end
 
@@ -199,7 +199,7 @@ end
 
 # --- interpolate from eos
 
-function br_eos_interpolate(eos::EOS_tables, nvar::Int)
+function eos_interpolate(eos::EOSTables, nvar::Int)
     
     lnRho = log(parse(Float32,eos.params["RhoMax"]) / parse(Float32,eos.params["RhoMin"]))
     dlnRho = lnRho / (parse(Float32,eos.params["nRhoBin"]) - 1)
@@ -210,7 +210,7 @@ function br_eos_interpolate(eos::EOS_tables, nvar::Int)
     eia = eos.EiAxis[1]:dlnEi:eos.EiAxis[end]
     rhoa = eos.RhoAxis[1]:dlnRho:eos.RhoAxis[end]
 
-    tab = br_get_eostable(eos)
+    tab = get_eostable(eos)
 
     return CubicSplineInterpolation((eia, rhoa), tab[:, :, nvar], extrapolation_bc=Line())
 end
