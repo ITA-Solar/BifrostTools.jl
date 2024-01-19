@@ -24,7 +24,7 @@ end
 
 
 """
-    br_find_snap_numbers
+    get_snap_numbers
 
 Finds all files in the format 'expname_XXX.snap' in the experiment directory
 `exp_dir`, and returns a vector of the snapshots XXX. If `expname` is not

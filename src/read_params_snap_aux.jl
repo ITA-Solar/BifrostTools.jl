@@ -10,14 +10,14 @@ const primary_vars = Dict(
 )
 
 """
-    br_read_params(file_name::String)
+    read_params(file_name::String)
 
 Reads and returns parameters `params` of a Bifrost simulation snapshot given 
 the path `file_name` to the simulation snapshot. The input file should have the
 format 'name_xxx.idl' where 'name' is the simulation name and 'xxx' is the 
 snapshot number
 """
-function br_read_params(file_name::String)
+function read_params(file_name::String)
     
     params = Dict{String,String}()
   
@@ -43,7 +43,7 @@ end
 
 
 """
-    br_load_snapdata(
+    load_snapdata(
         expname::String,
         snap   ::Int,
         expdir ::String,
@@ -70,7 +70,7 @@ Variables of `snapdata`:
 Warning:
     variables in code units.ts
 """
-function br_load_snapdata(
+function load_snapdata(
     expname  ::String,
     snap     ::Int,
     expdir   ::String,
@@ -81,7 +81,7 @@ function br_load_snapdata(
     basename = string(expdir, "/", expname, "_$(lpad(snap,3,"0"))")
     idl_filename = string(basename, ".idl")
     snap_filename = string(basename, ".snap")
-    params = br_read_params(idl_filename)
+    params = read_params(idl_filename)
     
     snapsize, numvars, _ = get_snapsize_and_numvars(params)
 
@@ -90,10 +90,10 @@ function br_load_snapdata(
     snapdata = mmap(file, Array{precision, 4}, (snapsize..., numvars))
     close(file)
     return snapdata, params
-end # function br_load_snapdata
+end # function load_snapdata
 
 """
-    br_load_snapdata(
+    load_snapdata(
         file_name::String,
         params   ::Dict{String,String}
         )
@@ -118,7 +118,7 @@ Variables of `snapdata`:
 Warning:
     variables in code units.
 """
-function br_load_snapdata(
+function load_snapdata(
     file_name::String,
     params   ::Dict{String,String},
     precision::DataType=Float32
@@ -132,10 +132,10 @@ function br_load_snapdata(
     snapdata = mmap(file, Array{precision, datadims}, (snapsize..., numvars))
     close(file)
     return snapdata
-end # function br_load_snapdata
+end # function load_snapdata
 
 """
-    br_load_auxdata(
+    load_auxdata(
         file_name::String,
         params   ::Dict{String,String}
     )
@@ -143,7 +143,7 @@ Reads Bifrost *.aux binary file using memory-mapping. The returned
 `auxdata` array will have dimensions (mx,my,mz,nvars) where nvars is the
 number of aux-variables. Assumes single floating point precision by default.
 """
-function br_load_auxdata(
+function load_auxdata(
     file_name::String,
     params   ::Dict{String,String},
     precision::DataType=Float32
@@ -161,7 +161,7 @@ function br_load_auxdata(
         close(file)
         return auxdata
     end
-end # function br_load_auxdata
+end # function load_auxdata
 
 """
     get_variable_offset_in_file(
@@ -233,7 +233,7 @@ function get_auxvarnr(
 end
 
 """
-    br_load_snapvariable(
+    load_snapvariable(
         file_name::String,
         params   ::Dict{String,String},
         variable ::String,
@@ -260,7 +260,7 @@ The available variables are:
 Can convert variable to si or cgs units by passing `units="si"` or
 `units="cgs"`.
 """
-function br_load_snapvariable(
+function load_snapvariable(
     file_name::String,
     params   ::Dict{String,String},
     variable ::String,
@@ -316,10 +316,10 @@ function br_load_snapvariable(
     close(file)
 
     return snapvariable
-end # function br_load_snapvariable
+end # function load_snapvariable
 
 """
-    br_load_snapvariable(
+    load_snapvariable(
         expname ::String,
         snap    ::Vector{T} where {T<:Integer},
         expdir  ::String,
@@ -345,7 +345,7 @@ The available variables are:
 Can convert variable to si or cgs units by passing  `units="si"` or
 `units="cgs"`.
 """
-function br_load_snapvariable(
+function load_snapvariable(
     expname ::String,
     snap    ::Vector{T} where {T<:Integer},
     expdir  ::String,
@@ -358,7 +358,7 @@ function br_load_snapvariable(
     # Parse filenames
     basename = string(expdir, "/", expname, "_$(lpad(snap[1],3,"0"))")
     idl_filename  = string(basename, ".idl")
-    params = br_read_params(idl_filename)
+    params = read_params(idl_filename)
 
     snapsize, numvars = get_snapsize_and_numvars(params)
 
@@ -389,10 +389,10 @@ function br_load_snapvariable(
     end
 
     return snapvariable
-end # function br_load_snapvariable
+end # function load_snapvariable
 
 """
-    br_load_auxvariable(
+    load_auxvariable(
         file_name::String,
         params   ::Dict{String,String},
         auxvar   ::String,
@@ -408,7 +408,7 @@ snapshot parameters must be given together with a string for the aux-variable,
 variable to si or cgs units by passing  `units="si"` or 
 `units="cgs"`.
 """
-function br_load_auxvariable(
+function load_auxvariable(
     file_name::String,
     params::Dict{String,String},
     auxvar::String,
@@ -461,10 +461,10 @@ function br_load_auxvariable(
     close(file)
 
     return auxvariable
-end # function br_load_auxdata
+end # function load_auxdata
 
 """
-    br_load_auxvariable(
+    load_auxvariable(
         expname ::String,
         snap    ::Vector{T} where {T<:Integer},
         expdir  ::String,
@@ -477,7 +477,7 @@ snapshots. Takes the snapshot-numbers in the vector `snap`.
 Assumes single floating point precision as default. Can convert variable to si 
 or cgs units by passing  `units="si"` or `units="cgs"`.
 """
-function br_load_auxvariable(
+function load_auxvariable(
     expname ::String,
     snap    ::Vector{T} where {T<:Integer},
     expdir  ::String,
@@ -490,7 +490,7 @@ function br_load_auxvariable(
     # Parse filenames
     basename = string(expdir, "/", expname, "_$(lpad(snap[1],3,"0"))")
     idl_filename  = string(basename, ".idl")
-    params = br_read_params(idl_filename)
+    params = read_params(idl_filename)
 
     snapsize, _, numauxvars = get_snapsize_and_numvars(params)
     auxvarnr = get_auxvarnr(params, auxvar)
@@ -595,18 +595,18 @@ function get_var(
 
     isnap = lpad(snap,3,"0")
     idl_file = string(expname,"_",isnap,".idl")
-    params = br_read_params(joinpath(expdir,idl_file))
+    params = read_params(joinpath(expdir,idl_file))
 
     if variable in keys(primary_vars)
         filename = string(expname,"_",isnap,".snap")
         filename = joinpath(expdir,filename)
-        return br_load_snapvariable(filename,params,variable,precision,
+        return load_snapvariable(filename,params,variable,precision,
             units=units,slicex=slicex,slicey=slicey,slicez=slicez)
             
     elseif variable in split(params["aux"])
         filename = string(expname,"_",isnap,".aux")
         filename = joinpath(expdir,filename)
-        return br_load_auxvariable(filename,params,variable,precision,
+        return load_auxvariable(filename,params,variable,precision,
             units=units,slicex=slicex,slicey=slicey,slicez=slicez)
     
     elseif variable == "t"
@@ -638,15 +638,15 @@ function get_var(
 
     isnap = lpad(snaps[1],3,"0")
     idl_file = string(expname,"_",isnap,".idl")
-    params = br_read_params(joinpath(expdir,idl_file))
+    params = read_params(joinpath(expdir,idl_file))
 
     filename = joinpath(expdir,expname*"_")
     
     if variable in keys(primary_vars)
-        load_var = br_load_snapvariable
+        load_var = load_snapvariable
         file_ext = ".snap"
     elseif variable in split(params["aux"])
-        load_var = br_load_auxvariable
+        load_var = load_auxvariable
         file_ext = ".aux"
     elseif variable == "t"
         var = Vector{Float64}(undef, length(snaps))
@@ -657,7 +657,7 @@ function get_var(
             
             isnap = lpad(snap,3,"0")
             idl_file = string(filename,isnap,file_ext)
-            params = br_read_params(idl_file) 
+            params = read_params(idl_file) 
             
             time = parse(Float64, params["t"])
             
@@ -683,7 +683,7 @@ function get_var(
         # !! Create thread-local variables to avoid race conditions !!
         isnap_local = lpad(snap,3,"0")
         idl_file_local = string(filename,isnap_local,".idl")
-        params_local = br_read_params(idl_file_local)        
+        params_local = read_params(idl_file_local)        
         tmp_file = string(filename,isnap_local,file_ext)
 
         var[:,:,:,i] .= load_var(tmp_file,params_local,variable,
@@ -780,12 +780,12 @@ function get_staggered_var(
     )
 
     shift_functions = Dict(
-        "xdn" => br_xdn, 
-        "xup" => br_xup,
-        "ydn" => br_ydn, 
-        "yup" => br_yup, 
-        "zdn" => br_zdn, 
-        "zup" => br_zup
+        "xdn" => xdn, 
+        "xup" => xup,
+        "ydn" => ydn, 
+        "yup" => yup, 
+        "zdn" => zdn, 
+        "zup" => zup
     )
 
     allowed_directions = collect(keys(shift_functions))
@@ -804,7 +804,7 @@ function get_staggered_var(
     # io stuff
     isnap = lpad(snap,3,"0")
     idl_file = string(expname,"_",isnap,".idl")
-    params = br_read_params(joinpath(expdir,idl_file))
+    params = read_params(joinpath(expdir,idl_file))
     filename = string(expname,"_",isnap,".snap")
     filename = joinpath(expdir,filename)
 
@@ -815,11 +815,11 @@ function get_staggered_var(
         if ( direction == "xup" ) || ( direction == "xdn" )
             if isempty(slicex)
                 # All indices in 'x' are loaded, don't worry about slicing
-                var = br_load_snapvariable(filename,params,variable,precision,
+                var = load_snapvariable(filename,params,variable,precision,
                     units=units,slicey=slicey,slicez=slicez)
                 var = shift(var,periodic,order)
             else
-                var = br_load_snapvariable(filename,params,variable,precision,
+                var = load_snapvariable(filename,params,variable,precision,
                     units="none",slicey=slicey,slicez=slicez)
                 var = shift(var,slicex,periodic,order)
                 if units ≠ "none"
@@ -829,11 +829,11 @@ function get_staggered_var(
         elseif ( direction == "yup" ) || ( direction == "ydn" )
             if isempty(slicey)
                 # All indices in 'y' are loaded, don't worry about slicing
-                var = br_load_snapvariable(filename,params,variable,precision,
+                var = load_snapvariable(filename,params,variable,precision,
                     units=units,slicex=slicex,slicez=slicez)
                 var = shift(var,periodic,order)
             else
-                var = br_load_snapvariable(filename,params,variable,precision,
+                var = load_snapvariable(filename,params,variable,precision,
                     units="none",slicex=slicex,slicez=slicez)
                 var = shift(var,slicey,periodic,order)
                 if units ≠ "none"
@@ -843,11 +843,11 @@ function get_staggered_var(
         else
             if isempty(slicez)
                 # All indices in 'z' are loaded, don't worry about slicing
-                var = br_load_snapvariable(filename,params,variable,precision,
+                var = load_snapvariable(filename,params,variable,precision,
                     units=units,slicex=slicex,slicey=slicey)
                 var = shift(var,periodic,order)
             else
-                var = br_load_snapvariable(filename,params,variable,precision,
+                var = load_snapvariable(filename,params,variable,precision,
                     units="none",slicex=slicex,slicey=slicey)
                 var = shift(var,slicez,periodic,order)
                 if units ≠ "none"
@@ -857,7 +857,7 @@ function get_staggered_var(
         end
     else
         # load the entire variable and shift it in the desired direction
-        var = br_load_snapvariable(filename,params,variable,precision,
+        var = load_snapvariable(filename,params,variable,precision,
             units=units)
         var = shift(var,periodic,order)
     end
@@ -976,7 +976,7 @@ function get_electron_density(
     end
     
     # Create interpolation table, takes the log of coordinates
-    itp_table = br_eos_interpolate(eos,3)
+    itp_table = eos_interpolate(eos,3)
 
     x = log.(ee)
     y = log.(rho)

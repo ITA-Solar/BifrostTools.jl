@@ -1,6 +1,6 @@
 
 """
-    br_change_snap_resolution(
+    change_snap_resolution(
         xp      ::BifrostExperiment,
         isnap   ::Integer,
         new_x   ::Vector{<:Real},
@@ -18,7 +18,7 @@ by the BifrostExperiment and isnap argument.
 Boundary conditions could be either Throw(), Flat(), Line(), Periodic()
 or Reflect().
 """
-function br_change_snap_resolution(
+function change_snap_resolution(
     xp      ::BifrostExperiment,
     isnap   ::Integer,
     new_x   ::Vector{<:Real},
@@ -28,15 +28,15 @@ function br_change_snap_resolution(
     ;
     filename::String="out.snap"
     )
-    primaries, params = br_load_snapdata(xp.expname, isnap, xp.expdir)
+    primaries, params = load_snapdata(xp.expname, isnap, xp.expdir)
     snapsize, numvars, _ = get_snapsize_and_numvars(params)
-    br_change_snap_resolution(primaries, xp.mesh, numvars, 
+    change_snap_resolution(primaries, xp.mesh, numvars, 
                                 new_x, new_y, new_z, itp_bc;
                                 filename
                                 )
 end
 
-function br_change_snap_resolution(
+function change_snap_resolution(
     snapname::String,
     meshname::String,
     new_x   ::Vector{<:Real},
@@ -47,17 +47,17 @@ function br_change_snap_resolution(
     filename::String="out.snap"
     )
     params_filename = snapname[1:end-4]*"idl"
-    params = br_read_params(params_filename)
-    primaries = br_load_snapdata(snapname, params)
+    params = read_params(params_filename)
+    primaries = load_snapdata(snapname, params)
     snapsize, numvars, _ = get_snapsize_and_numvars(params)
     mesh = BifrostMesh(meshname)
-    br_change_snap_resolution(primaries, mesh, numvars,
+    change_snap_resolution(primaries, mesh, numvars,
                                 new_x, new_y, new_z, itp_bc;
                                 filename
                                 )
 end 
 
-function br_change_snap_resolution(
+function change_snap_resolution(
     primaries::Array{<:Real, 4},
     mesh     ::BifrostMesh,
     numvars  ::Int64,
@@ -183,7 +183,7 @@ end
 
 
 """
-    br_duplicate_xz_plane(
+    duplicate_xz_plane(
         xp      ::BifrostExperiment,
         isnap   ::Integer,
         ny      ::Integer,
@@ -193,30 +193,30 @@ end
 Duplicates the xz-plane into `ny` gridpoints in the y-axis. Used for creating
 3D snapshots from a 2D xy-snapshot. 
 """
-function br_duplicate_xz_plane(
+function duplicate_xz_plane(
     xp      ::BifrostExperiment,
     isnap   ::Integer,
     ny      ::Int64,
     ;
     filename::String="out.snap"
     )
-    primaries, params = br_load_snapdata(xp.expname, isnap, xp.expdir)
-    br_duplicate_xz_plane(primaries, ny; filename=filename)
+    primaries, params = load_snapdata(xp.expname, isnap, xp.expdir)
+    duplicate_xz_plane(primaries, ny; filename=filename)
 end
 
-function br_duplicate_xz_plane(
+function duplicate_xz_plane(
     snapname::String,
     ny      ::Int64,
     ;
     filename::String="out.snap"
     )
     params_filename = snapname[1:end-4]*"idl"
-    params = br_read_params(params_filename)
-    primaries = br_load_snapdata(snapname, params)
-    br_duplicate_xz_plane(primaries, ny; filename=filename)
+    params = read_params(params_filename)
+    primaries = load_snapdata(snapname, params)
+    duplicate_xz_plane(primaries, ny; filename=filename)
 end 
 
-function br_duplicate_xz_plane(
+function duplicate_xz_plane(
     primaries::Array{<:Real, 4},
     ny       ::Int64,
     ;
