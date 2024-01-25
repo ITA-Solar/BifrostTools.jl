@@ -32,9 +32,22 @@ function read_params(file_name::String)
     return params
 end
 
-# -----------------------------------------------------------------------------
-# Remove doc
-# -----------------------------------------------------------------------------
+"""
+    read_params(expname::String, snap::Integer, expdir::String)
+"""
+function read_params(
+    expname::String,
+    snap::Integer,
+    expdir::String
+    )
+
+    isnap = lpad(snap,3,"0")
+    idl_file = string(joinpath(expdir,expname),"_",isnap,".idl")
+    
+    
+    read_params(idl_file)
+end
+
 """
     get_snap(
         expname::String,
@@ -216,21 +229,19 @@ function get_var(
     kwargs...
     )
 
-    basename, basename_isnap = get_basename(expname, snaps, expdir)
+    basename, basename_isnap = get_filename(expname, snaps, expdir)
     params = read_params(string(basename_isnap, ".idl"))
 
     if variable == "t"
         # The special case of getting the snapshot time
         return get_time(basename, snaps, params; kwargs...)
-    else
-        varnr, file_ext = get_varnr_and_file_extension(params, variable)
     end
 
     data = get_var(
-        basename, 
+        filename, 
         snaps,
-        varnr, 
-        file_ext;
+        variable,
+        params;
         kwargs...
     )
 
@@ -295,14 +306,22 @@ function get_var(
     basename ::String,
     snaps::Union{<:Integer, AbstractVector{<:Integer}},
     varnr::Integer,
-    file_ext::String,
+    params::Dict{String,String}
     ;
     precision::DataType=Float32,
     kwargs...
     )
 
+    varnr, file_ext = get_varnr_and_file_extension(params, variable)
+
     kwarg_keys = keys(kwargs)
     kwarg_values = values(kwargs)
+
+    if :destagger in kwarg_keys && kwarg_values.destagger
+        if ! ( variable in ["px","py","pz","bx","by","bz","ix","iy","iz"] )
+            @warn "Variable $variable is not usually staggered"
+        end
+    end
 
     # Allocate space for variable
     var = Vector{Array{precision, 3}}(undef, length(snaps))
@@ -398,59 +417,32 @@ function get_var(
 end
 
 function get_time(
-    filename_prefix::String,
-    snap           ::Union{<:Integer, AbstractVector{<:Integer}},
-    params         ::Dict{String,String} 
+    expname::String,
+    snap   ::Union{<:Integer, AbstractVector{<:Integer}},
+    expdir ::String 
     ;
     kwargs...
     )
     nsnaps = length(snap)
     if nsnaps == 1
-    var = parse(Float64, params["t"])
-        return var
+        params = read_params(expname,snap,expdir)
+        var = [parse(Float64, params["t"])]
     else 
         var = Vector{Float64}(undef, nsnaps)
-        file_ext = ".idl"
         # Load the variable directly from params
         for (i,snap) in enumerate(snap)
-            isnap = lpad(snap,3,"0")
-            idl_file = string(filename_prefix, isnap, file_ext)
-            params = read_params(idl_file)
+            params = read_params(expname,snap,expdir)
             time = parse(Float64, params["t"])
             var[i] = time
         end
-        if :units in keys(kwargs)
-            convert_timeunits!(var, params)
-        end
-        return var
     end
+
+    if :units in keys(kwargs)
+        convert_timeunits!(var, params)
+    end
+    
+    return var
 end
-
-
-# -----------------------------------------------------------------------------
-# Relevant doc-string
-# -----------------------------------------------------------------------------
-"""
-
-Function to load a staggered variable and interpolate it to cell center.
-The staggered variables that typically need to be interpolated are the velocity
-and magnetic field components. Normally you need to use `direction="zup"` for 
-vz and bz with `periodic=false` (these are the default arguments), and 
-`direction="xup"` for vx and bx with `periodic=true` (same for y direction).
-
-This function should be called through the `get_var` function, like so:
-`uz = get_var(xp, snap, "uz", args...; kwargs...)`.
-
-`kwargs`:
-    precision::DataType=Float32,
-    units::String="none",
-    direction::String="zup",
-    periodic::Bool=false,
-    order::Int=6,
-    slicex::AbstractVector{<:Integer}=Int[],
-    slicey::AbstractVector{<:Integer}=Int[],
-    slicez::AbstractVector{<:Integer}=Int[]
-"""
 
 """
     function get_and_destagger_var(expname::String,
@@ -467,6 +459,12 @@ This function should be called through the `get_var` function, like so:
         slicey::AbstractVector{<:Integer}=Int[],
         slicez::AbstractVector{<:Integer}=Int[]
         )
+
+Function to load a staggered variable and interpolate it to cell center.
+The staggered variables that typically need to be interpolated are the velocity
+and magnetic field components. Normally you need to use `direction="zup"` for 
+vz and bz with `periodic=false` (these are the default arguments), and 
+`direction="xup"` for vx and bx with `periodic=true` (same for y direction).
 """
 function get_and_destagger_var(
     filename::String,
@@ -491,18 +489,7 @@ function get_and_destagger_var(
         "zup" => zup
     )
 
-    #allowed_directions = collect(keys(shift_functions))
-    #if ! ( direction in allowed_directions )
-    #    throw(ErrorException("$direction not a valid keyword argument, use "*
-    #    "one of the following: $((allowed_directions[1:end-1] .* ", ")...)"*
-    #    "$(allowed_directions[end])."))
-    #end
-
     shift = shift_functions[direction]
-
-    #if ! ( variable in keys(primary_vars) )
-    #    throw(ErrorException("Variable $variable is not a primary variable"))
-    #end
 
     slicing = true
     ( isempty(slicex) && isempty(slicey) && isempty(slicez) ) && ( slicing = false )
@@ -687,7 +674,7 @@ function get_electron_density(
     tabfile::String="tabparam.in"
     ) where {T<:AbstractFloat}
 
-    basename, basename_isnap = get_basename(expname, snap, expdir)
+    basename, basename_isnap = filename(expname, snap, expdir)
     params = read_params(string(basename_isnap, ".idl"))
     
     # rho in g/cm^3
