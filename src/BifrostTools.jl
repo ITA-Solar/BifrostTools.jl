@@ -18,13 +18,8 @@ include("eos_tables.jl")
 include("unit_conversion.jl")
 
 # Exports
-export squeeze
 export read_params
-export load_snapdata
-export load_auxdata
-export load_snapvariable
-export load_auxvariable
-export get_var, get_staggered_var, get_snap_numbers, get_electron_density
+export get_var, get_snap_numbers, get_electron_density
 export change_snap_resolution, duplicate_xz_plane
 
 export make_uniform_axes

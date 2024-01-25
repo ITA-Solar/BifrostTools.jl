@@ -48,9 +48,12 @@ struct BifrostExperiment
                                     findall=true)
 
         # Get some snap-independent parameters
-        params_file = string(expdir, "/", expname, "_", string(snaps[1], pad=3),
-                             ".idl"
-                             )
+        params_file = string(
+            joinpath(expdir,expname),
+            "_", lpad(snaps[1],3,"0"),
+            ".idl"
+        )
+
         params = read_params(params_file)
         snapsize, num_vars = get_snapsize_and_numvars(params)
    
