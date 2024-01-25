@@ -33,7 +33,7 @@ function read_params(file_name::String)
 end
 
 # -----------------------------------------------------------------------------
-# Can these two functions of `get_snap` be merged?
+# Remove doc
 # -----------------------------------------------------------------------------
 """
     get_snap(
@@ -83,26 +83,6 @@ end
         file_name::String,
         params   ::Dict{String,String}
         )
-
-Reads Bifrost *.snap binary file as an Array in dimension: (mx,my,mz,nvar).
-Takes the snap-filename and its paramters as arguments. Returns `snapdata`
-(the data). Assumes single floating point precision by default.
-
-Variables of `snapdata`:
-
-        snapdata[:,:,:,1] : r, density
-        snapdata[:,:,:,2] : px, x-component of momentum 
-        snapdata[:,:,:,3] : py, y-component of momentum 
-        snapdata[:,:,:,4] : pz, z-component of momentum 
-        snapdata[:,:,:,5] : e, energy
-    
-        if params["do_mhd"] == 1 # numvars = 8, otherwise numvars = 5
-            snapdata[:,:,:,6] : bx, x-component of magnetic field 
-            snapdata[:,:,:,7] : by, y-component of magnetic field 
-            snapdata[:,:,:,8] : bz, z-component of magnetic field 
-
-Warning:
-    variables in code units.
 """
 function get_snap(
     file_name::String,
@@ -235,7 +215,7 @@ function get_var(
     ;
     kwargs...
     )
-    nsnaps = length(snaps)
+
     basename, basename_isnap = get_basename(expname, snaps, expdir)
     params = read_params(string(basename_isnap, ".idl"))
 
@@ -317,6 +297,7 @@ function get_var(
     varnr::Integer,
     file_ext::String,
     ;
+    precision::DataType=Float32,
     kwargs...
     )
 
@@ -324,7 +305,7 @@ function get_var(
     kwarg_values = values(kwargs)
 
     # Allocate space for variable
-    var = Vector{Array{Float32, 3}}(undef, length(snaps))
+    var = Vector{Array{precision, 3}}(undef, length(snaps))
 
     # Loop over snapshots
     Threads.@threads for (i,snap) in collect(enumerate(snaps))
@@ -335,11 +316,12 @@ function get_var(
         tmp_file = string(basename, "_", isnap_local, file_ext)
 
         if :destagger in kwarg_keys && kwarg_values.destagger
-            var[i] = get_staggered_var(
+            var[i] = get_and_destagger_var(
                 tmp_file,
                 params_local,
                 varnr,
                 ;
+                precision=precision,
                 kwargs...)
         else
             var[i] = get_var(
@@ -347,6 +329,7 @@ function get_var(
                 params_local,
                 varnr,
                 ;
+                precision=precision,
                 kwargs...)
         end
         
@@ -470,7 +453,7 @@ This function should be called through the `get_var` function, like so:
 """
 
 """
-    function get_staggered_var(expname::String,
+    function get_and_destagger_var(expname::String,
         snap::Integer,
         expdir::String,
         variable::String
@@ -485,7 +468,7 @@ This function should be called through the `get_var` function, like so:
         slicez::AbstractVector{<:Integer}=Int[]
         )
 """
-function get_staggered_var(
+function get_and_destagger_var(
     filename::String,
     params::Dict{String,String},
     varnr::Integer,
