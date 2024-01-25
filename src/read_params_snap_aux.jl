@@ -225,6 +225,7 @@ function get_var(
     variable::String,
     args...
     ;
+    precision::DataType=Float32,
     kwargs...
     )
 
@@ -237,7 +238,7 @@ function get_var(
     kwarg_values = values(kwargs)
 
     # Allocate space for variable
-    var = Vector{Array{precision, 3}}(undef, length(snaps))
+    data = Vector{Array{precision, 3}}(undef, length(snaps))
 
     # decide which get_var function to use
     if :destagger in kwarg_keys && kwarg_values.destagger
@@ -255,7 +256,7 @@ function get_var(
         end
 
         # If destagger direction is not passed fall back to default direction
-        if ! :direction in kwarg_keys
+        if :direction ∉ kwarg_keys
             kwargs[:direction] = destagger_direction(variable)
         end
 
@@ -267,10 +268,10 @@ function get_var(
     Threads.@threads for (i,snap) in collect(enumerate(snaps))
         
         params_local = read_params(expname,snap,expdir)
-        varnr, file_ext = get_varnr_and_file_extension(params, variable)
-        tmp_file = string(basename, "_", isnap_local, file_ext)
+        varnr, file_ext = get_varnr_and_file_extension(params_local, variable)
+        tmp_file = string(joinpath(expdir,expname),"_",lpad(snap,3,"0"),file_ext)
 
-        var[i] = get_function(
+        data[i] = get_function(
             tmp_file,
             params_local,
             varnr,
@@ -291,6 +292,7 @@ function get_var(
     #   If multiple snapshots: Assumes the same conversion factor for all
     #
     if :units in kwarg_keys
+        params = read_params(expname,snaps[1],expdir)
         data = convert_units(data, variable, params, kwarg_values.units)
     end
 
@@ -457,7 +459,7 @@ function get_and_destagger_var(
     if slicing
         if ( direction == "xup" ) || ( direction == "xdn" )
             # Load var
-            var = get_var(filename,params,varnr,slicey=slicey,slicez=slicez)
+            var = get_var(filename,params,varnr,slicey=slicey,slicez=slicez,kwargs...)
             if isempty(slicex)
                 # All indices in 'x' are loaded, don't worry about slicing
                 var = shift(var,periodic,order)
@@ -466,7 +468,7 @@ function get_and_destagger_var(
                 var = shift(var,slicex,periodic,order)
             end
         elseif ( direction == "yup" ) || ( direction == "ydn" )
-            var = get_var(filename,params,varnr,slicex=slicex,slicez=slicez)
+            var = get_var(filename,params,varnr,slicex=slicex,slicez=slicez,kwargs...)
             if isempty(slicey)
                 # All indices in 'y' are loaded, don't worry about slicing
                 var = shift(var,periodic,order)
@@ -475,7 +477,7 @@ function get_and_destagger_var(
                 var = shift(var,slicey,periodic,order)
             end
         else
-            var = get_var(filename,params,varnr,slicex=slicex,slicey=slicey)
+            var = get_var(filename,params,varnr,slicex=slicex,slicey=slicey,kwargs...)
             if isempty(slicez)
                 # All indices in 'z' are loaded, don't worry about slicing
                 var = shift(var,periodic,order)
@@ -651,14 +653,13 @@ function get_electron_density(
     tabfile::String="tabparam.in"
     ) where {T<:AbstractFloat}
 
-    basename, basename_isnap = filename(expname, snap, expdir)
-    params = read_params(string(basename_isnap, ".idl"))
+    params = read_params(expname,snap,expdir)
     
     # rho in g/cm^3
     if isempty(rho)
         
         varnr, file_ext = get_varnr_and_file_extension(params, "r")
-        tmp_file = string(basename, "_", lpad(snap,3,"0"), file_ext)
+        tmp_file = string(joinpath(expdir,expname), "_", lpad(snap,3,"0"), file_ext)
 
         rho = get_var(
             tmp_file,
@@ -675,7 +676,7 @@ function get_electron_density(
     # internal energy in ergs
     if isempty(e)
         varnr, file_ext = get_varnr_and_file_extension(params, "e")
-        tmp_file = string(basename, "_", lpad(snap,3,"0"), file_ext)
+        tmp_file = string(joinpath(expdir,expname), "_", lpad(snap,3,"0"), file_ext)
 
         e = get_var(
             tmp_file,
