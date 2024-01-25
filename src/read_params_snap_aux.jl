@@ -44,7 +44,6 @@ function read_params(
     isnap = lpad(snap,3,"0")
     idl_file = string(joinpath(expdir,expname),"_",isnap,".idl")
     
-    
     read_params(idl_file)
 end
 
@@ -83,7 +82,7 @@ function get_snap(
     precision::DataType=Float32
     )
     # Parse filenames
-    basename = string(expdir, "/", expname, "_$(lpad(snap,3,"0"))")
+    basename = string(joinpath(expdir, expname),"_$(lpad(snap,3,"0"))")
     idl_filename = string(basename, ".idl")
     snap_filename = string(basename, ".snap")
     params = read_params(idl_filename)
@@ -229,28 +228,57 @@ function get_var(
     kwargs...
     )
 
-    basename, basename_isnap = get_filename(expname, snaps, expdir)
-    params = read_params(string(basename_isnap, ".idl"))
-
     if variable == "t"
         # The special case of getting the snapshot time
-        return get_time(basename, snaps, params; kwargs...)
+        return get_time(expname,snaps,expdir;kwargs...)
     end
 
-    data = get_var(
-        filename, 
-        snaps,
-        variable,
-        params;
-        kwargs...
-    )
-
-
-    # -------------------------------------------------------------------------
-    # KEYWORD ARGUMENTS
-    # -------------------------------------------------------------------------
     kwarg_keys = keys(kwargs)
     kwarg_values = values(kwargs)
+
+    # Allocate space for variable
+    var = Vector{Array{precision, 3}}(undef, length(snaps))
+
+    # decide which get_var function to use
+    if :destagger in kwarg_keys && kwarg_values.destagger
+        
+        if variable ∉ ("px","py","pz","bx","by","bz","ex","ey","ez","ix","iy","iz")
+            @warn "Variable $variable is not usually staggered. "*
+                "Destagger will take place anyways."
+            get_function = get_and_destagger_var
+        elseif variable ∈ ("ex","ey","ez","ix","iy","iz")
+            @warn "Destagger of $variable is not implemented. "*
+                "Defaulting to loading variable without destaggering"
+            get_function = get_var
+        else
+            get_function = get_and_destagger_var
+        end
+
+        # If destagger direction is not passed fall back to default direction
+        if ! :direction in kwarg_keys
+            kwargs[:direction] = destagger_direction(variable)
+        end
+
+    else
+        get_function = get_var
+    end
+    
+    # Loop over snapshots
+    Threads.@threads for (i,snap) in collect(enumerate(snaps))
+        
+        params_local = read_params(expname,snap,expdir)
+        varnr, file_ext = get_varnr_and_file_extension(params, variable)
+        tmp_file = string(basename, "_", isnap_local, file_ext)
+
+        var[i] = get_function(
+            tmp_file,
+            params_local,
+            varnr,
+            ;
+            precision=precision,
+            kwargs...)
+
+    end
 
     # -------------------------------------------------------------------------
     #  Below is where you extend the functionality of get_var by handling 
@@ -287,74 +315,6 @@ function get_var(
     # Additional kwargs and functionality go under here
     # -------------------------------------------------------------------------
     return data
-end
-
-"""
-    get_var(
-        basename ::String,
-        snaps    ::AbstractVector{<:Integer},
-        params   ::Dict{String, String},
-        varnr    ::Integer,
-        file_ext ::String,
-        args...
-        )
-Load variable nr `varnr` from multiple snapshots. Requires experiment basename 
-(expdir + expname) and the file extension (.aux/.snap). Slicing the snapshot
-is optional. Assumes single precision snapshot by default.
-"""
-function get_var(
-    basename ::String,
-    snaps::Union{<:Integer, AbstractVector{<:Integer}},
-    varnr::Integer,
-    params::Dict{String,String}
-    ;
-    precision::DataType=Float32,
-    kwargs...
-    )
-
-    varnr, file_ext = get_varnr_and_file_extension(params, variable)
-
-    kwarg_keys = keys(kwargs)
-    kwarg_values = values(kwargs)
-
-    if :destagger in kwarg_keys && kwarg_values.destagger
-        if ! ( variable in ["px","py","pz","bx","by","bz","ix","iy","iz"] )
-            @warn "Variable $variable is not usually staggered"
-        end
-    end
-
-    # Allocate space for variable
-    var = Vector{Array{precision, 3}}(undef, length(snaps))
-
-    # Loop over snapshots
-    Threads.@threads for (i,snap) in collect(enumerate(snaps))
-        # !! Create thread-local variables to avoid race conditions !!
-        isnap_local = lpad(snap,3,"0")
-        idl_file_local = string(basename, "_", isnap_local, ".idl")
-        params_local = read_params(idl_file_local)
-        tmp_file = string(basename, "_", isnap_local, file_ext)
-
-        if :destagger in kwarg_keys && kwarg_values.destagger
-            var[i] = get_and_destagger_var(
-                tmp_file,
-                params_local,
-                varnr,
-                ;
-                precision=precision,
-                kwargs...)
-        else
-            var[i] = get_var(
-                tmp_file,
-                params_local,
-                varnr,
-                ;
-                precision=precision,
-                kwargs...)
-        end
-        
-    end
-    
-    return var
 end
 
 """
@@ -560,6 +520,23 @@ function destagger(
         return xup(yup(data)) # not 100% sure about this operation
     else
         error("Destaggering of variable $variable is not implemented.")
+    end
+end
+
+"""
+    destagger_direction(variable::String)
+
+Takes in a variable, and determines the default direction to destagger the variable
+"""
+function destagger_direction(variable::String)
+    if variable in ("px", "bx")
+        return "xup"
+    elseif variable in ("py", "by")
+        return "yup"
+    elseif variable in ("pz", "bz")
+        return "zup"
+    else
+        error("Give direction manually to destagger variable $variable.")
     end
 end
 
