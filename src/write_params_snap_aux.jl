@@ -28,7 +28,7 @@ function change_snap_resolution(
     ;
     filename::String="out.snap"
     )
-    primaries, params = load_snapdata(xp.expname, isnap, xp.expdir)
+    primaries, params = get_snap(xp.expname, isnap, xp.expdir)
     snapsize, numvars, _ = get_snapsize_and_numvars(params)
     change_snap_resolution(primaries, xp.mesh, numvars, 
                                 new_x, new_y, new_z, itp_bc;
@@ -48,7 +48,7 @@ function change_snap_resolution(
     )
     params_filename = snapname[1:end-4]*"idl"
     params = read_params(params_filename)
-    primaries = load_snapdata(snapname, params)
+    primaries = get_snap(snapname, params)
     snapsize, numvars, _ = get_snapsize_and_numvars(params)
     mesh = BifrostMesh(meshname)
     change_snap_resolution(primaries, mesh, numvars,
@@ -200,7 +200,7 @@ function duplicate_xz_plane(
     ;
     filename::String="out.snap"
     )
-    primaries, params = load_snapdata(xp.expname, isnap, xp.expdir)
+    primaries, params = get_snap(xp.expname, isnap, xp.expdir)
     duplicate_xz_plane(primaries, ny; filename=filename)
 end
 
@@ -212,7 +212,7 @@ function duplicate_xz_plane(
     )
     params_filename = snapname[1:end-4]*"idl"
     params = read_params(params_filename)
-    primaries = load_snapdata(snapname, params)
+    primaries = get_snap(snapname, params)
     duplicate_xz_plane(primaries, ny; filename=filename)
 end 
 
