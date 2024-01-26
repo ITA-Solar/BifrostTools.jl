@@ -400,7 +400,7 @@ function get_time(
     end
 
     if :units in keys(kwargs)
-        convert_timeunits!(var, params)
+        var = convert_timeunits(var, params)
     end
     
     return var
