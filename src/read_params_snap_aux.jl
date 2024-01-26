@@ -268,17 +268,11 @@ function get_var(
         if :destaggeroperation in kwarg_keys
             get_function = get_and_destagger_var
         elseif variable in keys(destaggeroperation)
-            if variable in ("ex","ey","ez","ix","iy","iz")
-                @warn "Destaggerering of $variable is not implemented. "*
-                    "Defaulting to loading variable without destaggering"
-                get_function = get_var
-            else
-                get_function = get_and_destagger_var
-                kwargs = addtokwargs(
-                    ;destaggeroperation=destaggeroperation[variable],
-                    kwargs...
-                    )
-            end
+            get_function = get_and_destagger_var
+            kwargs = addtokwargs(
+                ;destaggeroperation=destaggeroperation[variable],
+                kwargs...
+                )
         else
             error("Destaggering of $variable is not implemented. "*
                 "Set the keyword-argument `destaggeroperation`"
@@ -488,7 +482,7 @@ function get_and_destagger_var(
                 # Call to the function that slices in y
                 data = destaggeroperation(data,slicey,periodic,order)
             end
-        else
+        elseif destaggeroperation in (zup, zdn)
             data = get_var(filename, params, varnr;
                 slicex=slicex, slicey=slicey, kwargs...
                 )
@@ -499,7 +493,66 @@ function get_and_destagger_var(
                 # Call to the function that slices in z
                 data = destaggeroperation(data,slicez,periodic,order)
             end
+        #
+        # POSSIBLE TO SIMPLIFY THIS?
+        # Always passing slice to the operation and handling it there?
+        #
+        elseif destaggeroperation == yupzup
+            data = get_var(filename, params, varnr; slicex=slicex, kwargs...)
+            if isempty(slicez) && isempty(slicey)
+                # All indices in 'z' and 'y' are loaded, don't worry about slicing
+                data = destaggeroperation(data,periodic,order)
+            elseif isempty(slicey)
+                # Call to the function that slices in z
+                data = zup(data, slicez, periodic, order)
+                data = yup(data, periodic, order)
+            elseif isempty(slicez)
+                # All indices in 'z' are loaded, don't worry about slicing
+                data = zup(data, periodic, order)
+                data = yup(data, slicey, periodic, order)
+            else
+                # Call to the function that slices in z and y
+                data = zup(data, slicez, periodic, order)
+                data = yup(data, slicey, periodic, order)
+            end
+        elseif destaggeroperation == zupxup
+            data = get_var(filename, params, varnr; slicey=slicey, kwargs...)
+            if isempty(slicez) && isempty(slicex)
+                # All indices in 'z' and 'x' are loaded, don't worry about slicing
+                data = destaggeroperation(data,periodic,order)
+            elseif isempty(slicez)
+                # Call to the function that slices in x
+                data = xup(data, slicex, periodic, order)
+                data = zup(data, periodic, order)
+            elseif isempty(slicex)
+                # All indices in 'y' are loaded, don't worry about slicing
+                data = xup(data, periodic, order)
+                data = zup(data, slicez, periodic, order)
+            else
+                # Call to the function that slices in x and z
+                data = xup(data, slicex, periodic, order)
+                data = zup(data, slicez, periodic, order)
+            end
+        elseif destaggeroperation == xupyup
+            data = get_var(filename, params, varnr; slicez=slicez, kwargs...)
+            if isempty(slicex) && isempty(slicey)
+                # All indices in 'x' and 'y' are loaded, don't worry about slicing
+                data = destaggeroperation(data,periodic,order)
+            elseif isempty(slicex)
+                # Call to the function that slices in y
+                data = yup(data, slicey, periodic, order)
+                data = xup(data, periodic, order)
+            elseif isempty(slicey)
+                # All indices in 'y' are loaded, don't worry about slicing
+                data = yup(data, periodic, order)
+                data = xup(data, slicex, periodic, order)
+            else
+                # Call to the function that slices in y and x.
+                data = yup(data, slicey, periodic, order)
+                data = xup(data, slicex, periodic, order)
+            end
         end
+
     end
     return data
 end
