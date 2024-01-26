@@ -240,6 +240,7 @@ function get_var(
     args...
     ;
     precision::DataType=Float32,
+    squeeze::Bool=true,
     kwargs...
     )
 
@@ -256,10 +257,14 @@ function get_var(
 
     # Check if user wants data to be destaggered. If so we have to
     # call get_and_destagger_var. If not, we may call get_var
-    if :destagger in kwarg_keys && kwarg_values.destagger
+    destagger = try kwarg_values.destagger
+    catch
+        false
+    end
+    if destagger
         # Check if destagger-operation is passed as a keyword-argument.
-        # If not, use defualt operation corresponding to the requested
-        # variable if available. If not throw error,
+        # If not, use default operation corresponding to the requested
+        # variable.
         if :destaggeroperation in kwarg_keys
             get_function = get_and_destagger_var
         elseif variable in keys(destaggeroperation)
@@ -318,17 +323,15 @@ function get_var(
     #
     # ORIENTATION: Rotate coordinate system
     #
-    if :rotate_about_x in kwarg_keys && kwarg_values.rotate_about_x
-        data = rotate(data, variable, "x")
-    end
+    try data = rotate(data, variable, kwarg_values.rotate_about)
+    catch end
 
     # CONCATENATION: Concatenate vector to 4D array
-    if :stack in kwarg_keys && kwarg_values.stack
-       data = stack(data)
-    end
+    try kwarg_values.stack ? data = stack(data) : nothing
+    catch end
 
     # SQUEEZE: Drop empty dimensions
-    if length(snaps) == 1 && :squeeze in kwarg_keys && kwarg_values.squeeze
+    if squeeze && length(data) == 1
         data = data[1]
     end
 
