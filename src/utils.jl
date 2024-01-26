@@ -269,3 +269,12 @@ function get_basename(
     basename =  joinpath(expdir, expname)
     return  basename, string(basename, "_", isnap)
 end
+
+
+"""
+    addtokwargs(;kwargs...)
+Add keyword-arguments to your `Base.Pairs` of kwargs.
+"""
+function addtokwargs(;kwargs...)
+    kwargs
+end

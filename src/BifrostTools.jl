@@ -25,9 +25,6 @@ export change_snap_resolution, duplicate_xz_plane
 export make_uniform_axes
 
 export arr_ffile
-export heatmap_xy
-export heatmap_xz
-export heatmap_yz
 
 export get_eostable
 export get_expieos_err
@@ -120,6 +117,6 @@ export poissonud
 export divB_clean_ud
 export divB_clean_du
 
-
+export destaggeroperation
 
 end # module BifrostTools

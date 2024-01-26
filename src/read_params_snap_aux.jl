@@ -1,3 +1,17 @@
+const destaggeroperation = Dict(
+    "px" => xup,
+    "py" => yup,
+    "pz" => zup,
+    "bx" => xup,
+    "by" => yup,
+    "bz" => zup,
+    "ex" => yupzup,
+    "ey" => zupxup,
+    "ez" => xupyup,
+    "ix" => yupzup,
+    "iy" => zupxup,
+    "iz" => xupyup
+    )
 
 
 """
@@ -240,26 +254,31 @@ function get_var(
     # Allocate space for variable
     data = Vector{Array{precision, 3}}(undef, length(snaps))
 
-    # decide which get_var function to use
+    # Check if user wants data to be destaggered. If so we have to
+    # call get_and_destagger_var. If not, we may call get_var
     if :destagger in kwarg_keys && kwarg_values.destagger
-        
-        if variable ∉ ("px","py","pz","bx","by","bz","ex","ey","ez","ix","iy","iz")
-            @warn "Variable $variable is not usually staggered. "*
-                "Destagger will take place anyways."
+        # Check if destagger-operation is passed as a keyword-argument.
+        # If not, use defualt operation corresponding to the requested
+        # variable if available. If not throw error,
+        if :destaggeroperation in kwarg_keys
             get_function = get_and_destagger_var
-        elseif variable ∈ ("ex","ey","ez","ix","iy","iz")
-            @warn "Destagger of $variable is not implemented. "*
-                "Defaulting to loading variable without destaggering"
-            get_function = get_var
+        elseif variable in keys(destaggeroperation)
+            if variable in ("ex","ey","ez","ix","iy","iz")
+                @warn "Destaggerering of $variable is not implemented. "*
+                    "Defaulting to loading variable without destaggering"
+                get_function = get_var
+            else
+                get_function = get_and_destagger_var
+                kwargs = addtokwargs(
+                    ;destaggeroperation=destaggeroperation[variable],
+                    kwargs...
+                    )
+            end
         else
-            get_function = get_and_destagger_var
+            error("Destaggering of $variable is not implemented. "*
+                "Set the keyword-argument `destaggeroperation`"
+                )
         end
-
-        # If destagger direction is not passed fall back to default direction
-        if :direction ∉ kwarg_keys
-            kwargs[:direction] = destagger_direction(variable)
-        end
-
     else
         get_function = get_var
     end
@@ -346,17 +365,20 @@ function get_var(
     )
     datadims = 3 # 3 spatial dimensions and 1 variable dimension
     snapsize = get_snapsize(params)
-    # Do slicing or not (returns the mmap)
-    if isempty(slicex) && isempty(slicey) && isempty(slicez)
-        slicing = false
-    else
-        slicing = true
-    end
     # Calculate offset in file
     offset = get_variable_offset_in_file(precision, snapsize, varnr)
     file = open(filename)
+
+    # Do slicing or not (returns the mmap)
     # Use Julia standard-library memory-mapping to extract file values
-    if slicing
+    if isempty(slicex) && isempty(slicey) && isempty(slicez)
+        # do not slice the variable
+        data = mmap(file,
+            Array{precision, datadims}, 
+            snapsize, 
+            offset
+            )
+    else
         isempty(slicex) && ( slicex = 1:snapsize[1] )
         isempty(slicey) && ( slicey = 1:snapsize[2] )
         isempty(slicez) && ( slicez = 1:snapsize[3] )
@@ -366,13 +388,6 @@ function get_var(
             snapsize, 
             offset
             )[slicex,slicey,slicez]
-    else
-        # do not slice the variable
-        data = mmap(file,
-            Array{precision, datadims}, 
-            snapsize, 
-            offset
-            )
     end
     close(file)
     return data
@@ -389,52 +404,52 @@ function get_time(
     nsnaps = length(snap)
     if nsnaps == 1
         params = read_params(expname,snap,expdir)
-        var = [parse(Float64, params["t"])]
+        data = [parse(Float64, params["t"])]
     else 
-        var = Vector{Float64}(undef, nsnaps)
+        data = Vector{Float64}(undef, nsnaps)
         # Load the variable directly from params
         for (i,snap) in enumerate(snap)
             params = read_params(expname,snap,expdir)
             time = parse(Float64, params["t"])
-            var[i] = time
+            data[i] = time
         end
     end
 
     if units != "code"
-        var = convert_timeunits(var, params)
+        data = convert_timeunits(data, params)
     end
     
-    return var
+    return data
 end
 
 """
     function get_and_destagger_var(expname::String,
-        snap::Integer,
-        expdir::String,
-        variable::String
+        filename::String,
+        params::Dict{String,String},
+        varnr::Integer,
         ;
-        precision::DataType=Float32,
+        destaggeroperation::Function,
         units::String="none",
-        direction::String="zup",
         periodic::Bool=false,
         order::Int=6,
         slicex::AbstractVector{<:Integer}=Int[],
         slicey::AbstractVector{<:Integer}=Int[],
-        slicez::AbstractVector{<:Integer}=Int[]
+        slicez::AbstractVector{<:Integer}=Int[],
+        kwargs...
         )
 
 Function to load a staggered variable and interpolate it to cell center.
 The staggered variables that typically need to be interpolated are the velocity
-and magnetic field components. Normally you need to use `direction="zup"` for 
-vz and bz with `periodic=false` (these are the default arguments), and 
-`direction="xup"` for vx and bx with `periodic=true` (same for y direction).
+and magnetic field components. Normally you need to use `destaggeroperation=zup`
+for vz and bz with `periodic=false`, and `destaggeroperation=xup` for vx and bx
+with `periodic=true` (same for y direction).
 """
 function get_and_destagger_var(
     filename::String,
     params::Dict{String,String},
     varnr::Integer,
     ;
-    direction::String="zup",
+    destaggeroperation::Function,
     periodic::Bool=false,
     order::Int=6,
     slicex::AbstractVector{<:Integer}=Int[],
@@ -442,105 +457,48 @@ function get_and_destagger_var(
     slicez::AbstractVector{<:Integer}=Int[],
     kwargs...
     )
-
-    shift_functions = Dict(
-        "xdn" => xdn, 
-        "xup" => xup,
-        "ydn" => ydn, 
-        "yup" => yup, 
-        "zdn" => zdn, 
-        "zup" => zup
-    )
-
-    shift = shift_functions[direction]
-
-    slicing = true
-    ( isempty(slicex) && isempty(slicey) && isempty(slicez) ) && ( slicing = false )
-    
-    if slicing
-        if ( direction == "xup" ) || ( direction == "xdn" )
+    if isempty(slicex) && isempty(slicey) && isempty(slicez)
+        # load the entire variable and destaggeroperation it in the desired direction
+        data = get_var(filename,params,varnr,)
+        data = destaggeroperation(data,periodic,order)
+    else
+        if destaggeroperation in (xup, xdn)
             # Load var
-            var = get_var(filename,params,varnr,slicey=slicey,slicez=slicez,kwargs...)
+            data = get_var(filename,params,varnr;
+                slicey=slicey,slicez=slicez,kwargs...
+                )
             if isempty(slicex)
                 # All indices in 'x' are loaded, don't worry about slicing
-                var = shift(var,periodic,order)
+                data = destaggeroperation(data,periodic,order)
             else
                 # Call to the function that slices in x
-                var = shift(var,slicex,periodic,order)
+                data = destaggeroperation(data,slicex,periodic,order)
             end
-        elseif ( direction == "yup" ) || ( direction == "ydn" )
-            var = get_var(filename,params,varnr,slicex=slicex,slicez=slicez,kwargs...)
+        elseif destaggeroperation in (yup, ydn)
+            data = get_var(filename,params,varnr;
+                slicex=slicex,slicez=slicez,kwargs...
+                )
             if isempty(slicey)
                 # All indices in 'y' are loaded, don't worry about slicing
-                var = shift(var,periodic,order)
+                data = destaggeroperation(data,periodic,order)
             else
                 # Call to the function that slices in y
-                var = shift(var,slicey,periodic,order)
+                data = destaggeroperation(data,slicey,periodic,order)
             end
         else
-            var = get_var(filename,params,varnr,slicex=slicex,slicey=slicey,kwargs...)
+            data = get_var(filename, params, varnr;
+                slicex=slicex, slicey=slicey, kwargs...
+                )
             if isempty(slicez)
                 # All indices in 'z' are loaded, don't worry about slicing
-                var = shift(var,periodic,order)
+                data = destaggeroperation(data,periodic,order)
             else
                 # Call to the function that slices in z
-                var = shift(var,slicez,periodic,order)
+                data = destaggeroperation(data,slicez,periodic,order)
             end
         end
-    else
-        # load the entire variable and shift it in the desired direction
-        var = get_var(filename,params,varnr,)
-        var = shift(var,periodic,order)
     end
-
-    return var
-
-end
-
-
-"""
-    destagger(data::AbstractArray, variable::String)
-De-stagger the Bifrost `data` of type `variable` to cell centre. The input may 
-be read-only, so return a copy
-"""
-function destagger(
-    data    ::AbstractArray{<:Real, 3},
-    variable::String,
-    )
-    if variable in ("r", "e", "tg", "p")
-        return data # nothing to do, already cell centred
-    elseif variable in ("px", "bx")
-        return xup(data)
-    elseif variable in ("py", "by")
-        return yup(data)
-    elseif variable in ("pz", "bz")
-        return zup(data)
-    elseif variable in ("ex", "ix")
-        return yup(zup(data)) # not 100% sure about this operation
-    elseif variable in ("ey", "iy")
-        return zup(xup(data)) # not 100% sure about this operation
-    elseif variable in ("ez", "iz")
-        return xup(yup(data)) # not 100% sure about this operation
-    else
-        error("Destaggering of variable $variable is not implemented.")
-    end
-end
-
-"""
-    destagger_direction(variable::String)
-
-Takes in a variable, and determines the default direction to destagger the variable
-"""
-function destagger_direction(variable::String)
-    if variable in ("px", "bx")
-        return "xup"
-    elseif variable in ("py", "by")
-        return "yup"
-    elseif variable in ("pz", "bz")
-        return "zup"
-    else
-        error("Give direction manually to destagger variable $variable.")
-    end
+    return data
 end
 
 
