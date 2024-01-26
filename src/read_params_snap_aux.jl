@@ -383,6 +383,7 @@ function get_time(
     snap   ::Union{<:Integer, AbstractVector{<:Integer}},
     expdir ::String 
     ;
+    units::String="si",
     kwargs...
     )
     nsnaps = length(snap)
@@ -399,7 +400,7 @@ function get_time(
         end
     end
 
-    if :units in keys(kwargs)
+    if units != "code"
         var = convert_timeunits(var, params)
     end
     
