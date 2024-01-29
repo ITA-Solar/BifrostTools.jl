@@ -17,8 +17,11 @@ const cgs_to_SI_conversion_factors = Dict(
     "px" => 1f1,
     "py" => 1f1,
     "pz" => 1f1,
-    # Energy:     erg/cm^3 * 1f-7 J/erg * 1f6 cm^3/m = 1f-1 J/m^3
+    # Internal energy:     erg/cm^3 * 1f-7 J/erg * 1f6 cm^3/m = 1f-1 J/m^3
     "e"  => 1f-1,
+    # Dissipation coefficients:     erg/cm^3/s * 1.e-7 J/erg * 1.e6 cm^3/m^3 = W/m^3
+    "qvisc" => 1f-1,
+    "qjoule" => 1f-1,
     # Magnetic field: G * 1f-4 T/G = 1f-4 T
     "bx" => 1f-4,
     "by" => 1f-4,
@@ -104,6 +107,8 @@ function code_to_cgs(
         # not implemented yet
     elseif variable in ("ex", "ey", "ez")    # Electric field
          return data*parse(Float32, params["u_u"])*parse(Float32,params["u_B"])
+    elseif variable in ("qvisc, qjoule")
+        return data*parse(Float32, params["u_e"])/parse(Float32, params["u_t"]) 
     else
         throw(ErrorException(
             "Conversion to cgs-units of variable $variable is not implemented."
