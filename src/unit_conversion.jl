@@ -1,115 +1,153 @@
 """
 Script for converting from Bifrost's simulation units to cgs or si units. 
-Consult https://github.com/ITA-Solar/Bifrost/blob/develop/IDL/util/br_make_fits.pro
+Based on https://github.com/ITA-Solar/Bifrost/blob/develop/IDL/util/br_make_fits.pro
 """
 
-# Simulation units
-const params = Dict(
-        "u_l" => 1f8,
-        "u_t" => 1f2,
-        "u_r" => 1f-7,
-        "u_u" => 1f6,
-        "u_p" => 1f5,
-        "u_e" => 1f5,
-        "u_B" => Float32(1121)
-        )
-
-# Converts from simulation units to cgs units
-const cgs_params = Dict(
-        # pressure
-        "p" => params["u_p"],
-        # gas density
-        "r" => params["u_r"],
-        # momentum
-        "px" => params["u_r"]*params["u_u"],
-        "py" => params["u_r"]*params["u_u"],
-        "pz" => params["u_r"]*params["u_u"],
-        # energy
-        "e" => params["u_e"],
-        # B-field
-        "bx"  => params["u_B"],
-        "by"  => params["u_B"],
-        "bz"  => params["u_B"]
-        )
-
-# Converts from simulation units to cgs units
-const si_params = Dict(
-        # pressure
-        "p" => params["u_p"]*1f-1,
-        # gas density
-        "r" => params["u_r"]*1f3,
-        # momentum
-        "px" => params["u_r"]*params["u_u"]*1f1,
-        "py" => params["u_r"]*params["u_u"]*1f1,
-        "pz" => params["u_r"]*params["u_u"]*1f1,
-        # energy
-        "e" => params["u_e"]*1f-1,
-        # B-field
-        "bx"  => params["u_B"]*1f-4,
-        "by"  => params["u_B"]*1f-4,
-        "bz"  => params["u_B"]*1f-4
-        )
 
 """
-    convert_units!(
-        snapvariable, 
-        variable::String, 
-        unit_conversion::String
-        )
-
-Converts the units of `snapvariable` from simulation units to 'si' or 'cgs'
-units
+    cgs_to_SI_conversion_factors
+Factors for converting some physical quantities from cgs-units to SI-units.
 """
-function convert_units!(
-    snapvariable::AbstractArray, 
-    variable::String, 
-    unit_conversion::String
+const cgs_to_SI_conversion_factors = Dict(
+    # Pressure:    g/s^2/cm * 1f-3 kg/g * 1f2 cm/m = 1f-1 kg/s^2/m
+    "p"  => 1f-1,
+    # Gas density: g/cm^3 * 1f-3 kg/g * 1f6 cm^3/m^3 = 1f3 kg/m^3
+    "r"  => 1f3,
+    # Momentum:    g/cm^2/s * 1f-3 kg/g * 1f4 cm^2/m^2 = 1f1 kg/m^2/s
+    "px" => 1f1,
+    "py" => 1f1,
+    "pz" => 1f1,
+    # Energy:     erg/cm^3 * 1f-7 J/erg * 1f6 cm^3/m = 1f-1 J/m^3
+    "e"  => 1f-1,
+    # Magnetic field: G * 1f-4 T/G = 1f-4 T
+    "bx" => 1f-4,
+    "by" => 1f-4,
+    "bz" => 1f-4,
+    # Electric field: g*cm/s^2/Fr * 1f-3 kg/g * 1f-2 m/cm * 1f-1 Fr/C 
+    #                   = 1f-6 kg*m/s^2/C
+    "ex" => 1f-6,
+    "ey" => 1f-6,
+    "ez" => 1f-6,
     )
 
-    if unit_conversion=="cgs"
-        if variable != "tg"
-            snapvariable .*= cgs_params[variable]
-        end
-        
-    elseif unit_conversion=="si"
-        if variable != "tg"
-            snapvariable .*= si_params[variable]
-        end
-    
-    else
-        throw(ErrorException("Unit conversion '$unit_conversion' does not exits"))
-    end
-end
 
+"""
+    convert_units(
+        data    ::AbstractArray,
+        variable::String,
+        params  ::Dict{String,String},
+        units   ::String,
+        )
+Convert the `data` from code `units` to someting else.
+"""
 function convert_units(
-    snapvariable::AbstractArray, 
-    variable::String, 
-    unit_conversion::String
-    )::Array{Float32, 3}
-
-    if unit_conversion=="cgs"
-        if variable != "tg"
-            snapvariable = snapvariable .* cgs_params[variable]
-        end
-        
-    elseif unit_conversion=="si"
-        if variable != "tg"
-            snapvariable = snapvariable .* si_params[variable]
-        end
-    
+    data    ::AbstractArray,
+    variable::String,
+    params  ::Dict{String,String},
+    units   ::String,
+    )
+    if lowercase(units) == "si"
+        return code_to_SI(data, variable, params)
+    elseif lowercase(units) == "cgs"
+        return code_to_cgs(data, variable, params)
+    elseif lowercase(units) == "code"
+        # Do nothing
+        nothing
     else
-        throw(ErrorException("Unit conversion '$unit_conversion' does not exits"))
-        snapvariable = snapvariable .* 0f0
+        throw(ErrorException("Unit conversion '$units' does not exits"))
     end
 end
 
 """
-    convert_time(t::AbstractFloat)
+    code_to_SI(
+        data    ::AbstractArray,
+        variable::String,
+        params  ::Dict{String,String},
+    )
+Convert the `data` from code units to SI units.
+"""
+function code_to_SI(
+    data    ::AbstractArray,
+    variable::String,
+    params  ::Dict{String,String},
+    )
+    tmp = code_to_cgs(data, variable, params)
+    return cgs_to_SI(tmp, variable)
+end
+
+"""
+    code_to_cgs(
+        data    ::AbstractArray,
+        variable::String,
+        params  ::Dict{String,String},
+    )
+Convert the `data` from code-units to cgs-units.
+"""
+function code_to_cgs(
+    data    ::AbstractArray,
+    variable::String,
+    params  ::Dict{String,String},
+    )
+    if variable == "r"                       # Density
+        return  data * parse(Float32, params["u_r"])
+    elseif variable == "e"                   # Energy
+         return data * parse(Float32, params["u_e"])
+    elseif variable == "tg"                  # Gas temperature
+        return data # nothing to do
+    elseif variable == "p"                   # Pressure
+         return data * parse(Float32, params["u_p"])
+    elseif variable in ("px", "py", "pz")    # Momentum
+         return data*parse(Float32, params["u_r"])*parse(Float32,params["u_u"])
+    elseif variable in ("bx", "by", "bz")    # Magnetic field
+         return data * parse(Float32, params["u_B"])
+    #elseif variable in ("ix", "iy", "iz")    # Current density
+        # not implemented yet
+    elseif variable in ("ex", "ey", "ez")    # Electric field
+         return data*parse(Float32, params["u_u"])*parse(Float32,params["u_B"])
+    else
+        throw(ErrorException(
+            "Conversion to cgs-units of variable $variable is not implemented."
+            ))
+    end
+end
+
+"""
+    cgs_to_SI(
+        data    ::AbstractArray,
+        variable::String,
+        params  ::Dict{String,String},
+    )
+Convert the `data` from cgs-units to SI-units.
+"""
+function cgs_to_SI(
+    data    ::AbstractArray,
+    variable::String,
+    )
+    if variable == "tg" # Temperature: Kelvin -> Kelvin
+        return data # nothing to do
+    elseif variable in keys(cgs_to_SI_conversion_factors)
+        return data * cgs_to_SI_conversion_factors[variable]
+    else
+        throw(ErrorException(
+            "Conversion to SI-units of variable $variable is not implemented."
+            ))
+    end
+end
+
+
+"""
+    convert_timeunits!(
+    t     ::AbstractArray,
+    params::Dict{String,String}
+    )     ::Float64
 
 Converts snapshot time to seconds
 """
-function convert_snaptime(t::AbstractFloat)::Float64
+function convert_timeunits(
+    t     ::Union{AbstractArray, AbstractFloat},
+    params::Dict{String,String}
+    )
 
-    t*params["u_t"]
-
+    t *= parse(Float64, params["u_t"])
 end
+

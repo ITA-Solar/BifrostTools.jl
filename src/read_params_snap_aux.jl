@@ -1,13 +1,18 @@
-const primary_vars = Dict(
-    "r" => 1,
-    "px" => 2, 
-    "py" => 3, 
-    "pz" => 4, 
-    "e" => 5, 
-    "bx" => 6, 
-    "by" => 7, 
-    "bz" => 8,  
-)
+const destaggeroperation = Dict(
+    "px" => xup,
+    "py" => yup,
+    "pz" => zup,
+    "bx" => xup,
+    "by" => yup,
+    "bz" => zup,
+    "ex" => yupzup,
+    "ey" => zupxup,
+    "ez" => xupyup,
+    "ix" => yupzup,
+    "iy" => zupxup,
+    "iz" => xupyup
+    )
+
 
 """
     read_params(file_name::String)
@@ -41,9 +46,23 @@ function read_params(file_name::String)
     return params
 end
 
+"""
+    read_params(expname::String, snap::Integer, expdir::String)
+"""
+function read_params(
+    expname::String,
+    snap::Integer,
+    expdir::String
+    )
+
+    isnap = lpad(snap,3,"0")
+    idl_file = string(joinpath(expdir,expname),"_",isnap,".idl")
+    
+    read_params(idl_file)
+end
 
 """
-    load_snapdata(
+    get_snap(
         expname::String,
         snap   ::Int,
         expdir ::String,
@@ -70,55 +89,28 @@ Variables of `snapdata`:
 Warning:
     variables in code units.ts
 """
-function load_snapdata(
+function get_snap(
     expname  ::String,
     snap     ::Int,
     expdir   ::String,
     precision::DataType=Float32
     )
-    datadims = 4 # 3 spatial dimensions and 1 variable dimension
     # Parse filenames
-    basename = string(expdir, "/", expname, "_$(lpad(snap,3,"0"))")
+    basename = string(joinpath(expdir, expname),"_$(lpad(snap,3,"0"))")
     idl_filename = string(basename, ".idl")
     snap_filename = string(basename, ".snap")
     params = read_params(idl_filename)
-    
-    snapsize, numvars, _ = get_snapsize_and_numvars(params)
+    return get_snap(snap_filename, params, precision), params
+end
 
-    file = open(snap_filename)
-    # Use Julia standard-library memory-mapping to extract file values
-    snapdata = mmap(file, Array{precision, 4}, (snapsize..., numvars))
-    close(file)
-    return snapdata, params
-end # function load_snapdata
 
 """
-    load_snapdata(
+    get_snap(
         file_name::String,
         params   ::Dict{String,String}
         )
-
-Reads Bifrost *.snap binary file as an Array in dimension: (mx,my,mz,nvar).
-Takes the snap-filename and its paramters as arguments. Returns `snapdata`
-(the data). Assumes single floating point precision by default.
-
-Variables of `snapdata`:
-
-        snapdata[:,:,:,1] : r, density
-        snapdata[:,:,:,2] : px, x-component of momentum 
-        snapdata[:,:,:,3] : py, y-component of momentum 
-        snapdata[:,:,:,4] : pz, z-component of momentum 
-        snapdata[:,:,:,5] : e, energy
-    
-        if params["do_mhd"] == 1 # numvars = 8, otherwise numvars = 5
-            snapdata[:,:,:,6] : bx, x-component of magnetic field 
-            snapdata[:,:,:,7] : by, y-component of magnetic field 
-            snapdata[:,:,:,8] : bz, z-component of magnetic field 
-
-Warning:
-    variables in code units.
 """
-function load_snapdata(
+function get_snap(
     file_name::String,
     params   ::Dict{String,String},
     precision::DataType=Float32
@@ -132,10 +124,10 @@ function load_snapdata(
     snapdata = mmap(file, Array{precision, datadims}, (snapsize..., numvars))
     close(file)
     return snapdata
-end # function load_snapdata
+end
 
 """
-    load_auxdata(
+    get_aux(
         file_name::String,
         params   ::Dict{String,String}
     )
@@ -143,7 +135,7 @@ Reads Bifrost *.aux binary file using memory-mapping. The returned
 `auxdata` array will have dimensions (mx,my,mz,nvars) where nvars is the
 number of aux-variables. Assumes single floating point precision by default.
 """
-function load_auxdata(
+function get_aux(
     file_name::String,
     params   ::Dict{String,String},
     precision::DataType=Float32
@@ -161,375 +153,20 @@ function load_auxdata(
         close(file)
         return auxdata
     end
-end # function load_auxdata
-
-"""
-    get_variable_offset_in_file(
-        precision::DataType,
-        snapsize::Tuple{Integer, Integer, Integer},
-        varnr   ::Integer
-        )
-Given the precision and size of a snapshot, find the offset for reading the
-variable with index `varnr` directly from file. Offset given in number of bytes.
-"""
-function get_variable_offset_in_file(
-    precision::DataType,
-    snapsize::Tuple{Integer, Integer, Integer},
-    varnr   ::Integer
-    )
-    if precision == Float32
-        bytes_per_value = 4
-    elseif precision == Float64
-        bytes_per_value = 8
-    end 
-    values_per_variable = snapsize[1]*snapsize[2]*snapsize[3]
-    offset = bytes_per_value*values_per_variable*(varnr - 1)
-    return offset
-end
-
-"""
-    get_snapvarnr(
-        variable::String,
-        upperlimit::Integer=8
-        )
-Given a primary `variable` (in string format), return its index in a Bifrost
-snapshot.
-"""
-function get_snapvarnr(
-    variable::String,
-    upperlimit::Integer=8
-    )
-    if variable in keys(primary_vars)
-        varnr = primary_vars[variable]
-    else
-        error("Variable name not known.")
-    end
-    # In case one tries to get magnetic field with do_mhd = false
-    if varnr > upperlimit
-        error("Variable number exceeding number of available variables.")
-    end 
-    return varnr
-end # function find_snapvarnr
-
-"""
-    get_auxvarnr(
-        params::Dict{String,String},
-        auxvar::String
-        )
-Given the snapshot `params` and an auxiliary variable (in string format), return
-its index in the ".aux"-array.
-"""
-function get_auxvarnr(
-    params::Dict{String,String},
-    auxvar::String
-    )
-    indices = findall(x -> x == auxvar, split(params["aux"]))
-    if length(indices) > 1
-        error("Multiple matches for given aux variable name.")
-    elseif length(indices) == 0
-        error("Auxiliary variable not found in file.")
-    end
-    return indices[1]
-end
-
-"""
-    load_snapvariable(
-        file_name::String,
-        params   ::Dict{String,String},
-        variable ::String,
-        precision::DataType=Float32;
-        units::String="none",
-        slicex::AbstractVector{<:Integer}=Int[],
-        slicey::AbstractVector{<:Integer}=Int[],
-        slicez::AbstractVector{<:Integer}=Int[]
-        )
-Reads a single `variable` of the Bifrost snapshot `file_name`.
-Assumes single floating point precision as default.
-The available variables are: 
-    "r":  density
-    "px": x-component of momentum
-    "py": y-component of momentum
-    "pz": z-component of momentum
-    "e":  energy
-
-   if params["do_mhd"] == true
-    "bx": x-component of magnetic field
-    "by": y-component of magnetic field
-    "bz": z-component of magnetic field
-
-Can convert variable to si or cgs units by passing `units="si"` or
-`units="cgs"`.
-"""
-function load_snapvariable(
-    file_name::String,
-    params   ::Dict{String,String},
-    variable ::String,
-    precision::DataType=Float32;
-    units::String="none",
-    slicex::AbstractVector{<:Integer}=Int[],
-    slicey::AbstractVector{<:Integer}=Int[],
-    slicez::AbstractVector{<:Integer}=Int[]
-    )
-    datadims = 3 # 3 spatial dimensions and 1 variable dimension
-
-    snapsize, _, _ = get_snapsize_and_numvars(params)
-
-    # Do slicing or not (returns the mmap)
-    slicing = true
-    ( isempty(slicex) && isempty(slicey) && isempty(slicez) ) && ( slicing = false )
-
-    # Get variable number/position in snapdata from argument.
-    varnr = get_snapvarnr(variable)
-
-    # Calculate offset in file
-    offset = get_variable_offset_in_file(precision, snapsize, varnr)
-
-    file = open(file_name)
-
-    # Use Julia standard-library memory-mapping to extract file values
-    if slicing
-        isempty(slicex) && ( slicex = 1:snapsize[1] )
-        isempty(slicey) && ( slicey = 1:snapsize[2] )
-        isempty(slicez) && ( slicez = 1:snapsize[3] )
-        # slice the variable
-        snapvariable = mmap(file,
-                            Array{precision, datadims}, 
-                            snapsize, 
-                            offset)[slicex,slicey,slicez]
-        
-        if units ≠ "none"
-            convert_units!(snapvariable, variable, units)
-        end
-    else
-        # do not slice the variable
-        snapvariable = mmap(file,
-                            Array{precision, datadims}, 
-                            snapsize, 
-                            offset)
-        
-        if units ≠ "none"
-            # Allocate the variable before changing units
-            snapvariable = convert_units(snapvariable, variable, units)
-        end
-    end
-
-    close(file)
-
-    return snapvariable
-end # function load_snapvariable
-
-"""
-    load_snapvariable(
-        expname ::String,
-        snap    ::Vector{T} where {T<:Integer},
-        expdir  ::String,
-        variable::String,
-        precision::DataType=Float32;
-        units::String="none"
-        )
-Reads a single primary `variable` of one or multiple Bifrost snapshots.
-Takes the snapshot-numbers in the vector `snap`.
-Assumes single floating point precision as default.
-The available variables are: 
-    "r":  density
-    "px": x-component of momentum
-    "py": y-component of momentum
-    "pz": z-component of momentum
-    "e":  energy
-
-   if params["do_mhd"] == true
-    "bx": x-component of magnetic field
-    "by": y-component of magnetic field
-    "bz": z-component of magnetic field
-
-Can convert variable to si or cgs units by passing  `units="si"` or
-`units="cgs"`.
-"""
-function load_snapvariable(
-    expname ::String,
-    snap    ::Vector{T} where {T<:Integer},
-    expdir  ::String,
-    variable::String,
-    precision::DataType=Float32;
-    units::String="none"
-    )
-    datadims = 3 # 3 spatial dimensions and 1 variable dimension
-
-    # Parse filenames
-    basename = string(expdir, "/", expname, "_$(lpad(snap[1],3,"0"))")
-    idl_filename  = string(basename, ".idl")
-    params = read_params(idl_filename)
-
-    snapsize, numvars = get_snapsize_and_numvars(params)
-
-    # Get variable number/position in snapdata from argument.
-    varnr = get_snapvarnr(variable)
-
-    # Calculate offset in file
-    offset = get_variable_offset_in_file(precision, snapsize, varnr)
-
-    # Loop through all snapshots and load variable
-    numsnaps = length(snap)
-    snapvariable = zeros(precision, snapsize..., numsnaps)
-    for i = 1:numsnaps
-        isnap = "_"*lpad(snap[i],3,"0")
-        basename = string(expdir, "/", expname, isnap)
-        snap_filename = string(basename, ".snap")
-        file = open(snap_filename)
-        # Use Julia standard-library memory-mapping to extract file values
-        snapvariable[:,:,:,i] .= mmap(file,
-                                     Array{precision, datadims},
-                                     snapsize,
-                                     offset)
-        close(file)
-    end
-
-    if units ≠ "none"
-        convert_units!(snapvariable, variable, units)
-    end
-
-    return snapvariable
-end # function load_snapvariable
-
-"""
-    load_auxvariable(
-        file_name::String,
-        params   ::Dict{String,String},
-        auxvar   ::String,
-        precision::DataType=Float32;
-        units::String="none",
-        slicex::AbstractVector{<:Integer}=Int[],
-        slicey::AbstractVector{<:Integer}=Int[],
-        slicez::AbstractVector{<:Integer}=Int[]
-        )
-Reads a single auxiliary variable from a Bifrost ".aux"-file `file_name`. The
-snapshot parameters must be given together with a string for the aux-variable,
-`auxvar`. Assumes single floating point precision as default. Can convert 
-variable to si or cgs units by passing  `units="si"` or 
-`units="cgs"`.
-"""
-function load_auxvariable(
-    file_name::String,
-    params::Dict{String,String},
-    auxvar::String,
-    precision::DataType=Float32;
-    units::String="none",
-    slicex::AbstractVector{<:Integer}=Int[],
-    slicey::AbstractVector{<:Integer}=Int[],
-    slicez::AbstractVector{<:Integer}=Int[]
-    )
-
-    datadims = 3
-    snapsize, _, _ = get_snapsize_and_numvars(params)
-
-    # Do slicing or not (returns the mmap)
-    slicing = true
-    ( isempty(slicex) && isempty(slicey) && isempty(slicez) ) && ( slicing = false )
-
-    auxvarnr = get_auxvarnr(params, auxvar)
-    # Load file and auxvariable
-    file = open(file_name)
-    offset = get_variable_offset_in_file(precision, snapsize, auxvarnr)
-
-    # Use Julia standard-library memory-mapping to extract file values
-    if slicing
-        isempty(slicex) && ( slicex = 1:snapsize[1] )
-        isempty(slicey) && ( slicey = 1:snapsize[2] )
-        isempty(slicez) && ( slicez = 1:snapsize[3] )
-        # slice the variable
-        auxvariable = mmap(file,
-                           Array{precision, datadims}, 
-                           snapsize, 
-                           offset)[slicex,slicey,slicez]
-        
-        if units ≠ "none"
-            convert_units!(auxvariable, auxvar, units)
-        end
-    else
-        # do not slice the variable
-        auxvariable = mmap(file,
-                           Array{precision, datadims}, 
-                           snapsize, 
-                           offset)
-        
-        if units ≠ "none"
-            # Allocate the variable to change units
-            auxvariable = convert_units(auxvariable, auxvar, units)
-        end
-    end
-
-    close(file)
-
-    return auxvariable
-end # function load_auxdata
-
-"""
-    load_auxvariable(
-        expname ::String,
-        snap    ::Vector{T} where {T<:Integer},
-        expdir  ::String,
-        auxvar  ::String,
-        precision::DataType=Float32;
-        units::String="none"
-        )
-Reads a single axiliary variable (`auxvar`) of one or multiple Bifrost
-snapshots. Takes the snapshot-numbers in the vector `snap`.
-Assumes single floating point precision as default. Can convert variable to si 
-or cgs units by passing  `units="si"` or `units="cgs"`.
-"""
-function load_auxvariable(
-    expname ::String,
-    snap    ::Vector{T} where {T<:Integer},
-    expdir  ::String,
-    auxvar  ::String,
-    precision::DataType=Float32;
-    units::String="none"
-    )
-    datadims = 3
-
-    # Parse filenames
-    basename = string(expdir, "/", expname, "_$(lpad(snap[1],3,"0"))")
-    idl_filename  = string(basename, ".idl")
-    params = read_params(idl_filename)
-
-    snapsize, _, numauxvars = get_snapsize_and_numvars(params)
-    auxvarnr = get_auxvarnr(params, auxvar)
-    # Calculate offset in file
-    offset = get_variable_offset_in_file(precision, snapsize, auxvarnr)
-
-    # Loop through all snapshots and load variable
-    numsnaps = length(snap)
-    auxvariable = zeros(precision, snapsize..., numsnaps)
-    for i = 1:numsnaps
-        isnap = "_"*lpad(snap[i],3,"0")
-        basename = string(expdir, "/", expname, isnap)
-        aux_filename = string(basename, ".aux")
-        file = open(aux_filename)
-        # Use Julia standard-library memory-mapping to extract file values
-        auxvariable[:,:,:,i] = mmap(file,
-                                    Array{precision, datadims},
-                                    snapsize,
-                                    offset)
-        close(file)
-    end
-
-    if units ≠ "none"
-        convert_units!(auxvariable,auxvar,units)
-    end
-
-    return auxvariable
 end
 
 """
     get_var(
         xp::BifrostExperiment,
         snap::Union{<:Integer, AbstractVector{<:Integer}},
-        variable::String
+        variable::String,
+        args...
+        ;
+        kwargs...
         )
- Loads a variable from a simulation snapshot. `snap` can either be an integer 
-snapshot or an integer list of snapshots. 
+Load a `variable` from one or multiple snapshots of `xp`.
 
-Available variables
+# Available variables
 
 The primary variables:
 - "r":  density
@@ -547,13 +184,13 @@ auxilliary variables (variables in params["aux"]):
 - "p": pressure
 - "tg": gas temperature
     ...
-___
-OPTIONAL KEYWORD-ARGUMENTS
+
+# Optional keyword-arguments
 Converts variables to "si" or "cgs" units: `units="si"` or `units="cgs"`.
 
 To load a slice of the variable, give e.g. `slicex=[32, 410]` or `slicey=40:90`
 
-Example usage: 
+# Example usage: 
 
 ```{julia}
 exp_name = "cb24oi"
@@ -570,302 +207,389 @@ rho = get_var(xp, snap, "r"; units="cgs", slicez=[100])
 ```
 """
 function get_var(
-    xp::BifrostExperiment,
-    snap::Union{<:Integer, AbstractVector{<:Integer}},
-    variable::String;
+    xp      ::BifrostExperiment,
+    snap    ::Union{<:Integer, AbstractVector{<:Integer}},
+    variable::String,
+    args...
+    ;
     kwargs...
     )
     
-    get_var(xp.expname, snap, xp.expdir, variable; kwargs...)
+    get_var(xp.expname, snap, xp.expdir, variable, args...; kwargs...)
 end
 
-function get_var(
-    expname::String,
-    snap::Integer,
-    expdir::String,
-    variable::String,
-    precision::DataType=Float32
-    ;
-    units::String="none",
-    slicex::AbstractVector{<:Integer}=Int[],
-    slicey::AbstractVector{<:Integer}=Int[],
-    slicez::AbstractVector{<:Integer}=Int[]
+"""
+    get_var(
+        expname ::String,
+        snap    ::Union{<:Integer, AbstractVector{<:Integer}},
+        expdir  ::String,
+        variable::String,
+        args...
+        ;
+        kwargs...
     )
 
-
-    isnap = lpad(snap,3,"0")
-    idl_file = string(expname,"_",isnap,".idl")
-    params = read_params(joinpath(expdir,idl_file))
-
-    if variable in keys(primary_vars)
-        filename = string(expname,"_",isnap,".snap")
-        filename = joinpath(expdir,filename)
-        return load_snapvariable(filename,params,variable,precision,
-            units=units,slicex=slicex,slicey=slicey,slicez=slicez)
-            
-    elseif variable in split(params["aux"])
-        filename = string(expname,"_",isnap,".aux")
-        filename = joinpath(expdir,filename)
-        return load_auxvariable(filename,params,variable,precision,
-            units=units,slicex=slicex,slicey=slicey,slicez=slicez)
-    
-    elseif variable == "t"
-        var = parse(Float64, params["t"])
-        if units == "si" || units == "cgs"
-            var = convert_snaptime(var)
-        end
-    
-        return var
-
-    else
-        throw(ErrorException("Variable $variable does not exist"))
-    end
-
-end
-
+Load a `variable` from one or multiple snapshots of a Bifrost experiment with 
+experiment directory `expdir` and experiment name `expname`.
+"""
 function get_var(
-    expname::String,
-    snaps::AbstractVector{<:Integer},
-    expdir::String,
+    expname ::String,
+    snaps   ::Union{<:Integer, AbstractVector{<:Integer}},
+    expdir  ::String,
     variable::String,
-    precision::DataType=Float32
+    args...
     ;
-    units::String="none",
-    slicex::AbstractVector{<:Integer}=Int[],
-    slicey::AbstractVector{<:Integer}=Int[],
-    slicez::AbstractVector{<:Integer}=Int[]
+    precision::DataType=Float32,
+    squeeze::Bool=true,
+    kwargs...
     )
 
-    isnap = lpad(snaps[1],3,"0")
-    idl_file = string(expname,"_",isnap,".idl")
-    params = read_params(joinpath(expdir,idl_file))
-
-    filename = joinpath(expdir,expname*"_")
-    
-    if variable in keys(primary_vars)
-        load_var = load_snapvariable
-        file_ext = ".snap"
-    elseif variable in split(params["aux"])
-        load_var = load_auxvariable
-        file_ext = ".aux"
-    elseif variable == "t"
-        var = Vector{Float64}(undef, length(snaps))
-        file_ext = ".idl"
-        
-        # Load the variable directly from params
-        for (i,snap) in collect(enumerate(snaps))
-            
-            isnap = lpad(snap,3,"0")
-            idl_file = string(filename,isnap,file_ext)
-            params = read_params(idl_file) 
-            
-            time = parse(Float64, params["t"])
-            
-            if ( units == "si" ) || ( units == "cgs" )
-                time = convert_snaptime(time)
-            end
-            var[i] = time
-        end
-
-        return var
-    else
-        throw(ErrorException("Variable $variable does not exist"))
+    if variable == "t"
+        # The special case of getting the snapshot time
+        return get_time(expname,snaps,expdir;kwargs...)
     end
-    
-    # Get spatial size
-    mx, my, mz = get_dims(slicex, slicey, slicez, params)
-    
+
+    kwarg_keys = keys(kwargs)
+    kwarg_values = values(kwargs)
+
     # Allocate space for variable
-    var = Array{precision}(undef, mx, my, mz, length(snaps))
+    data = Vector{Array{precision, 3}}(undef, length(snaps))
+
+    # Check if user wants data to be destaggered. If so we have to
+    # call get_and_destagger_var. If not, we may call get_var
+    destagger = try kwarg_values.destagger
+    catch
+        false
+    end
+    if destagger
+        # Check if destagger-operation is passed as a keyword-argument.
+        # If not, use default operation corresponding to the requested
+        # variable.
+        if :destaggeroperation in kwarg_keys
+            get_function = get_and_destagger_var
+        elseif variable in keys(destaggeroperation)
+            get_function = get_and_destagger_var
+            kwargs = addtokwargs(
+                ;destaggeroperation=destaggeroperation[variable],
+                kwargs...
+                )
+        else
+            error("Destaggering of $variable is not implemented. "*
+                "Set the keyword-argument `destaggeroperation`"
+                )
+        end
+    else
+        get_function = get_var
+    end
     
     # Loop over snapshots
     Threads.@threads for (i,snap) in collect(enumerate(snaps))
-        # !! Create thread-local variables to avoid race conditions !!
-        isnap_local = lpad(snap,3,"0")
-        idl_file_local = string(filename,isnap_local,".idl")
-        params_local = read_params(idl_file_local)        
-        tmp_file = string(filename,isnap_local,file_ext)
-
-        var[:,:,:,i] .= load_var(tmp_file,params_local,variable,
-            units=units,slicex=slicex,slicey=slicey,slicez=slicez)
         
-        # Need manual call to run garbage collector within threads
-        GC.safepoint()
+        params_local = read_params(expname,snap,expdir)
+        varnr, file_ext = get_varnr_and_file_extension(params_local, variable)
+        tmp_file = string(joinpath(expdir,expname),"_",lpad(snap,3,"0"),file_ext)
+
+        data[i] = get_function(
+            tmp_file,
+            params_local,
+            varnr,
+            ;
+            precision=precision,
+            kwargs...)
+
+    end
+
+    # -------------------------------------------------------------------------
+    #  Below is where you extend the functionality of get_var by handling 
+    #  arbitrary keyword arguments. Please put your new implementation into a 
+    #  new function.
+    # -------------------------------------------------------------------------
+
+    # UNITS: Scale from code units to something else
+    # 
+    #   If multiple snapshots: Assumes the same conversion factor for all
+    #
+    if :units in kwarg_keys
+        params = read_params(expname,snaps[1],expdir)
+        data = convert_units(data, variable, params, kwarg_values.units)
+    end
+
+    #
+    # ORIENTATION: Rotate coordinate system
+    #
+    try data = rotate(data, variable, kwarg_values.rotate_about)
+    catch end
+
+    # CONCATENATION: Concatenate vector to 4D array
+    try kwarg_values.stack ? data = stack(data) : nothing
+    catch end
+
+    # SQUEEZE: Drop empty dimensions
+    if squeeze && length(data) == 1
+        data = data[1]
+    end
+
+    # -------------------------------------------------------------------------
+    # Additional kwargs and functionality go under here
+    # -------------------------------------------------------------------------
+    return data
+end
+
+"""
+    get_var(
+        filename       ::String,
+        params         ::Dict{String,String},
+        varnr          ::Integer,
+        precision      ::DataType=Float32;
+        slicex         ::AbstractVector{<:Integer}=Int[],
+        slicey         ::AbstractVector{<:Integer}=Int[],
+        slicez         ::AbstractVector{<:Integer}=Int[]
+        )
+Load variable nr. `varnr` from `filename`. The variable could be either 
+primary or auxiliary. Slicing the snapshot is optional. Assumes single 
+precision snapshot by default.
+"""
+function get_var(
+    filename       ::String,
+    params         ::Dict{String,String},
+    varnr          ::Integer
+    ;
+    precision      ::DataType=Float32,
+    slicex         ::AbstractVector{<:Integer}=Int[],
+    slicey         ::AbstractVector{<:Integer}=Int[],
+    slicez         ::AbstractVector{<:Integer}=Int[],
+    kwargs...
+    )
+    datadims = 3 # 3 spatial dimensions and 1 variable dimension
+    snapsize = get_snapsize(params)
+    # Calculate offset in file
+    offset = get_variable_offset_in_file(precision, snapsize, varnr)
+    file = open(filename)
+
+    # Do slicing or not (returns the mmap)
+    # Use Julia standard-library memory-mapping to extract file values
+    if isempty(slicex) && isempty(slicey) && isempty(slicez)
+        # do not slice the variable
+        data = mmap(file,
+            Array{precision, datadims}, 
+            snapsize, 
+            offset
+            )
+    else
+        isempty(slicex) && ( slicex = 1:snapsize[1] )
+        isempty(slicey) && ( slicey = 1:snapsize[2] )
+        isempty(slicez) && ( slicez = 1:snapsize[3] )
+        # slice the variable
+        data = mmap(file,
+            Array{precision, datadims}, 
+            snapsize, 
+            offset
+            )[slicex,slicey,slicez]
+    end
+    close(file)
+    return data
+end
+
+function get_time(
+    expname::String,
+    snap   ::Union{<:Integer, AbstractVector{<:Integer}},
+    expdir ::String 
+    ;
+    units::String="si",
+    kwargs...
+    )
+    nsnaps = length(snap)
+    if nsnaps == 1
+        params = read_params(expname,snap,expdir)
+        data = [parse(Float64, params["t"])]
+    else 
+        data = Vector{Float64}(undef, nsnaps)
+        # Load the variable directly from params
+        for (i,snap) in enumerate(snap)
+            params = read_params(expname,snap,expdir)
+            time = parse(Float64, params["t"])
+            data[i] = time
+        end
+    end
+
+    if units != "code"
+        data = convert_timeunits(data, params)
     end
     
-    return var
+    return data
 end
 
 """
-    function get_staggered_var(
-        xp::BifrostExperiment,
-        snap::Integer,
-        variable::String
+    function get_and_destagger_var(expname::String,
+        filename::String,
+        params::Dict{String,String},
+        varnr::Integer,
         ;
-        slicex::AbstractVector{<:Integer}=Int[],
-        slicey::AbstractVector{<:Integer}=Int[],
-        slicez::AbstractVector{<:Integer}=Int[]
-        kwargs...)
-
-Function to load a staggered variable and interpolate it to cell center.
-The staggered variables that typically need to be interpolated are the velocity
-and magnetic field components. Normally you need to use `direction="zup"` for 
-vz and bz with `periodic=false` (these are the default arguments), and 
-`direction="xup"` for vx and bx with `periodic=true` (same for y direction).
-
-`kwargs`:
-    precision::DataType=Float32,
-    units::String="none",
-    direction::String="zup",
-    periodic::Bool=false,
-    order::Int=6,
-    slicex::AbstractVector{<:Integer}=Int[],
-    slicey::AbstractVector{<:Integer}=Int[],
-    slicez::AbstractVector{<:Integer}=Int[]
-"""
-function get_staggered_var(
-    xp::BifrostExperiment,
-    snaps::Union{<:Integer, AbstractVector{<:Integer}},
-    variable::String;
-    slicex::AbstractVector{<:Integer}=Int[],
-    slicey::AbstractVector{<:Integer}=Int[],
-    slicez::AbstractVector{<:Integer}=Int[],
-    kwargs...)
-
-    if typeof(snaps) <: Integer
-        return get_staggered_var(xp.expname,snaps,xp.expdir,variable;
-                slicex=slicex,slicey=slicey,slicez=slicez,kwargs...)
-    elseif typeof(snaps) <: AbstractVector{<:Integer}
-        mx, my, mz = get_dims(slicex, slicey, slicez, xp.mesh)
-        var = Array{Float32}(undef, mx, my, mz, length(snaps))
-        Threads.@threads for (i,snap) in collect(enumerate(snaps))
-            var[:,:,:,i] .= get_staggered_var(xp.expname,snap,xp.expdir,variable;
-                            slicex=slicex,slicey=slicey,slicez=slicez,kwargs...)
-            
-        end
-        return var
-    end
-end
-
-"""
-    function get_staggered_var(expname::String,
-        snap::Integer,
-        expdir::String,
-        variable::String
-        ;
-        precision::DataType=Float32,
+        destaggeroperation::Function,
         units::String="none",
-        direction::String="zup",
         periodic::Bool=false,
         order::Int=6,
         slicex::AbstractVector{<:Integer}=Int[],
         slicey::AbstractVector{<:Integer}=Int[],
-        slicez::AbstractVector{<:Integer}=Int[]
+        slicez::AbstractVector{<:Integer}=Int[],
+        kwargs...
         )
+
+Function to load a staggered variable and interpolate it to cell center.
+The staggered variables that typically need to be interpolated are the velocity
+and magnetic field components. Normally you need to use `destaggeroperation=zup`
+for vz and bz with `periodic=false`, and `destaggeroperation=xup` for vx and bx
+with `periodic=true` (same for y direction).
 """
-function get_staggered_var(
-    expname::String,
-    snap::Integer,
-    expdir::String,
-    variable::String,
-    precision::DataType=Float32
+function get_and_destagger_var(
+    filename::String,
+    params::Dict{String,String},
+    varnr::Integer,
     ;
-    units::String="none",
-    direction::String="zup",
+    destaggeroperation::Function,
     periodic::Bool=false,
     order::Int=6,
     slicex::AbstractVector{<:Integer}=Int[],
     slicey::AbstractVector{<:Integer}=Int[],
-    slicez::AbstractVector{<:Integer}=Int[]
+    slicez::AbstractVector{<:Integer}=Int[],
+    kwargs...
     )
-
-    shift_functions = Dict(
-        "xdn" => xdn, 
-        "xup" => xup,
-        "ydn" => ydn, 
-        "yup" => yup, 
-        "zdn" => zdn, 
-        "zup" => zup
-    )
-
-    allowed_directions = collect(keys(shift_functions))
-    if ! ( direction in allowed_directions )
-        throw(ErrorException("$direction not a valid keyword argument, use "*
-        "one of the following: $((allowed_directions[1:end-1] .* ", ")...)"*
-        "$(allowed_directions[end])."))
-    end
-
-    shift = shift_functions[direction]
-
-    if ! ( variable in keys(primary_vars) )
-        throw(ErrorException("Variable $variable is not a primary variable"))
-    end
-
-    # io stuff
-    isnap = lpad(snap,3,"0")
-    idl_file = string(expname,"_",isnap,".idl")
-    params = read_params(joinpath(expdir,idl_file))
-    filename = string(expname,"_",isnap,".snap")
-    filename = joinpath(expdir,filename)
-
-    slicing = true
-    ( isempty(slicex) && isempty(slicey) && isempty(slicez) ) && ( slicing = false )
-    
-    if slicing
-        if ( direction == "xup" ) || ( direction == "xdn" )
+    if isempty(slicex) && isempty(slicey) && isempty(slicez)
+        # load the entire variable and destaggeroperation it in the desired direction
+        data = get_var(filename,params,varnr,)
+        data = destaggeroperation(data,periodic,order)
+    else
+        if destaggeroperation in (xup, xdn)
+            # Load var
+            data = get_var(filename,params,varnr;
+                slicey=slicey,slicez=slicez,kwargs...
+                )
             if isempty(slicex)
                 # All indices in 'x' are loaded, don't worry about slicing
-                var = load_snapvariable(filename,params,variable,precision,
-                    units=units,slicey=slicey,slicez=slicez)
-                var = shift(var,periodic,order)
+                data = destaggeroperation(data,periodic,order)
             else
-                var = load_snapvariable(filename,params,variable,precision,
-                    units="none",slicey=slicey,slicez=slicez)
-                var = shift(var,slicex,periodic,order)
-                if units ≠ "none"
-                    convert_units!(var,variable,units)
-                end
+                # Call to the function that slices in x
+                data = destaggeroperation(data,slicex,periodic,order)
             end
-        elseif ( direction == "yup" ) || ( direction == "ydn" )
+        elseif destaggeroperation in (yup, ydn)
+            data = get_var(filename,params,varnr;
+                slicex=slicex,slicez=slicez,kwargs...
+                )
             if isempty(slicey)
                 # All indices in 'y' are loaded, don't worry about slicing
-                var = load_snapvariable(filename,params,variable,precision,
-                    units=units,slicex=slicex,slicez=slicez)
-                var = shift(var,periodic,order)
+                data = destaggeroperation(data,periodic,order)
             else
-                var = load_snapvariable(filename,params,variable,precision,
-                    units="none",slicex=slicex,slicez=slicez)
-                var = shift(var,slicey,periodic,order)
-                if units ≠ "none"
-                    convert_units!(var,variable,units)
-                end
+                # Call to the function that slices in y
+                data = destaggeroperation(data,slicey,periodic,order)
             end
-        else
+        elseif destaggeroperation in (zup, zdn)
+            data = get_var(filename, params, varnr;
+                slicex=slicex, slicey=slicey, kwargs...
+                )
             if isempty(slicez)
                 # All indices in 'z' are loaded, don't worry about slicing
-                var = load_snapvariable(filename,params,variable,precision,
-                    units=units,slicex=slicex,slicey=slicey)
-                var = shift(var,periodic,order)
+                data = destaggeroperation(data,periodic,order)
             else
-                var = load_snapvariable(filename,params,variable,precision,
-                    units="none",slicex=slicex,slicey=slicey)
-                var = shift(var,slicez,periodic,order)
-                if units ≠ "none"
-                    convert_units!(var,variable,units)
-                end
+                # Call to the function that slices in z
+                data = destaggeroperation(data,slicez,periodic,order)
+            end
+        #
+        # POSSIBLE TO SIMPLIFY THIS?
+        # Always passing slice to the operation and handling it there?
+        #
+        elseif destaggeroperation == yupzup
+            data = get_var(filename, params, varnr; slicex=slicex, kwargs...)
+            if isempty(slicez) && isempty(slicey)
+                # All indices in 'z' and 'y' are loaded, don't worry about slicing
+                data = destaggeroperation(data,periodic,order)
+            elseif isempty(slicey)
+                # Call to the function that slices in z
+                data = zup(data, slicez, periodic, order)
+                data = yup(data, periodic, order)
+            elseif isempty(slicez)
+                # All indices in 'z' are loaded, don't worry about slicing
+                data = zup(data, periodic, order)
+                data = yup(data, slicey, periodic, order)
+            else
+                # Call to the function that slices in z and y
+                data = zup(data, slicez, periodic, order)
+                data = yup(data, slicey, periodic, order)
+            end
+        elseif destaggeroperation == zupxup
+            data = get_var(filename, params, varnr; slicey=slicey, kwargs...)
+            if isempty(slicez) && isempty(slicex)
+                # All indices in 'z' and 'x' are loaded, don't worry about slicing
+                data = destaggeroperation(data,periodic,order)
+            elseif isempty(slicez)
+                # Call to the function that slices in x
+                data = xup(data, slicex, periodic, order)
+                data = zup(data, periodic, order)
+            elseif isempty(slicex)
+                # All indices in 'y' are loaded, don't worry about slicing
+                data = xup(data, periodic, order)
+                data = zup(data, slicez, periodic, order)
+            else
+                # Call to the function that slices in x and z
+                data = xup(data, slicex, periodic, order)
+                data = zup(data, slicez, periodic, order)
+            end
+        elseif destaggeroperation == xupyup
+            data = get_var(filename, params, varnr; slicez=slicez, kwargs...)
+            if isempty(slicex) && isempty(slicey)
+                # All indices in 'x' and 'y' are loaded, don't worry about slicing
+                data = destaggeroperation(data,periodic,order)
+            elseif isempty(slicex)
+                # Call to the function that slices in y
+                data = yup(data, slicey, periodic, order)
+                data = xup(data, periodic, order)
+            elseif isempty(slicey)
+                # All indices in 'y' are loaded, don't worry about slicing
+                data = yup(data, periodic, order)
+                data = xup(data, slicex, periodic, order)
+            else
+                # Call to the function that slices in y and x.
+                data = yup(data, slicey, periodic, order)
+                data = xup(data, slicex, periodic, order)
             end
         end
-    else
-        # load the entire variable and shift it in the desired direction
-        var = load_snapvariable(filename,params,variable,precision,
-            units=units)
-        var = shift(var,periodic,order)
+
     end
-
-    GC.safepoint()
-    return var
-
+    return data
 end
+
+
+"""
+    rotate(
+        data         ::AbstractArray,
+        variable     ::String,
+        rotation_axis::String,
+        )
+Rotate the data about an `rotation_axis`.
+"""
+function rotate(
+    data         ::AbstractArray,
+    variable     ::String,
+    rotation_axis::String,
+    )
+    xcomponents = ("px", "bx", "ex", "ix")
+    ycomponents = ("py", "by", "ey", "iy")
+    zcomponents = ("pz", "bz", "ez", "iz")
+
+    if variable in ("r", "p", "tg")
+        return data # Scalar fields, do nothing
+    else
+        if rotation_axis == "x"
+            if variable in xcomponents
+                return data
+            elseif variable in ycomponents || variable in zcomponents
+                return -data
+            end
+        else
+            error("Rotation about $rotation_axis-axis is not implemented")
+        end
+    end
+end
+
 
 """
     function get_electron_density(
@@ -893,22 +617,26 @@ function get_electron_density(
     slicex::AbstractVector{<:Integer}=Int[],
     slicey::AbstractVector{<:Integer}=Int[],
     slicez::AbstractVector{<:Integer}=Int[],
+    stack::Bool=true,
     kwargs...)
 
     if typeof(snaps) <: Integer
-        return get_electron_density(xp.expname,snaps,xp.expdir;
-		slicex=slicex,slicey=slicey,slicez=slicez,kwargs...)
-    elseif typeof(snaps) <: AbstractVector{<:Integer}
-        mx, my, mz = get_dims(slicex, slicey, slicez, xp.mesh)
-        var = Array{Float32}(undef, mx, my, mz, length(snaps))
-        Threads.@threads for (i,snap) in collect(enumerate(snaps))
-            var[:,:,:,i] .= get_electron_density(xp.expname,snap,xp.expdir;
-                            slicex=slicex,slicey=slicey,slicez=slicez,kwargs...)
-            
-            # Need manual call to run garbage collector within threads
-            GC.safepoint()
-        end
+        var = get_electron_density(xp.expname,snaps,xp.expdir;
+		    slicex=slicex,slicey=slicey,slicez=slicez,kwargs...)
         return var
+
+    elseif typeof(snaps) <: AbstractVector{<:Integer}
+        var = Vector{Array{Float32,3}}(undef, length(snaps))
+        Threads.@threads for (i,snap) in collect(enumerate(snaps))
+            var[i] = get_electron_density(xp.expname,snap,xp.expdir;
+                        slicex=slicex,slicey=slicey,slicez=slicez,kwargs...)
+        end
+
+        if stack
+            return stack(var)
+        else
+            return var
+        end
     end
 
 end
@@ -940,15 +668,42 @@ function get_electron_density(
     tabfile::String="tabparam.in"
     ) where {T<:AbstractFloat}
 
-    # rho in g/cm^3
-    ( isempty(rho) ) && ( rho = get_var(expname,snap,expdir,"r",
-    units="cgs",slicex=slicex,slicey=slicey,
-    slicez=slicez) )
+    params = read_params(expname,snap,expdir)
     
-    # internal energy in ergs 
-    ( isempty(e) ) && ( e = get_var(expname,snap,expdir,"e",
-    units="cgs",slicex=slicex,slicey=slicey,
-    slicez=slicez) )
+    # rho in g/cm^3
+    if isempty(rho)
+        
+        varnr, file_ext = get_varnr_and_file_extension(params, "r")
+        tmp_file = string(joinpath(expdir,expname), "_", lpad(snap,3,"0"), file_ext)
+
+        rho = get_var(
+            tmp_file,
+            params,
+            varnr,
+            slicex=slicex,
+            slicey=slicey,
+            slicez=slicez
+        )
+        rho = convert_units(rho, "r", params, "cgs")
+
+    end
+    
+    # internal energy in ergs
+    if isempty(e)
+        varnr, file_ext = get_varnr_and_file_extension(params, "e")
+        tmp_file = string(joinpath(expdir,expname), "_", lpad(snap,3,"0"), file_ext)
+
+        e = get_var(
+            tmp_file,
+            params,
+            varnr,
+            slicex=slicex,
+            slicey=slicey,
+            slicez=slicez
+        )
+        e = convert_units(e, "e", params, "cgs")
+
+    end
 
     # Calculate internal energy per mass
     ee = e ./ rho
@@ -987,7 +742,7 @@ function get_electron_density(
     ne = exp.(ne)
 
     # Convert to si on request (cm^-3 --> m^-3)
-    if units == "si"
+    if lowercase(units) == "si"
         ne .*= 1f6
     end
 

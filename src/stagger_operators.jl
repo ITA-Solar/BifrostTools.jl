@@ -1560,4 +1560,28 @@ function dzdn(
     end
 end
 
+"""
+    yupzup(data, args...)
+For destagering variables at cell edges, in particular the x-axis.
+"""
+function yupzup(data, args...)
+    yup(zup(data, args...), args...)
+end
 
+
+"""
+    zupxup(data, args...)
+For destagering variables at cell edges, in particular the y-axis.
+"""
+function zupxup(data, args...)
+    zup(xup(data, args...), args...)
+end
+
+
+"""
+    xupyup(data, args...)
+For destagering variables at cell edges, in particular the z-axis.
+"""
+function xupyup(data, args...)
+    xup(yup(data, args...), args...)
+end
