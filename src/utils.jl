@@ -278,3 +278,12 @@ Add keyword-arguments to your `Base.Pairs` of kwargs.
 function addtokwargs(;kwargs...)
     kwargs
 end
+
+"""
+    function squeeze(a::AbstractArray)
+Drop singleton dimensions of array `a`
+"""
+function squeeze(a::AbstractArray)
+    emptydims = tuple(findall(size(a) .== 1)...)
+    dropdims(a; dims=emptydims)
+end

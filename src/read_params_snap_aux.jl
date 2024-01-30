@@ -240,7 +240,6 @@ function get_var(
     args...
     ;
     precision::DataType=Float32,
-    squeeze::Bool=true,
     kwargs...
     )
 
@@ -306,26 +305,32 @@ function get_var(
     # -------------------------------------------------------------------------
 
     # UNITS: Scale from code units to something else
-    # 
     #   If multiple snapshots: Assumes the same conversion factor for all
-    #
     if :units in kwarg_keys
         params = read_params(expname,snaps[1],expdir)
         data = convert_units(data, variable, params, kwarg_values.units)
     end
 
-    #
     # ORIENTATION: Rotate coordinate system
-    #
     try data = rotate(data, variable, kwarg_values.rotate_about)
     catch end
 
-    # CONCATENATION: Concatenate vector to 4D array
-    try kwarg_values.stack ? data = stack(data) : nothing
-    catch end
-
     # SQUEEZE: Drop empty dimensions
-    if squeeze && length(data) == 1
+    #   Allocates new data with fewer dims, and copies this into data
+    if get(kwarg_values, :squeeze, false)
+        dims = count( size(data) .≠ 1 )
+
+        if dims < 3
+            new_data = Vector{Array{precision,dims}}(undef,length(snaps))
+            for i in eachindex(data)
+                new_data[i] = squeeze(data[i])
+            end
+            data = new_data
+        end
+    end
+
+    # CONCATENATION: Concatenate vector to 3D array if single snapshot
+    if length(data) == 1
         data = data[1]
     end
 
@@ -588,6 +593,15 @@ function rotate(
             error("Rotation about $rotation_axis-axis is not implemented")
         end
     end
+end
+
+function rotate(
+    data         ::AbstractVector,
+    variable     ::String,
+    rotation_axis::String,
+    )
+
+    return [rotate(data[i], variable, rotation_axis) for i in eachindex(data)] 
 end
 
 
