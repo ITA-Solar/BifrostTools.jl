@@ -322,9 +322,9 @@ function get_var(
 
         if dims < 3
             if dims == 0
-                new_data = Vector{Array{precision,dims}}(undef,length(snaps))
-            else
                 new_data = Vector{precision}(undef,length(snaps))
+            else
+                new_data = Vector{Array{precision,dims}}(undef,length(snaps))
             end
             for i in eachindex(data)
                 new_data[i] = squeeze(data[i])
