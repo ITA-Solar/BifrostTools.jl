@@ -107,7 +107,7 @@ function code_to_cgs(
         # not implemented yet
     elseif variable in ("ex", "ey", "ez")    # Electric field
          return data*parse(Float32, params["u_u"])*parse(Float32,params["u_B"])
-    elseif variable in ("qvisc, qjoule")
+    elseif variable in ("qvisc", "qjoule")
         return data*parse(Float32, params["u_e"])/parse(Float32, params["u_t"]) 
     else
         throw(ErrorException(
