@@ -284,6 +284,6 @@ end
 Drop singleton dimensions of array `a`
 """
 function squeeze(a::AbstractArray)
-    emptydims = tuple(findall(size(a) .== 1)...)
-    dropdims(a; dims=emptydims)
+    shape = size(a)[findall(size(a) .≠ 1)]
+    reshape(a, shape)
 end
