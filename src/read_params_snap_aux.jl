@@ -248,18 +248,12 @@ function get_var(
         return get_time(expname,snaps,expdir;kwargs...)
     end
 
-    kwarg_keys = keys(kwargs)
-    kwarg_values = values(kwargs)
-
     # Allocate space for variable
     data = Vector{Array{precision, 3}}(undef, length(snaps))
 
     # Check if user wants data to be destaggered. If so we have to
     # call get_and_destagger_var. If not, we may call get_var
-    destagger = try kwarg_values.destagger
-    catch
-        false
-    end
+    destagger = get(kwargs, :destagger, false)
     if destagger
         # Check if destagger-operation is passed as a keyword-argument.
         # If not, use default operation corresponding to the requested
@@ -306,18 +300,19 @@ function get_var(
 
     # UNITS: Scale from code units to something else
     #   If multiple snapshots: Assumes the same conversion factor for all
-    if :units in kwarg_keys
+    if get(kwargs,:units,false)
         params = read_params(expname,snaps[1],expdir)
         data = convert_units(data, variable, params, kwarg_values.units)
     end
 
     # ORIENTATION: Rotate coordinate system
-    try data = rotate(data, variable, kwarg_values.rotate_about)
-    catch end
+    if get(kwargs, :rotate_about, false)
+        data = rotate(data, variable, kwargs[rotate_about])
+    end
 
     # SQUEEZE: Drop empty dimensions
     #   Allocates new data with fewer dims, and copies this into data
-    if get(kwarg_values, :squeeze, false)
+    if get(kwargs, :squeeze, false)
         dims = count( size(data) .≠ 1 )
 
         if dims < 3
