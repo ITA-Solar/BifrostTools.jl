@@ -253,12 +253,11 @@ function get_var(
 
     # Check if user wants data to be destaggered. If so we have to
     # call get_and_destagger_var. If not, we may call get_var
-    destagger = get(kwargs, :destagger, false)
-    if destagger
+    if get(kwargs, :destagger, false)
         # Check if destagger-operation is passed as a keyword-argument.
         # If not, use default operation corresponding to the requested
         # variable.
-        if :destaggeroperation in kwarg_keys
+        if get(kwargs,:destaggeroperation,false)
             get_function = get_and_destagger_var
         elseif variable in keys(destaggeroperation)
             get_function = get_and_destagger_var
@@ -275,16 +274,18 @@ function get_var(
         get_function = get_var
     end
     
+    # What we need in params should be constant for experiment
+    params = read_params(expname,snaps[1],expdir)
+    varnr, file_ext = get_varnr_and_file_extension(params, variable)
+    
     # Loop over snapshots
     Threads.@threads for (i,snap) in collect(enumerate(snaps))
         
-        params_local = read_params(expname,snap,expdir)
-        varnr, file_ext = get_varnr_and_file_extension(params_local, variable)
         tmp_file = string(joinpath(expdir,expname),"_",lpad(snap,3,"0"),file_ext)
 
         data[i] = get_function(
             tmp_file,
-            params_local,
+            params,
             varnr,
             ;
             precision=precision,
@@ -300,19 +301,18 @@ function get_var(
 
     # UNITS: Scale from code units to something else
     #   If multiple snapshots: Assumes the same conversion factor for all
-    if get(kwargs,:units,false)
-        params = read_params(expname,snaps[1],expdir)
-        data = convert_units(data, variable, params, kwarg_values.units)
+    if haskey(kwargs,:units)
+        data = convert_units(data, variable, params, kwargs[units])
     end
 
     # ORIENTATION: Rotate coordinate system
-    if get(kwargs, :rotate_about, false)
+    if haskey(kwargs,:rotate_about)
         data = rotate(data, variable, kwargs[rotate_about])
     end
 
     # SQUEEZE: Drop empty dimensions
     #   Allocates new data with fewer dims, and copies this into data
-    if get(kwargs, :squeeze, false)
+    if get(kwargs,:squeeze,false)
         dims = count( size(data) .≠ 1 )
 
         if dims < 3
@@ -329,7 +329,7 @@ function get_var(
     end
 
     # CONCATENATION: Concatenate vector to 3D array if single snapshot
-    if length(data) == 1
+    if length(snaps) == 1
         data = data[1]
     end
 
