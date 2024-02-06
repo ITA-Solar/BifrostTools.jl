@@ -302,12 +302,12 @@ function get_var(
     # UNITS: Scale from code units to something else
     #   If multiple snapshots: Assumes the same conversion factor for all
     if haskey(kwargs,:units)
-        data = convert_units(data, variable, params, kwargs[units])
+        data = convert_units(data, variable, params, kwargs[:units])
     end
 
     # ORIENTATION: Rotate coordinate system
     if haskey(kwargs,:rotate_about)
-        data = rotate(data, variable, kwargs[rotate_about])
+        data = rotate(data, variable, kwargs[:rotate_about])
     end
 
     # SQUEEZE: Drop empty dimensions
