@@ -1,10 +1,15 @@
 # BifrostTools.jl
+
 Tools for working with Bifrost in Julia.
 
 This Julia package is created for working with *Bifrost* data **faster**. 
 Load single or multiple simulation snapshots, and analyse data efficiently. 
 
 This package is an extension of `Bifrost.jl`, a script written by Mikolaj Szydlarski.
+
+## Documentation
+The documentation is available at https://ita-solar.github.io/BifrostTools.jl/
+
 ___
 ### Git commit message manners
 The commit message is mainly for other people, so they should be able to understand it now and six months later. Commit messages cannot be longer than one sentence (line) and should start with a tag identifier (see the end of this section).
