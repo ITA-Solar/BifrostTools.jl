@@ -135,39 +135,31 @@ snaps = xp.snaps
     ;
     kwargs...
 )
-````
-
-This funciton loads a *variable* from one or multiple snapshots of `xp`. The available variables are
-
-The primary variables:
-- &quot;r&quot;:  density
-- &quot;px&quot;: x-component of momentum
-- &quot;py&quot;: y-component of momentum
-- &quot;pz&quot;: z-component of momentum
-- &quot;e&quot;:  energy
-
-`if params[&quot;do_mhd&quot;] == true`
-- &quot;bx&quot;: x-component of magnetic field
-- &quot;by&quot;: y-component of magnetic field
-- &quot;bz&quot;: z-component of magnetic field
-
-and auxilliary variables (variables in params[&quot;aux&quot;]):
-- &quot;p&quot;: pressure
-- &quot;tg&quot;: gas temperature
-- Q terms
-
-The following are optional keyword-arguments
-- `units::String`: Converts variables to &quot;si&quot; or &quot;cgs&quot; units. `units=&quot;si&quot;` or `units=&quot;cgs&quot;`.
-- `destagger::Bool`: Performs 5th-order interpolation to center the variable, and should only be used when reading variables that are staggered, (e.g. velocity or magnetic field). The function uses the default direction (destaggeroperation) associated with the variable unless otherwise stated by the `destaggeroperation` keyword.
-- `destaggeroperation::String`: Determines which direction to destagger the variable. This is by default handled automatically by the `destaggeroperation` dictionary. 
-- `rotate_about_x::String`: Rotate coordinate system to the normal &quot;right hand system&quot; with *z*-axis pointing upwards by passing `rotate_about=&quot;x&quot;`
-- `slicex::AbstractVector{&lt;:Integer}=Int[]`: Load a slice or slices in x-axis. Give e.g. `slicex=[32, 410]` or `slicex=40:90`
-- `slicey::AbstractVector{&lt;:Integer}=Int[]`: Load a slice or slices in y-axis
-- `slicez::AbstractVector{&lt;:Integer}=Int[]`: Load a slice or slices in z-axis
-
-
-```{julia}
-exp_name = &quot;cb24oi&quot;
+</code></pre>
+<p>This funciton loads a <em>variable</em> from one or multiple snapshots of <code>xp</code>. The available variables are</p>
+<p>The primary variables:
+- "r":  density
+- "px": x-component of momentum
+- "py": y-component of momentum
+- "pz": z-component of momentum
+- "e":  energy</p>
+<p><code>if params["do_mhd"] == true</code>
+- "bx": x-component of magnetic field
+- "by": y-component of magnetic field
+- "bz": z-component of magnetic field</p>
+<p>and auxilliary variables (variables in params["aux"]):
+- "p": pressure
+- "tg": gas temperature
+- Q terms</p>
+<p>The following are optional keyword-arguments
+- <code>units::String</code>: Converts variables to "si" or "cgs" units. <code>units="si"</code> or <code>units="cgs"</code>.
+- <code>destagger::Bool</code>: Performs 5th-order interpolation to center the variable, and should only be used when reading variables that are staggered, (e.g. velocity or magnetic field). The function uses the default direction (destaggeroperation) associated with the variable unless otherwise stated by the <code>destaggeroperation</code> keyword.
+- <code>destaggeroperation::String</code>: Determines which direction to destagger the variable. This is by default handled automatically by the <code>destaggeroperation</code> dictionary. 
+- <code>rotate_about_x::String</code>: Rotate coordinate system to the normal "right hand system" with <em>z</em>-axis pointing upwards by passing <code>rotate_about="x"</code>
+- <code>slicex::AbstractVector{&lt;:Integer}=Int[]</code>: Load a slice or slices in x-axis. Give e.g. <code>slicex=[32, 410]</code> or <code>slicex=40:90</code>
+- <code>slicey::AbstractVector{&lt;:Integer}=Int[]</code>: Load a slice or slices in y-axis
+- <code>slicez::AbstractVector{&lt;:Integer}=Int[]</code>: Load a slice or slices in z-axis</p>
+<pre><code>exp_name = &quot;cb24oi&quot;
 exp_dir = &quot;/mn/stornext/d21/RoCS/matsc/3d/run/cb24oi&quot;
 snap = 700
 
