@@ -1,0 +1,112 @@
+# Example usage
+
+To load the package, type the following in the REPL
+
+```{julia}
+using BifrostTools
+```
+
+## Using `BifrostExperiment`
+
+In this example, we look at the simulation *cb24oi*.
+we start with defining the part to the simulation directory and the name of the simulation.
+
+```{julia}
+expdir = "/mn/stornext/d21/RoCS/matsc/3d/run/cb24oi/"
+expname = "cb24oi"
+```
+
+These variables can be passed to the `BifrostExperiment` structure, which creates an instance that lets us access the mesh file, snapshot numbers, and so on.
+
+```{julia}
+xp = BifrostExperiment(expname,expdir)
+
+# Mesh file that holds grid info etc.
+mesh = xp.mesh
+
+x = mesh.x
+y = mesh.y
+z = mesh.z
+
+# vector with snap numbers
+snaps = xp.snaps
+```
+
+## Reading data from the simulation with `get_var`
+
+Reading data from the snapshot or aux files is handled through the `get_var` function. Due to `Julia`'s multiple dispatch functionality, there are several ways to call the `get_var` function, but we recommend using the following function to simplify the calling signature:
+
+```{julia}
+get_var(
+    xp::BifrostExperiment,
+    snap::Union{<:Integer, AbstractVector{<:Integer}},
+    variable::String,
+    args...
+    ;
+    kwargs...
+)
+```
+
+This funciton loads a *variable* from one or multiple snapshots of `xp`. The available variables are
+
+The primary variables:
+- "r":  density
+- "px": x-component of momentum
+- "py": y-component of momentum
+- "pz": z-component of momentum
+- "e":  energy
+
+`if params["do_mhd"] == true`
+- "bx": x-component of magnetic field
+- "by": y-component of magnetic field
+- "bz": z-component of magnetic field
+
+and auxilliary variables (variables in params["aux"]):
+- "p": pressure
+- "tg": gas temperature
+- Q terms
+
+The following are optional keyword-arguments
+- `units::String`: Converts variables to "si" or "cgs" units. `units="si"` or `units="cgs"`.
+- `destagger::Bool`: Performs 5th-order interpolation to center the variable, and should only be used when reading variables that are staggered, (e.g. velocity or magnetic field). The function uses the default direction (destaggeroperation) associated with the variable unless otherwise stated by the `destaggeroperation` keyword.
+- `destaggeroperation::String`: Determines which direction to destagger the variable. This is by default handled automatically by the `destaggeroperation` dictionary. 
+- `rotate_about_x::String`: Rotate coordinate system to the normal "right hand system" with *z*-axis pointing upwards by passing `rotate_about="x"`
+- `slicex::AbstractVector{<:Integer}=Int[]`: Load a slice or slices in x-axis. Give e.g. `slicex=[32, 410]` or `slicex=40:90`
+- `slicey::AbstractVector{<:Integer}=Int[]`: Load a slice or slices in y-axis
+- `slicez::AbstractVector{<:Integer}=Int[]`: Load a slice or slices in z-axis
+
+
+```{julia}
+exp_name = "cb24oi"
+exp_dir = "/mn/stornext/d21/RoCS/matsc/3d/run/cb24oi"
+snap = 700
+
+xp = BifrostExperiment(expname, expdir)
+
+# Load pressude for the full cube in si units
+pressure = get_var(xp, snap, "p"; units="si")
+
+# Load gas density in a slize along the xy-plane in cgs units
+rho = get_var(xp, snap, "r"; units="cgs", slicez=[100])
+# Then read and destagger vertical velocity
+vz = get_var(xp, isnap, "pz", units="si", destagger=true, slicez=[100]) ./ rho
+
+# Load x-component of B-field and rotate about x-axis
+bx = get_var(xp, isnap, "bx", units="si", destagger=true, rotate_about="x")
+```
+
+## Loading the simulation parameters with `read_params`
+
+The `read_params` function reads the params file. It can be called by giving the full filename, like the following
+
+```{julia}
+snap = 500
+params_file = joinpath(expdir,string(expname,"_",snap,".idl"))
+params = read_params(params_file)
+```
+
+or
+
+```{julia}
+read_params(expname,snap,expdir)
+```
