@@ -735,11 +735,11 @@ function get_electron_density(
     
     if maximum(ee) > parse(Float64,eos.params["EiMax"])
         @printf """tab_interp: density outside table bounds.
-        Table rho max=%.3e, requested rho max=%.3e""" eos.params["EiMax"] maximum(Ei)
+        Table rho max=%.3e, requested rho max=%.3e""" eos.params["EiMax"] maximum(ee)
     end        
     if minimum(ee) < parse(Float64,eos.params["EiMin"])
         @printf """tab_interp: density outside table bounds.
-        Table rho min=%.3e, requested rho min=%.3e""" eos.params["EiMin"] minimum(Ei)
+        Table rho min=%.3e, requested rho min=%.3e""" eos.params["EiMin"] minimum(ee)
     end
     
     # Create interpolation table, takes the log of coordinates
