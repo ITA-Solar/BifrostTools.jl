@@ -313,19 +313,18 @@ function get_var(
     # SQUEEZE: Drop empty dimensions
     #   Allocates new data with fewer dims, and copies this into data
     if get(kwargs,:squeeze,false)
-        dims = count( size(data) .≠ 1 )
+        # number of non-empty dimension
+        dims = count( size(data[1]) .≠ 1 )
 
-        if dims < 3
-            if dims == 0
-                new_data = Vector{precision}(undef,length(snaps))
-            else
-                new_data = Vector{Array{precision,dims}}(undef,length(snaps))
-            end
-            for i in eachindex(data)
-                new_data[i] = squeeze(data[i])
-            end
-            data = new_data
+        if dims == 0
+            new_data = Vector{precision}(undef,length(snaps))
+        else
+            new_data = Vector{Array{precision,dims}}(undef,length(snaps))
         end
+        for i in eachindex(data)
+            new_data[i] = squeeze(data[i])
+        end
+        data = new_data
     end
 
     # CONCATENATION: Concatenate vector to 3D array if single snapshot
