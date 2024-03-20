@@ -14,5 +14,6 @@ makedocs(
 deploydocs(
     repo = "github.com/ITA-solar/BifrostTools.jl.git",
     branch="gh-pages",
+    devbranch="develop-documentation",
     versions = nothing
 )
