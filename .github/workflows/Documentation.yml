@@ -1,4 +1,6 @@
 name: Documentation
+
+on:
   push:
     branches:
       - develop
