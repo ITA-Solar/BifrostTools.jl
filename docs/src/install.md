@@ -8,4 +8,4 @@ BifrostTools.jl is not published yet, and therefore not available in the Julia r
 2. Move to the repo and open the REPL by typing `julia` in your terminal
 3. `] add .` installs the package from inside the repository (alternatively `] add PATH/TO/BifrostTools.jl`)
 
-Now you can use BifrostTools.jl in Julia
+Now you can use BifrostTools.jl in Julia! `> using BifrostTools`
