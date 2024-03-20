@@ -10,3 +10,7 @@ makedocs(
         "Example Usage" => "usage.md"
     ]
 )
+
+deploydocs(;
+    repo="github.com/ITA-solar/BifrostTools.jl",
+)

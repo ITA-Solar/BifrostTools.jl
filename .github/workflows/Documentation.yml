@@ -5,7 +5,9 @@ on:
     branches:
       - develop
     tags: '*'
-  pull_request:jobs:
+  pull_request:
+  
+jobs:
   build:
     runs-on: ubuntu-latest
     steps:
@@ -14,7 +16,8 @@ on:
         with:
           version: '1.10'
       - name: Install dependencies
-        run: julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+        run: julia --project=docs/ -e 'using Pkg; 
+        Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
       - name: Build and deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # For authentication with GitHub Actions token
