@@ -1,6 +1,6 @@
 push!(LOAD_PATH,"../src/")
 
-using Documenter, BifrostTools
+using Documenter
 
 makedocs(
     sitename="BifrostTools.jl Documentation",
