@@ -1,19 +1,23 @@
-push!(LOAD_PATH,"../src/")
-
+using BifrostTools
 using Documenter
 
-makedocs(
-    sitename="BifrostTools.jl Documentation",
-    pages = [
+DocMeta.setdocmeta!(BifrostTools, :DocTestSetup, :(using BifrostTools); recursive=true)
+
+makedocs(;
+    modules=[BifrostTools],
+    authors="meudnaes <eliasudnes@hotmail.com>, eilifso <eilif.oyre@gmail.com> and contributors",
+    sitename="BifrostTools.jl",
+    format=Documenter.HTML(;
+        canonical="https://ITA-Solar.github.io/BifrostTools.jl",
+        edit_link="develop-documentation",
+        assets=String[],
+    ),
+    pages=[
         "Home" => "index.md",
-        "Installation" => "install.md",
-        "Example Usage" => "usage.md"
-    ]
+    ],
 )
 
-deploydocs(
-    repo = "github.com/ITA-solar/BifrostTools.jl.git",
-    branch="gh-pages",
+deploydocs(;
+    repo="github.com/ITA-Solar/BifrostTools.jl",
     devbranch="develop-documentation",
-    versions = nothing
 )

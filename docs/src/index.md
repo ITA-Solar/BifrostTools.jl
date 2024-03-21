@@ -1,7 +1,14 @@
-# BifrostTools.jl
+```@meta
+CurrentModule = BifrostTools
+```
 
-BifrostTools is a Julia package for working with Bifrost simulations.
+# BifrostTools
 
-The goal of this package is to analyse *Bifrost* data **faster** than if you were to use python. 
+Documentation for [BifrostTools](https://github.com/ITA-Solar/BifrostTools.jl).
 
-BifrostTools lets you can load variables from single or multiple simulation snapshots, destaggers data automatically, and calculates derivatives. It is made to analyse data efficiently. 
+```@index
+```
+
+```@autodocs
+Modules = [BifrostTools]
+```
