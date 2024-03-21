@@ -1,6 +1,5 @@
 # BifrostTools.jl
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://ITA-Solar.github.io/BifrostTools.jl/stable/)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://ITA-Solar.github.io/BifrostTools.jl/dev/)
 [![Build Status](https://github.com/ITA-Solar/BifrostTools.jl/actions/workflows/CI.yml/badge.svg?branch=develop)](https://github.com/ITA-Solar/BifrostTools.jl/actions/workflows/CI.yml?query=branch%3Adevelop)
 [![Coverage](https://codecov.io/gh/ITA-Solar/BifrostTools.jl/branch/develop/graph/badge.svg)](https://codecov.io/gh/ITA-Solar/BifrostTools.jl)
