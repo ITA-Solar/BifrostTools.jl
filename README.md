@@ -12,7 +12,7 @@ Load single or multiple simulation snapshots, and analyse data efficiently.
 This package is an extension of `Bifrost.jl`, a script written by Mikolaj Szydlarski.
 
 ## Documentation
-The documentation is currently available at https://ita-solar.github.io/BifrostTools.jl/build/
+The documentation is available at [https://ita-solar.github.io/BifrostTools.jl](https://ita-solar.github.io/BifrostTools.jl)
 
 ___
 ### Git commit message manners
