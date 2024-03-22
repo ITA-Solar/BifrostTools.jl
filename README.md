@@ -4,10 +4,10 @@
 [![Build Status](https://github.com/ITA-Solar/BifrostTools.jl/actions/workflows/CI.yml/badge.svg?branch=develop)](https://github.com/ITA-Solar/BifrostTools.jl/actions/workflows/CI.yml?query=branch%3Adevelop)
 [![Coverage](https://codecov.io/gh/ITA-Solar/BifrostTools.jl/branch/develop/graph/badge.svg)](https://codecov.io/gh/ITA-Solar/BifrostTools.jl)
 
-Tools for working with Bifrost in Julia.
+Tools for working with Bifrost simulation output in Julia.
 
-This Julia package is created for working with *Bifrost* data **faster**. 
-Load single or multiple simulation snapshots, and analyse data efficiently. 
+This Julia package is created for working with *Bifrost* data **efficiently**. 
+Load single or multiple simulation snapshots, and analyse data with Julia speed. 
 
 This package is an extension of `Bifrost.jl`, a script written by Mikolaj Szydlarski.
 
