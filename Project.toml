@@ -11,6 +11,9 @@ Mmap = "a63ad114-7e13-5084-954f-fe012c677804"
 OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 
+[compat]
+Interpolations = "0.15"
+
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
