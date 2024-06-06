@@ -1,6 +1,17 @@
 """
-Script for converting from Bifrost's simulation units to cgs or si units. 
+# Overview
+Script for converting from Bifrost's simulation units to cgs or SI units.
 Based on https://github.com/ITA-Solar/Bifrost/blob/develop/IDL/util/br_make_fits.pro
+
+Many auxiliary variables are missing conversion factors. Feel free to add.
+
+## Note on the electric field
+The conversion of electric field from cgs to SI is based on dimensional analysis of
+Ohm's law. In cgs-units, Ohm's law reads
+    ηJ = E + (u x B) / c.
+In SI-units, one omits the lightspeed constant
+    ηJ = E + u x B.
+Hence the division/multiplicatoin by c during conversion.
 """
 
 
@@ -44,6 +55,7 @@ const cgs_to_SI_conversion_factors = Dict(
 
 const c_in_cgs = 2.99792458e10
 
+
 """
     convert_units(
         data    ::AbstractArray,
@@ -51,7 +63,8 @@ const c_in_cgs = 2.99792458e10
         params  ::Dict{String,String},
         units   ::String,
         )
-Convert the `data` from code `units` to someting else.
+Convert the `data` from code `units` to cgs or SI. Conversion factor depends
+on `variable` and snapshot `params`.
 """
 function convert_units(
     data    ::AbstractArray,
@@ -85,11 +98,10 @@ end
 
 """
     code_to_cgs(
-        data    ::AbstractArray,
         variable::String,
         params  ::Dict{String,String},
     )
-Convert the `data` from code-units to cgs-units.
+Conversion factor of `variable` from code units to cgs units.
 """
 function code_to_cgs(
     variable::String,
