@@ -10,37 +10,39 @@ Factors for converting some physical quantities from cgs-units to SI-units.
 """
 const cgs_to_SI_conversion_factors = Dict(
     # Pressure:    g/s^2/cm * 1f-3 kg/g * 1f2 cm/m = 1f-1 kg/s^2/m
-    "p"  => 1f-1,
+    "p"  => 1e-1,
     # Gas density: g/cm^3 * 1f-3 kg/g * 1f6 cm^3/m^3 = 1f3 kg/m^3
-    "r"  => 1f3,
+    "r"  => 1e3,
     # Momentum:    g/cm^2/s * 1f-3 kg/g * 1f4 cm^2/m^2 = 1f1 kg/m^2/s
-    "px" => 1f1,
-    "py" => 1f1,
-    "pz" => 1f1,
+    "px" => 1e1,
+    "py" => 1e1,
+    "pz" => 1e1,
     # Bulk velocity:  cm/s * 1f-2 m/cm = 1f-2 m/s
-    "ux" => 1f-2,
-    "uy" => 1f-2,
-    "uz" => 1f-2,
+    "ux" => 1e-2,
+    "uy" => 1e-2,
+    "uz" => 1e-2,
     # Internal energy:     erg/cm^3 * 1f-7 J/erg * 1f6 cm^3/m = 1f-1 J/m^3
-    "e"  => 1f-1,
+    "e"  => 1e-1,
     # Dissipation coefficients/energy terms:     erg/cm^3/s * 1.e-7 J/erg * 1.e6 cm^3/m^3 = W/m^3
-    "qvisc" => 1f-1,
-    "qjoule" => 1f-1,
-    "qpdv" => 1f-1,
-    "qrdiff" => 1f-1,
-    "qediff" => 1f-1,
-    "qeadv" => 1f-1,
+    "qvisc" => 1e-1,
+    "qjoule" => 1e-1,
+    "qpdv" => 1e-1,
+    "qrdiff" => 1e-1,
+    "qediff" => 1e-1,
+    "qeadv" => 1e-1,
     # Magnetic field: G * 1f-4 T/G = 1f-4 T
-    "bx" => 1f-4,
-    "by" => 1f-4,
-    "bz" => 1f-4,
+    "bx" => 1e-4,
+    "by" => 1e-4,
+    "bz" => 1e-4,
     # Electric field: statV/cm * 1f-2 m/cm * 1f-4 T/G * c[cm/s] = 2.998f4 V/m
-    "ex" => 2.99792458f4,
-    "ey" => 2.99792458f4,
-    "ez" => 2.99792458f4,
+    "ex" => 2.99792458e4,
+    "ey" => 2.99792458e4,
+    "ez" => 2.99792458e4,
+    # Temperature: K = K
+    "tg" => 1.0,
     )
 
-const c_in_cgs = 2.99792458f10
+const c_in_cgs = 2.99792458e10
 
 """
     convert_units(
@@ -57,34 +59,29 @@ function convert_units(
     params  ::Dict{String,String},
     units   ::String,
     )
+    # Working floating precision
+    # Data is a vector of snapshots and has type Vector{AbstractArray}.
+    wfp = eltype(eltype(data))
     if lowercase(units) == "si"
-        return code_to_SI(data, variable, params)
+        conversionfactor = code_to_cgs(variable, params)
+        try conversionfactor *= cgs_to_SI_conversion_factors[variable]
+        catch
+            error(
+            "Conversion to SI-units of variable $variable from CGS-units is" *
+            " not implemented."
+            )
+        end
+        return data * wfp(conversionfactor)
     elseif lowercase(units) == "cgs"
-        return code_to_cgs(data, variable, params)
+        return data * wfp(code_to_cgs(variable, params))
     elseif lowercase(units) == "code"
         # Do nothing
-        nothing
+        return data
     else
         throw(ErrorException("Unit conversion '$units' does not exits"))
     end
 end
 
-"""
-    code_to_SI(
-        data    ::AbstractArray,
-        variable::String,
-        params  ::Dict{String,String},
-    )
-Convert the `data` from code units to SI units.
-"""
-function code_to_SI(
-    data    ::AbstractArray,
-    variable::String,
-    params  ::Dict{String,String},
-    )
-    tmp = code_to_cgs(data, variable, params)
-    return cgs_to_SI(tmp, variable)
-end
 
 """
     code_to_cgs(
@@ -95,60 +92,35 @@ end
 Convert the `data` from code-units to cgs-units.
 """
 function code_to_cgs(
-    data    ::AbstractArray,
     variable::String,
     params  ::Dict{String,String},
     )
     if variable == "r"                       # Density
-        return  data * parse(Float32, params["u_r"])
+        return  parse(Float64, params["u_r"])
     elseif variable == "e"                   # Energy
-         return data * parse(Float32, params["u_e"])
+         return parse(Float64, params["u_e"])
     elseif variable == "tg"                  # Gas temperature
-        return data # nothing to do
+        return 1.0 # nothing to do
     elseif variable == "p"                   # Pressure
-         return data * parse(Float32, params["u_p"])
+         return parse(Float64, params["u_p"])
     elseif variable in ("px", "py", "pz")    # Momentum
-         return data*parse(Float32, params["u_r"])*parse(Float32,params["u_u"])
+         return parse(Float64, params["u_r"])*parse(Float32,params["u_u"])
     elseif variable in ("bx", "by", "bz")    # Magnetic field
-         return data * parse(Float32, params["u_B"])
+         return parse(Float64, params["u_B"])
     #elseif variable in ("ix", "iy", "iz")    # Current density
         # not implemented yet
     elseif variable in ("ex", "ey", "ez")    # Electric field
-        u_u = parse(Float32, params["u_u"])
-        u_B = parse(Float32, params["u_B"])
-        return data * u_u * u_B / c_in_cgs
+        u_u = parse(Float64, params["u_u"])
+        u_B = parse(Float64, params["u_B"])
+        return u_u * u_B / c_in_cgs
     elseif variable in ("qvisc", "qjoule", "qpdv", "qrdiff", "qediff", "qeadv")
-        return data*parse(Float32, params["u_e"])/parse(Float32, params["u_t"]) 
+        return parse(Float64, params["u_e"])/parse(Float64, params["u_t"])
     else
         throw(ErrorException(
             "Conversion to cgs-units of variable $variable is not implemented."
             ))
     end
 end
-
-"""
-    cgs_to_SI(
-        data    ::AbstractArray,
-        variable::String,
-        params  ::Dict{String,String},
-    )
-Convert the `data` from cgs-units to SI-units.
-"""
-function cgs_to_SI(
-    data    ::AbstractArray,
-    variable::String,
-    )
-    if variable == "tg" # Temperature: Kelvin -> Kelvin
-        return data # nothing to do
-    elseif variable in keys(cgs_to_SI_conversion_factors)
-        return data * cgs_to_SI_conversion_factors[variable]
-    else
-        throw(ErrorException(
-            "Conversion to SI-units of variable $variable is not implemented."
-            ))
-    end
-end
-
 
 """
     convert_timeunits!(
