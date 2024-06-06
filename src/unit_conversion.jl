@@ -34,13 +34,13 @@ const cgs_to_SI_conversion_factors = Dict(
     "bx" => 1f-4,
     "by" => 1f-4,
     "bz" => 1f-4,
-    # Electric field: g*cm/s^2/Fr * 1f-3 kg/g * 1f-2 m/cm * 1f-1 Fr/C 
-    #                   = 1f-6 kg*m/s^2/C
-    "ex" => 1f-6,
-    "ey" => 1f-6,
-    "ez" => 1f-6,
+    # Electric field: statV/cm * 1f-2 m/cm * 1f-4 T/G * c[cm/s] = 2.998f4 V/m
+    "ex" => 2.99792458f4,
+    "ey" => 2.99792458f4,
+    "ez" => 2.99792458f4,
     )
 
+const c_in_cgs = 2.99792458f10
 
 """
     convert_units(
@@ -114,7 +114,9 @@ function code_to_cgs(
     #elseif variable in ("ix", "iy", "iz")    # Current density
         # not implemented yet
     elseif variable in ("ex", "ey", "ez")    # Electric field
-         return data*parse(Float32, params["u_u"])*parse(Float32,params["u_B"])
+        u_u = parse(Float32, params["u_u"])
+        u_B = parse(Float32, params["u_B"])
+        return data * u_u * u_B / c_in_cgs
     elseif variable in ("qvisc", "qjoule", "qpdv", "qrdiff", "qediff", "qeadv")
         return data*parse(Float32, params["u_e"])/parse(Float32, params["u_t"]) 
     else
