@@ -1,7 +1,7 @@
 using Test
 using BifrostTools
 
-expdir = "data/sp.n064/"
+expdir = joinpath(pathof(BifrostTools),"test","sp.n064")
 expname = "en48"
 
 xp = BifrostExperiment(expname,expdir)
