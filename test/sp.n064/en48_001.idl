@@ -1,0 +1,268 @@
+; ************************* From main     *************************
+; $Id: [ Git commit: (e21548e9) Mon, 10 Jun 2024 13:31:13 +0200 ] $       
+; ************************* From  fp kind *************************
+; real(kind=bf) :: real(kind=sp) [ iso::real32 ]
+; ************************* From   params *************************
+; $Id: params (e21548e9) Mon Jun 10 13:31:13 2024 by M1kol4j $            
+             mx =        48
+             my =        48
+             mz =        64
+             mb =    5
+          nstep =  10000000
+     nstepstart =     18634
+          debug =    0
+       time_lim = -1.000E+00
+          tstop = -1.00000000E+00
+ 
+; ************************* From parallel *************************
+; $Id: mpi (062f0790) Wed Apr 3 11:31:30 2024 by M1kol4j $                
+     periodic_x =    1
+     periodic_y =    1
+     periodic_z =    0
+           ndim =    3
+        reorder =    1
+      mpi_debug =    0
+ 
+; ************************* From    units *************************
+; $Id: solar (1b261916) Sun May 1 15:03:02 2022 by GitHub $               
+            u_l =  1.000E+08
+            u_t =  1.000E+02
+            u_r =  1.000E-07
+            u_p =  1.000E+05
+            u_u =  1.000E+06
+           u_kr =  1.000E-01
+           u_ee =  1.000E+12
+            u_e =  1.000E+05
+           u_te =  1.000E+11
+            u_B =  1.121E+03
+ 
+; ************************* From  stagger *************************
+; $Id: stagger_mesh (20835130) Tue Jun 4 11:25:03 2024 by M1kol4j $       
+; $Id: stagger_6th (bbf788db) Fri Jan 21 17:48:36 2022 by GitHub $        
+       meshfile =                    "en48.mesh"
+             dx =  5.066E-01
+             dy =  5.066E-01
+             dz =  4.377E-01
+    mesh_offset = [   0.000,    0.000,  -11.931 ]
+ 
+; ************************* From timestep *************************
+; $Id: hyman (97634cac) Wed May 15 13:12:35 2024 by M1kol4j $             
+            Cdt =  0.300
+             dt =  5.312E-06
+        constdt =    0
+    msperupdate =    0
+              t =  1.00002506E-01
+  timestepdebug =    0
+ 
+; ************************* From      mhd *************************
+; $Id: mhd (eac1f5dd) Wed Mar 6 11:03:26 2024 by M1kol4j $                
+            nu1 =  0.050
+            nu2 =  0.200
+            nu3 =  0.500
+           nu_r =  0.200
+        nu_r_mz =  0.050
+         nu_r_k =      -45
+         nu_r_z =    -1.00
+         nu_r_w =  0.068
+          nu_ee =  0.300
+       nu_ee_mz =  0.050
+        nu_ee_k =      -45
+        nu_ee_z =    -1.00
+        nu_ee_w =  0.068
+    symmetric_e =    1
+    symmetric_b =    0
+           grav = -2.740
+           eta3 =  0.200
+         ca_max =  0.000E+00
+       mhddebug =    0
+         do_mhd =    1
+       mhdclean =       512
+    mhdclean_ub =    0
+    mhdclean_lb =    0
+ 
+; ************************* From       io *************************
+; $Id: io (b34ffc8b) Wed Jan 10 12:04:15 2024 by GitHub $                 
+       snapname =                         "en48"
+          isnap =         1
+   large_memory =   -1
+          nsnap =   1000000
+           nscr =       256
+            aux = " p tg   "  
+         dtsnap =  1.000E-01
+          dtaux =  0.000E+00
+         newaux =    0
+     rereadpars =   1000000
+          dtscr =  1.000E+09
+          tsnap =  1.00002505E-01
+           tscr =  0.00000000E+00
+    boundarychk =    0
+    print_stats =    1
+ 
+; ************************* From     math *************************
+; $Id: math (eac1f5dd) Wed Mar 6 11:03:26 2024 by M1kol4j $               
+          max_r =    5
+       smooth_r =    3
+     div_solver =    1
+      div_niter =  128
+        div_tol =  1.000E-05
+       div_norm = "max"
+  div_sor_niter =  512
+    div_sor_tol =  1.000E-08
+ 
+; ************************* From   quench *************************
+; $Id: quench3 (da4dc8e1) Mon Jun 10 11:00:10 2024 by M1kol4j $           
+           qmax =  8.000
+ 
+; ************************* From eos      *************************
+; $Id: square_gas (eac1f5dd) Wed Mar 6 11:03:26 2024 by M1kol4j $         
+          noneq =    0
+        expieos =    0
+        do_hion =    0
+      do_helium =    0
+          gamma =  1.667
+   debug_square =    0
+      maxlnelim = 32.300
+      minlnrlim =   -34.00
+   tabinputfile =    " tabparam.in  " 
+      crc_tabin = 2625569571
+    crc_eos_tab =  925064579
+  crc_rhoei_tab =   53510373
+ 
+; ************************* From      rad *************************
+; $Id: radiation_GS (77d72ab3) Mon Jun 10 11:00:49 2024 by M1kol4j $      
+         do_rad =    1
+       showinfo =    0
+          dtrad =  3.000E-03
+     quadrature =    3
+        quadalg = "legacy"
+        zrefine =    3
+        maxiter =  128
+      taustream =  1.000E-05
+        zradlim = -1.000E+04
+       accuracy =  1.000E-03
+      strictint =    1
+         linear =    1
+      monotonic =    1
+         minbin =    1
+         maxbin =    4
+      dualsweep =    1
+           teff =  5.410E+03
+       z4avrgt1 = -2.920E-01
+       k4avrgt1 =   50
+ 
+; ************************* From   timing *************************
+; $Id: timing (6350959d) Sun May 1 13:24:40 2022 by Mikolaj $             
+         timing =    0
+ 
+; ************************* From  spitzer *************************
+; $Id: spitzer_conductivity (59da07f5) Mon Jun 10 11:02:34 2024 by M1kol4j $
+        spitzer = "wave"
+  debug_spitzer =    0
+   info_spitzer =    0
+    spitzer_amp =  1.000
+       theta_mg =  0.500
+         dtgerr =  1.000E-05
+       ntest_mg =         1
+           tgb0 =  1.000E+06
+           tgb1 =  1.000E+06
+         tau_tg =  5.000E-03
+    fix_grad_tg =    0
+       niter_mg = [   2,    5,    5,    5,   30 ]
+           bmin =  1.000E-04
+         stgmin = -1.000E+00
+    stgmin_impl = -1.000E+00
+        kappaq0 = -1.000E+00
+           ee00 = -1.000E+00
+ 
+; ************************* From   genrad *************************
+; $Id: genrad (812eae3e) Tue Feb 20 22:34:36 2024 by M1kol4j $
+      do_genrad =    1
+     genradfile =                   'radtab.dat'
+    crc_genradf =          0
+   debug_genrad =    0
+  incrad_detail =    0
+    incrad_quad =    3
+       dtincrad =  1.000E-03
+   dtincrad_lya =  1.000E-04
+   debug_incrad =    0
+      anglequad = "legacy"
+ 
+; ************************* From corks    *************************
+; $Id: corks (d7c31778) Wed Aug 16 12:26:43 2023 by Mikolaj $
+       do_corks =    0
+ 
+; ************************* From   dampuz *************************
+       damptype = "none"
+       tau_damp =  1.000E-04
+       k_dampuz =        0
+       z_dampuz =   -15.30
+     z_dampuz_w =  0.068
+ 
+; ************************* From           pmode_damp *************
+; $Id: pmode_damp (6325a628) Fri Apr 12 15:55:43 2024 by Mikolaj $        
+         t_damp =  0.000E+00
+         k_damp =     -104
+         z_damp =     0.05
+       z_damp_w =  0.068
+ 
+; ************************* From External *************************
+       dyn_time = -1.000E+00
+ 
+; ************************* From  external mag field  *************
+; $Id: external_magfield (7a1eb936) Fri Apr 19 10:20:29 2024 by M1kol4j $ 
+   extmf_fadein = -1.000E+00
+   extmf_tstart =  0.00000000E+00
+    extmf_fname = ""
+    extmf_scale =  1.000E+00
+  extmf_ffactor =  0.000E+00
+ 
+; ************************* From    bc_lower_magnetic *************
+; $Id: bc_lower_magnetic (a23be1af) Wed Mar 6 15:17:25 2024 by M1kol4j $  
+    bctypelower = "mhssscccc"
+       bcldebug =    0
+        tau_bcl =  1.00000000E+00
+     tau_ee_bcl =  1.00000000E+02
+     tau_d2_bcl =  1.00000000E+02
+     tau_d5_bcl =  1.00000000E+00
+     tau_d6_bcl =  1.00000000E+00
+     tau_d7_bcl =  1.00000000E+00
+     tau_d8_bcl =  1.00000000E+00
+             s0 =  1.17817001E+01
+             e0 =  7.00427964E-02
+             r0 =  1.86682008E-02
+            cs0 =  6.54462993E-01
+             p0 =  4.81020007E-03
+    nsmooth_bcl =       256
+    nextrap_bcl =         1
+      naver_bcl =        -1
+     nclean_bcl =       128
+     nclean_lbl =        -4
+     nclean_ubl =         1
+ 
+; ************************* From        bc_upper_damp *************
+; $Id: bc_upper_damp (a4f783db) Mon Jun 10 10:57:12 2024 by M1kol4j $     
+    bctypeupper = "dhssseccc"
+      bcu_udamp = "ouz"
+         t_bdry =  1.00000000E+00
+           rbot =  2.77677582E+02
+           ebot =  3.04129614E+03
+     nclean_bcu =   -1
+       no_qj_qv =    0
+        pb_spot =  0.00000000E+00
+     spot_upper =  0.00000000E+00
+       beta_lim =  1.00000000E+02
+ 
+; ************************* From        bc_upper_emer *************
+; $Id: bc_upper_emer (7879ed89) Wed May 8 10:58:59 2024 by M1kol4j $      
+            bx0 =  0.00000000E+00
+            by0 =  0.00000000E+00
+            bz0 =  0.00000000E+00
+         x0_bcu =  9.90000000E+01
+         x1_bcu = -9.90000000E+01
+         y0_bcu =  9.90000000E+01
+         y1_bcu = -9.90000000E+01
+         dx_bcu =  3.03989410E+00
+         dy_bcu =  3.03989410E+00
+         uz_bcu =  1.00000001E-01
+          strtb =          "n"
+ 
