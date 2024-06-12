@@ -1,5 +1,6 @@
 using Test
 using BifrostTools
+using Interpolations
 
 BASE_FOLDER = dirname(dirname(pathof(BifrostTools)))
 
@@ -7,69 +8,8 @@ expdir = joinpath(BASE_FOLDER,"test","sp.n064")
 expname = "en48"
 
 xp = BifrostExperiment(expname,expdir)
-params = read_params(expname,xp.snaps[1],expdir)
 
-@testset "experiment and mesh" begin
-    
-    @test xp.snaps == [1]
-    @test xp.snapsize == (xp.mesh.mx, xp.mesh.my, xp.mesh.mz)
-
-end
-
-rho = get_var(xp,xp.snaps,"r")
-@testset "reading variables" begin
-    tmp_array = Float32[
-        4.517059f-9, 4.6568345f-9, 4.8888467f-9, 5.1624958f-9, 5.4335088f-9, 
-        5.5271556f-9, 5.5458482f-9, 5.5393974f-9, 5.546665f-9, 5.586004f-9, 
-        5.703038f-9, 5.9570238f-9, 6.1816396f-9, 6.4527703f-9, 6.774606f-9, 
-        7.119954f-9, 7.509514f-9, 7.911374f-9, 8.388659f-9, 8.831276f-9, 
-        9.330005f-9, 9.9333075f-9, 1.07750155f-8, 1.1793163f-8, 1.3059435f-8, 
-        1.4809497f-8, 1.7210718f-8, 2.0800567f-8, 2.6005944f-8, 3.4854107f-8, 
-        5.2834523f-8, 9.635602f-8, 1.9742674f-7, 4.3695874f-7, 9.646677f-7, 
-        2.2240474f-6, 4.748619f-6, 1.0463934f-5, 2.5050658f-5, 6.4452746f-5, 
-        0.00016707876, 0.0004727985, 0.0013061843, 0.003768678, 0.012945924, 
-        0.05415829, 0.22439207, 0.884576, 2.0215719, 2.5673914, 4.0931287, 
-        6.104089, 8.702029, 12.321905, 17.355167, 23.90907, 32.994244, 
-        45.009403, 61.117073, 82.6865, 111.65955, 150.39403, 202.42265, 277.7372
-    ]
-
-    @test rho[10,10,:] == tmp_array
-end
-
-
-@testset "unit conversions" begin
-    rho_si = get_var(xp,xp.snaps,"r",units="si")
-    rho_cgs = get_var(xp,xp.snaps,"r",units="cgs")
-
-    u_r = params["u_r"]
-
-    @test rho_cgs ≈ rho .* parse(Float32,u_r)
-    @test rho_si ≈ 1_000*rho_cgs
-end
-
-
-@testset "staggering" begin
-    pz = get_var(xp,xp.snaps,"pz",rotate_about="x",destagger=true)
-    z0 = argmin(abs.(xp.mesh.z))
-    @test pz[25:30,25:30,z0] == Float32[
-        -2.8144429 -0.8120449 -0.5979493 -0.84485525 -2.4832077 -1.8825934; 
-        -3.0733762 -0.95019686 -0.6374985 -0.92847407 -2.7581303 -2.1554458; 
-        -2.0217748 -0.5869956 -0.5794741 -0.90600693 -2.3873296 -2.6570663; 
-        -1.2085943 -0.49279392 -0.4682804 -0.74540174 -1.7134901 -3.2253096; 
-        -1.4575353 -0.5904956 -0.36372703 -0.56383526 -1.4641904 -3.403079;
-         -2.2453072 -0.89019406 -0.47210994 -0.5425303 -1.0906283 -2.158168
-    ]
-
-    by = get_var(xp,xp.snaps,"by",rotate_about="x",destagger=true)
-    @test by[10:12,10:12,end-2:end] == Float32[
-        -1.3320296f-6 -0.00010146302 -6.837378f-5;
-         -3.7034933f-5 -8.094481f-5 -6.1893414f-5;
-          -2.7130982f-5 -4.766165f-5 -9.615872f-5;;; 
-          -1.8346504f-5 -6.5619104f-5 -4.9272872f-5; 
-          -4.44516f-5 -3.9249648f-5 -3.367522f-5; 
-          -2.1379137f-5 -1.8583027f-5 -2.2054193f-5;;; 
-          1.7115804f-5 -2.1332935f-5 -3.549322f-5; 
-          -1.1158351f-5 -3.3101554f-5 -2.9929086f-5; 
-          -3.2591984f-6 -2.839885f-5 -3.5863806f-5
-    ]
-end
+include("experiment.jl")
+include("read_params_snap_aux.jl")
+include("stagger_operators.jl")
+include("unit_conversion.jl")
