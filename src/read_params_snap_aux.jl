@@ -725,21 +725,22 @@ function get_electron_density(
     eos = EOSTables(tabfile)
 
     if maximum(rho) > parse(Float64,eos.params["RhoMax"])
-        @printf """tab_interp: density outside table bounds.
-        Table rho max=%.3e, requested rho max=%.3e""" eos.params["RhoMax"] maximum(rho)
+        @warn "tab_interp: density outside table bounds. "*
+        "Table rho max=$(@sprintf("%.3e", parse(Float64,eos.params["RhoMax"]))), requested rho max=$(@sprintf("%.3e", maximum(rho)))"
     end        
     if minimum(rho) <parse(Float64,eos.params["RhoMin"])
-        @printf """tab_interp: density outside table bounds.
-        Table rho min=%.3e, requested rho min=%.3e""" eos.params["RhoMin"] minimum(rho)
+        @warn "tab_interp: density outside table bounds. "*
+        "Table rho min=$(@sprintf("%.3e", parse(Float64,eos.params["RhoMin"]))), requested rho min=$(@sprintf("%.3e", minimum(rho)))"
     end
     
     if maximum(ee) > parse(Float64,eos.params["EiMax"])
-        @printf """tab_interp: density outside table bounds.
-        Table rho max=%.3e, requested rho max=%.3e""" eos.params["EiMax"] maximum(ee)
+        @warn "tab_interp: energy outside table bounds. "*
+        "Table Ei max=$(@sprintf("%.3e", parse(Float64,eos.params["EiMax"]))), requested ee max=$(@sprintf("%.3e", maximum(ee)))"
+        
     end        
     if minimum(ee) < parse(Float64,eos.params["EiMin"])
-        @printf """tab_interp: density outside table bounds.
-        Table rho min=%.3e, requested rho min=%.3e""" eos.params["EiMin"] minimum(ee)
+        @warn "tab_interp: energy outside table bounds. "*
+        "Table Ei min=$(@sprintf("%.3e", parse(Float64,eos.params["EiMin"]))), requested ee min=$(@sprintf("%.3e", minimum(ee)))"
     end
     
     # Create interpolation table, takes the log of coordinates
