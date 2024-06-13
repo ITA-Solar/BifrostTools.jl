@@ -43,4 +43,14 @@ u_B =  1.121e3
         for (key, value) in conversions
     ])
 
+    @test all([
+        BifrostTools.convert_units(data, key, params, "code") == data
+        for key in keys(conversions)
+    ])
+
+    @test all([
+        BifrostTools.convert_units(data, key, params, "si")[1] == value*BifrostTools.cgs_to_SI_conversion_factors[key]
+        for (key, value) in conversions
+    ])
+
 end
