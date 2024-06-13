@@ -398,13 +398,13 @@ function get_time(
     snap   ::Union{<:Integer, AbstractVector{<:Integer}},
     expdir ::String 
     ;
-    units::String="si",
+    units::String="code",
     kwargs...
     )
     nsnaps = length(snap)
-    if nsnaps == 1
+    if typeof(snap) <: Integer
         params = read_params(expname,snap,expdir)
-        data = [parse(Float64, params["t"])]
+        data = parse(Float64, params["t"])
     else 
         data = Vector{Float64}(undef, nsnaps)
         # Load the variable directly from params

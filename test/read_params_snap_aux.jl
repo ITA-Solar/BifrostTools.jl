@@ -31,3 +31,5 @@ end
 end
 
 @test length(params) == 199
+@test get_var(xp,xp.snaps,"t")[1] == 0.100002506
+@test get_var(xp,xp.snaps[1],"t") == 0.100002506
