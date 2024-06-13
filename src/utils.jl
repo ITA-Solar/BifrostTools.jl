@@ -43,38 +43,7 @@ function get_snapsize(
     snapsize::Tuple{Int64, Int64, Int64} = mx, my, mz
     return snapsize 
 end
-"""
-    get_snapsize(
-        params::Dict{String,String},
-        slicex::AbstractVector{<:Integer},
-        slicey::AbstractVector{<:Integer},
-        slicez::AbstractVector{<:Integer}
-    )
-Returns snapsize (mx, my, mz) given the snapshot-parameters.
-"""
-function get_snapsize(
-    params::Dict{String,String},
-    slicex::AbstractVector{<:Integer},
-    slicey::AbstractVector{<:Integer},
-    slicez::AbstractVector{<:Integer}
-    )
-    if isempty(slicex)
-        mx = parse(Int, params["mx"])
-    else
-        mx = length(slicex)
-    end
-    if isempty(slicey)
-        my = parse(Int, params["my"])
-    else
-        my = length(slicey)
-    end
-    if isempty(slicez)
-        mz = parse(Int, params["mz"])
-    else
-        mz = length(slicez)
-    end
-    return mx, my, mz
-end
+
 """
     get_snapsize(
         mesh::BifrostMesh,
@@ -86,39 +55,6 @@ function get_snapsize(
     )
     return (mesh.mx, mesh.my, mesh.mz)
 end
-"""
-    get_snapsize(
-        mesh::BifrostMesh,
-        slicex::AbstractVector{<:Integer},
-        slicey::AbstractVector{<:Integer},
-        slicez::AbstractVector{<:Integer}
-    )
-Returns snapsize (mx, my, mz) given a Bifrost-mesh.
-"""
-function get_snapsize(
-    mesh::BifrostMesh,
-    slicex::AbstractVector{<:Integer},
-    slicey::AbstractVector{<:Integer},
-    slicez::AbstractVector{<:Integer}
-    )    
-    if isempty(slicex)
-        mx = mesh.mx
-    else
-        mx = length(slicex)
-    end
-    if isempty(slicey)
-        my = mesh.my
-    else
-        my = length(slicey)
-    end
-    if isempty(slicez)
-        mz = mesh.mz
-    else
-        mz = length(slicez)
-    end
-    return mx, my, mz
-end
-
 
 """
     get_numvars(
