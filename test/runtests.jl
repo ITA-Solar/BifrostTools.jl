@@ -8,6 +8,7 @@ expdir = joinpath(BASE_FOLDER,"test","sp.n064")
 expname = "en48"
 
 xp = BifrostExperiment(expname,expdir)
+params = read_params(expname,xp.snaps[1],expdir)
 
 include("experiment.jl")
 include("read_params_snap_aux.jl")

@@ -30,7 +30,4 @@ end
     @test T[20,30,5:14] == tmp_array
 end
 
-@testset "reading params" begin
-    params = read_params(expname,xp.snaps[1],expdir)
-    @test length(params) == 199
-end
+@test length(params) == 199
