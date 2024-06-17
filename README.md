@@ -58,7 +58,7 @@ Using optional keyword-arguments in `get_var` allows us to convert units, destag
 The command
 
 ```{julia}
-"bx" = get_var(brxp, snap, "bx"; units="si", destagger=true)
+bx = get_var(brxp, snap, "bx"; units="si", destagger=true)
 ```
 will load the $x$-component of the magnetic field in SI units and destagger it to the cell center.
 
