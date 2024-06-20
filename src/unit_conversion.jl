@@ -51,6 +51,10 @@ const cgs_to_SI_conversion_factors = Dict(
     "ez" => 2.99792458e4,
     # Temperature: K = K
     "tg" => 1.0,
+    # Position
+    "x" => 1e-2,
+    "y" => 1e-2,
+    "z" => 1e-2,
     )
 
 const c_in_cgs = 2.99792458e10
@@ -150,3 +154,25 @@ function convert_timeunits(
     t *= parse(Float64, params["u_t"])
 end
 
+function convert_axesunits(
+        mesh::BifrostMesh,
+        params::Dict{String, String}
+        ;
+        units::String="code"
+    )
+    wfp = eltype(mesh.x)
+    if units == "cgs"
+        u_l = parse(Float64, params["u_l"])
+        conversionfactor = wfp(u_l)
+    elseif units == "si"
+        u_l = parse(Float64, params["u_l"])
+        conversionfactor = wfp(u_l*cgs_to_SI_conversion_factors["x"])
+    elseif units == "code"
+        conversionfactor = wfp(1.0)
+    else
+        throw(ErrorException("Unit conversion '$units' is not implemented"))
+    end
+    return mesh.x*conversionfactor,
+        mesh.y*conversionfactor,
+        mesh.z*conversionfactor
+end

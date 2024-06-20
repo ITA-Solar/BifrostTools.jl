@@ -63,4 +63,11 @@ struct BifrostExperiment
     end
 end     
 
-
+function get_axes(
+    xp::BifrostExperiment
+    ;
+    units="code"
+    )
+    params = read_params(xp, xp.snaps[1])
+    return convert_axesunits(xp.mesh, params; units=units)
+end

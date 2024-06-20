@@ -48,6 +48,8 @@ export BifrostMesh
 export BifrostExperiment
 export EOSTables
 
+export get_axes
+
 # debugging
 
 export spitzer_debug_file
