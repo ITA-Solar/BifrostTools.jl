@@ -62,6 +62,17 @@ function read_params(
 end
 
 """
+    read_params(xp::BifrostExperiment, snap::Integer)
+"""
+function read_params(
+    xp::BifrostExperiment,
+    snap::Integer,
+    )
+    read_params(xp.expname, snap, xp.expdir)
+end
+
+
+"""
     get_snap(
         expname::String,
         snap   ::Int,
