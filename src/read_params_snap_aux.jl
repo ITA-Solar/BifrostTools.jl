@@ -565,6 +565,10 @@ function get_and_destagger_var(
                 data = yup(data, slicey, periodic, order)
                 data = xup(data, slicex, periodic, order)
             end
+        else
+            error("Destaggering of varnnr $varnr is not implemented. "*
+                "Set the keyword-argument `destaggeroperation`"
+                )
         end
 
     end
