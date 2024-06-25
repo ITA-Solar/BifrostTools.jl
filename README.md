@@ -17,7 +17,7 @@ The documentation is available at [https://ita-solar.github.io/BifrostTools.jl](
 ## Quick user guide
 To load the package, type the following in the REPL
 
-```{julia}
+```julia
 using BifrostTools
 ```
 
@@ -28,28 +28,28 @@ It can read primary variables or auxiliary variables.
 
 The command
 
-```{julia}
+```julia
 variable = get_var(expname, snap, expdir, variable)
 ```
 loads the (primary or auxiliary) variable `variable` from snapshot `snap` in the simulation `expname` located in the directory `expdir`.
 
 By creating a `BifrostExperiment` object 
 
-```{julia}
+```julia
 brxp = BifrostExperiment(expname, expdir)
 ```
 we can access the mesh file
 
-```{julia}
+```julia
 brxp.mesh
 ```
 snapshot numbers
-```{julia}
+```julia
 brxp.snaps
 ```
 and the calling signature of `get_var` can be simplified
 
-```{julia}
+```julia
 variable = get_var(brxp, snap, variable)
 ```
 
@@ -57,7 +57,7 @@ Using optional keyword-arguments in `get_var` allows us to convert units, destag
 
 The command
 
-```{julia}
+```julia
 bx = get_var(brxp, snap, "bx"; units="si", destagger=true)
 ```
 will load the $x$-component of the magnetic field in SI units and destagger it to the cell center.
