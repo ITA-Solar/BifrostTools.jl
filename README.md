@@ -63,3 +63,6 @@ bx = get_var(brxp, snap, "bx"; units="si", destagger=true)
 will load the $x$-component of the magnetic field in SI units and destagger it to the cell center.
 
 See the [documentation](https://ITA-Solar.github.io/BifrostTools.jl/dev/) for further information and more elaborate example usage.
+
+## Contributing
+Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md)
