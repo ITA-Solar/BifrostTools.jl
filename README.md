@@ -15,6 +15,14 @@ This package is an extension of `Bifrost.jl`, a script written by Mikolaj Szydla
 The documentation is available at [https://ita-solar.github.io/BifrostTools.jl](https://ita-solar.github.io/BifrostTools.jl)
 
 ## Quick user guide
+
+
+To install the package, open julia and add it in the package manager (the package manager is opened by typing `]`)
+
+```julia
+] add BifrostTools
+```
+
 To load the package, type the following in the REPL
 
 ```julia

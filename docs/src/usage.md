@@ -2,7 +2,7 @@
 
 To load the package, type the following in the REPL
 
-```{julia}
+```julia
 using BifrostTools
 ```
 
@@ -11,14 +11,14 @@ using BifrostTools
 In this example, we look at the simulation *cb24oi*.
 we start with defining the part to the simulation directory and the name of the simulation.
 
-```{julia}
+```julia
 expdir = "/mn/stornext/d21/RoCS/matsc/3d/run/cb24oi/"
 expname = "cb24oi"
 ```
 
 These variables can be passed to the `BifrostExperiment` structure, which creates an instance that lets us access the mesh file, snapshot numbers, and so on.
 
-```{julia}
+```julia
 xp = BifrostExperiment(expname,expdir)
 
 # Mesh file that holds grid info etc.
@@ -36,7 +36,7 @@ snaps = xp.snaps
 
 Reading data from the snapshot or aux files is handled through the `get_var` function. Due to `Julia`'s multiple dispatch functionality, there are several ways to call the `get_var` function, but we recommend using the following function to simplify the calling signature:
 
-```{julia}
+```julia
 get_var(
     xp::BifrostExperiment,
     snap::Union{<:Integer, AbstractVector{<:Integer}},
@@ -84,7 +84,7 @@ The following are optional keyword-arguments
 
 With `xp` as defined above, we define a snapshot that we want to investigate. When loading the full cube in code units, the variables are memory mapped, making them fast to load.
 
-```{julia}
+```julia
 snap = 700
 # Load some quantities for the full cube in code units
 pressure = get_var(xp, snap, "p")
@@ -95,7 +95,7 @@ temperature = get_var(xp, snap, "tg")
 ### Converting units
 
 If we want *si* or *cgs* units:
-```{julia}
+```julia
 snap = 700
 # Load some quantities for the full cube in si or cgs units
 pressure = get_var(xp, snap, "p", units="cgs")
@@ -110,7 +110,7 @@ If we're only interested in a small part of the cube, we can use the slicing fun
 
 We can load only the surface
 
-```{julia}
+```julia
 idz = argmin(abs.(mesh.z))
 
 rho = get_var(xp, snap, "r"; units="si", slicez=[idz], squeeze=true)
@@ -119,7 +119,7 @@ temperature = get_var(xp, snap, "tg"; units="si", slicez=[idz], squeeze=true)
 
 or a smaller cube around the surface
 
-```{julia}
+```julia
 rho = get_var(xp, snap, "r",
      units="si", slicex=100:200, slicey=400:500, slicez=[idz-20:idz+20])
 temperature = get_var(xp, snap, "tg",
@@ -130,7 +130,7 @@ temperature = get_var(xp, snap, "tg",
 
 Interpolating staggered variables (destaggering) can be handled through `get_var`. This is recommended because `get_var` can determine the interpolation direction, and if you want to slice a variable, it takes care of the correct ordering of interpolating and slicing. 
 
-```{julia}
+```julia
 # Read and destagger vertical momentum in si units
 pz = get_var(xp, snap, "pz", units="si", destagger=true)
 ```
@@ -141,7 +141,7 @@ If you want the time evolution
 
 If you want to get the time evolution of a quantity, you can simply pass a vector of snapshots. The `get_var` function uses Julia's threads functionality to read multiple snapshots in parallel. 
 
-```{julia}
+```julia
 snaps = 100:150
 
 rho = get_var(xp, snaps, "r", units="si", slicez=[idz], squeeze=true)
@@ -166,7 +166,7 @@ bx = get_var(xp, isnap, "bx", units="si", destagger=true, rotate_about="x")
 
 The `read_params` function reads the params file. It can be called by giving the full filename, like the following
 
-```{julia}
+```julia
 snap = 500
 params_file = joinpath(expdir,string(expname,"_",snap,".idl"))
 params = read_params(params_file)
@@ -174,6 +174,6 @@ params = read_params(params_file)
 
 or
 
-```{julia}
+```julia
 read_params(expname,snap,expdir)
 ```
