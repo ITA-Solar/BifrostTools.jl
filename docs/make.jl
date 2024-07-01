@@ -9,7 +9,7 @@ makedocs(;
     sitename="BifrostTools.jl",
     format=Documenter.HTML(;
         canonical="https://ITA-Solar.github.io/BifrostTools.jl",
-        edit_link="develop-documentation",
+        edit_link="develop",
         assets=String[],
     ),
     pages=[
@@ -22,5 +22,5 @@ makedocs(;
 
 deploydocs(;
     repo="github.com/ITA-Solar/BifrostTools.jl",
-    devbranch="develop-documentation",
+    devbranch="develop",
 )
