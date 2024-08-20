@@ -137,9 +137,9 @@ pz = get_var(xp, snap, "pz", units="si", destagger=true)
 
 ### Reading multiple snapshots
 
-If you want the time evolution 
+If you want to get the time evolution of a quantity, you can simply pass a vector of snapshots. 
 
-If you want to get the time evolution of a quantity, you can simply pass a vector of snapshots. The `get_var` function uses Julia's threads functionality to read multiple snapshots in parallel. 
+[//]: # "The `get_var` function used Julia's threads functionality to read multiple snapshots in parallel. Had some trouble with this functionality, might be reintroduced."
 
 ```julia
 snaps = 100:150

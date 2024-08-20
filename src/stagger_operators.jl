@@ -47,10 +47,10 @@ function xup(
                 end
             end
 
-            for k = 1:n[3]
+            @turbo for k = 1:n[3]
                 for j = 1:n[2]
-                    @simd for i = 3:n[1]+2
-                        @inbounds out[i, j, k] =
+                    for i = 3:n[1]+2
+                        out[i, j, k] =
                             a * (tmp[i, j, k] + tmp[i+1, j, k]) +
                             b * (tmp[i-1, j, k] + tmp[i+2, j, k]) +
                             c * (tmp[i-2, j, k] + tmp[i+3, j, k])
@@ -60,10 +60,10 @@ function xup(
             return out[3:end-3, :, :]
         else # order 2
             out = zeros(T, (n[1], n[2], n[3]))
-            for k = 1:n[3]
+            @turbo for k = 1:n[3]
                 for j = 1:n[2]
-                    @simd for i = 1:n[1]-1
-                        @inbounds out[i, j, k] = 0.5f0 * (arr[i, j, k] + arr[i+1, j, k])
+                    for i = 1:n[1]-1
+                        out[i, j, k] = 0.5f0 * (arr[i, j, k] + arr[i+1, j, k])
                     end
                 end
             end
@@ -118,7 +118,7 @@ function xup(
             slicex = slicex .+ 2
             for k = 1:n[3]
                 for j = 1:n[2]
-                    for (i,slice) in collect(enumerate(slicex))
+                    for (i,slice) in enumerate(slicex)
                         @inbounds out[i, j, k] =
                             a * (tmp[slice, j, k] + tmp[slice+1, j, k]) +
                             b * (tmp[slice-1, j, k] + tmp[slice+2, j, k]) +
@@ -141,7 +141,7 @@ function xup(
                 
             for k = 1:n[3]
                 for j = 1:n[2]
-                    for (i,slice) in collect(enumerate(slicex))
+                    for (i,slice) in enumerate(slicex)
                         if i < n[1]
                             @inbounds out[i, j, k] = 0.5f0 * (arr[slice, j, k] + arr[slice+1, j, k])
                         end
@@ -205,10 +205,10 @@ function dxup(
                 end
             end
 
-            for k = 1:n[3]
+            @turbo for k = 1:n[3]
                 for j = 1:n[2]
-                    @simd for i in 3:n[1]+2
-                        @inbounds out[i, j, k] =
+                    for i in 3:n[1]+2
+                        out[i, j, k] =
                             dx[i-2] * (
                                 a * (tmp[i+1, j, k] - tmp[i, j, k]) +
                                 b * (tmp[i+2, j, k] - tmp[i-1, j, k]) +
@@ -220,10 +220,10 @@ function dxup(
             return out[3:end-3, :, :]
         else # oder 2
             out = zeros(T, (n[1], n[2], n[3]))
-            for k = 1:n[3]
+            @turbo for k = 1:n[3]
                 for j = 1:n[2]
-                    @simd for i = 1:n[1]-1
-                        @inbounds out[i, j, k] = dx[i] * (arr[i+1, j, k] - arr[i, j, k])
+                    for i = 1:n[1]-1
+                        out[i, j, k] = dx[i] * (arr[i+1, j, k] - arr[i, j, k])
                     end
                 end
             end
@@ -282,10 +282,10 @@ function xdn(
                 end
             end
 
-            for k = 1:n[3]
+            @turbo for k = 1:n[3]
                 for j = 1:n[2]
-                    @simd for i = 4:n[1]+3
-                        @inbounds out[i, j, k] =
+                    for i = 4:n[1]+3
+                        out[i, j, k] =
                             a * (tmp[i-1, j, k] + tmp[i, j, k]) +
                             b * (tmp[i-2, j, k] + tmp[i+1, j, k]) +
                             c * (tmp[i-3, j, k] + tmp[i+2, j, k])
@@ -295,10 +295,10 @@ function xdn(
             return out[4:end-2, :, :]
         else # order 2
             out = zeros(T, (n[1], n[2], n[3]))
-            for k = 1:n[3]
+            @turbo for k = 1:n[3]
                 for j = 1:n[2]
-                    @simd for i = 2:n[1]
-                        @inbounds out[i, j, k] = 0.5f0 * (arr[i-1, j, k] + arr[i, j, k])
+                    for i = 2:n[1]
+                        out[i, j, k] = 0.5f0 * (arr[i-1, j, k] + arr[i, j, k])
                     end
                 end
             end
@@ -353,7 +353,7 @@ function xdn(
             slicex = slicex .+ 3
             for k=1:n[3]
                 for j = 1:n[2]
-                    for (i,slice) in collect(enumerate(slicex))
+                    for (i,slice) in enumerate(slicex)
                         @inbounds out[i, j, k] =
                             a * (tmp[slice-1, j, k] + tmp[slice, j, k]) +
                             b * (tmp[slice-2, j, k] + tmp[slice+1, j, k]) +
@@ -374,9 +374,9 @@ function xdn(
                 end
             end
 
-            for (k,slice) in collect(enumerate(slicex))
+            for (k,slice) in enumerate(slicex)
                 for j = 1:n[2]
-                    for (i,slice) in collect(enumerate(slicex))
+                    for (i,slice) in enumerate(slicex)
                         if i > 1
                             @inbounds out[i, j, k] = 0.5f0 * (arr[slice-1, j, k] + arr[slice, j, k])
                         end
@@ -441,9 +441,9 @@ function dxdn(
             end
 
             for k = 1:n[3]
-                for j = 1:n[2]
-                    @simd for i = 4:n[1]+3
-                        @inbounds out[i, j, k] =
+                @turbo for j = 1:n[2]
+                    for i = 4:n[1]+3
+                        out[i, j, k] =
                             dx[i-3] * (
                                 a * (tmp[i, j, k] - tmp[i-1, j, k]) +
                                 b * (tmp[i+1, j, k] - tmp[i-2, j, k]) +
@@ -455,10 +455,10 @@ function dxdn(
             return out[4:end-2, :, :]
         else # oder 2
             out = zeros(T, (n[1], n[2], n[3]))
-            for k = 1:n[3]
+            @turbo for k = 1:n[3]
                 for j = 1:n[2]
-                    @simd for i = 2:n[1]
-                        @inbounds out[i, j, k] = dx[i] * (arr[i, j, k] - arr[i-1, j, k])
+                    for i = 2:n[1]
+                        out[i, j, k] = dx[i] * (arr[i, j, k] - arr[i-1, j, k])
                     end
                 end
             end
@@ -518,10 +518,10 @@ function yup(
                 end
             end
 
-            for k = 1:n[3]
+            @turbo for k = 1:n[3]
                 for j = 3:n[2]+2
-                    @simd for i = 1:n[1]
-                        @inbounds out[i, j, k] =
+                    for i = 1:n[1]
+                        out[i, j, k] =
                             a * (tmp[i, j, k] + tmp[i, j+1, k]) +
                             b * (tmp[i, j-1, k] + tmp[i, j+2, k]) +
                             c * (tmp[i, j-2, k] + tmp[i, j+3, k])
@@ -531,10 +531,10 @@ function yup(
             return out[:, 3:end-3, :]
         else # order 2
             out = zeros(T, (n[1], n[2], n[3]))
-            for k = 1:n[3]
+            @turbo for k = 1:n[3]
                 for j = 1:n[2]-1
-                    @simd for i = 1:n[1]
-                        @inbounds out[i, j, k] = 0.5f0 * (arr[i, j, k] + arr[i, j+1, k])
+                    for i = 1:n[1]
+                        out[i, j, k] = 0.5f0 * (arr[i, j, k] + arr[i, j+1, k])
                     end
                 end
             end
@@ -589,9 +589,9 @@ function yup(
 
             slicey = slicey .+ 2
             for k = 1:n[3]
-                for (j,slice) in collect(enumerate(slicey))
-                    for i = 1:n[1]
-                        @inbounds out[i, j, k] =
+                for (j,slice) in enumerate(slicey)
+                    @turbo for i = 1:n[1]
+                        out[i, j, k] =
                             a * (tmp[i, slice, k] + tmp[i, slice+1, k]) +
                             b * (tmp[i, slice-1, k] + tmp[i, slice+2, k]) +
                             c * (tmp[i, slice-2, k] + tmp[i, slice+3, k])
@@ -612,10 +612,10 @@ function yup(
             end
 
             for k = 1:n[3]
-                for (j,slice) in collect(enumerate(slicey))
+                for (j,slice) in enumerate(slicey)
                     if j < n[2]
-                        for i = 1:n[1]
-                            @inbounds out[i, j, k] = 0.5f0 * (arr[i, slice, k] + arr[i, slice+1, k])
+                        @turbo for i = 1:n[1]
+                            out[i, j, k] = 0.5f0 * (arr[i, slice, k] + arr[i, slice+1, k])
                         end
                     end
                 end
@@ -676,10 +676,10 @@ function dyup(
                 end
             end
 
-            for k = 1:n[3]
+            @turbo for k = 1:n[3]
                 for j = 3:n[2]+2
-                    @simd for i = 1:n[1]
-                        @inbounds out[i, j, k] =
+                    for i = 1:n[1]
+                        out[i, j, k] =
                             dy[j-2] * (
                                 a * (tmp[i, j+1, k] - tmp[i, j, k]) +
                                 b * (tmp[i, j+2, k] - tmp[i, j-1, k]) +
@@ -691,10 +691,10 @@ function dyup(
             return out[:, 3:end-3, :]
         else # order 2
             out = zeros(T, (n[1], n[2], n[3]))
-            for k = 1:n[3]
+            @turbo for k = 1:n[3]
                 for j = 1:n[2]-1
-                    @simd for i = 1:n[1]
-                        @inbounds out[i, j, k] = dy[j] * (arr[i, j+1, k] - arr[i, j, k])
+                    for i = 1:n[1]
+                        out[i, j, k] = dy[j] * (arr[i, j+1, k] - arr[i, j, k])
                     end
                 end
             end
@@ -753,10 +753,10 @@ function ydn(
                 end
             end
 
-            for k = 1:n[3]
+            @turbo for k = 1:n[3]
                 for j = 4:n[2]+3
-                    @simd for i = 1:n[1]
-                        @inbounds out[i, j, k] =
+                    for i = 1:n[1]
+                        out[i, j, k] =
                             a * (tmp[i, j-1, k] + tmp[i, j, k]) +
                             b * (tmp[i, j-2, k] + tmp[i, j+1, k]) +
                             c * (tmp[i, j-3, k] + tmp[i, j+2, k])
@@ -766,10 +766,10 @@ function ydn(
             return out[:, 4:end-2, :]
         else # order 2
             out = zeros(T, (n[1], n[2], n[3]))
-            for k = 1:n[3]
+            @turbo for k = 1:n[3]
                 for j = 2:n[2]
-                    @simd for i = 1:n[1]
-                        @inbounds out[i, j, k] = 0.5f0 * (arr[i, j-1, k] + arr[i, j, k])
+                    for i = 1:n[1]
+                        out[i, j, k] = 0.5f0 * (arr[i, j-1, k] + arr[i, j, k])
                     end
                 end
             end
@@ -823,10 +823,10 @@ function ydn(
             end
 
             slicey = slicey .+ 3
-            for k = 1:n[3]
+            @turbo for k = 1:n[3]
                 for j = 4:n[2]+3
-                    @simd for i = 1:n[1]
-                        @inbounds out[i, j, k] =
+                    for i = 1:n[1]
+                        out[i, j, k] =
                             a * (tmp[i, j-1, k] + tmp[i, j, k]) +
                             b * (tmp[i, j-2, k] + tmp[i, j+1, k]) +
                             c * (tmp[i, j-3, k] + tmp[i, j+2, k])
@@ -847,10 +847,10 @@ function ydn(
             end
 
             for k = 1:n[3]
-                for (j,slice) in collect(enumerate(slicey))
+                for (j,slice) in enumerate(slicey)
                     if j > 1
-                        for i = 1:n[1]
-                            @inbounds out[i, j, k] = 0.5f0 * (arr[i, slice-1, k] + arr[i, slice, k])
+                        @turbo for i = 1:n[1]
+                            out[i, j, k] = 0.5f0 * (arr[i, slice-1, k] + arr[i, slice, k])
                         end
                     end
                 end
@@ -912,10 +912,10 @@ function dydn(
                 end
             end
 
-            for k = 1:n[3]
+            @turbo for k = 1:n[3]
                 for j = 4:n[2]+3
-                    @simd for i = 1:n[1]
-                        @inbounds out[i, j, k] =
+                    for i = 1:n[1]
+                        out[i, j, k] =
                             dy[j-3] * (
                                 a * (tmp[i, j, k] - tmp[i, j-1, k]) +
                                 b * (tmp[i, j+1, k] - tmp[i, j-2, k]) +
@@ -927,10 +927,10 @@ function dydn(
             return out[:, 4:end-2, :]
         else # order 2
             out = zeros(T, (n[1], n[2], n[3]))
-            for k = 1:n[3]
+            @turbo for k = 1:n[3]
                 for j = 2:n[2]
-                    @simd for i = 1:n[1]
-                        @inbounds out[i, j, k] = dy[j] * (arr[i, j, k] - arr[i, j-1, k])
+                    for i = 1:n[1]
+                        out[i, j, k] = dy[j] * (arr[i, j, k] - arr[i, j-1, k])
                     end
                 end
             end
@@ -990,10 +990,10 @@ function zup(
                 end
             end
 
-            for k = 3:n[3]+2
+            @turbo for k = 3:n[3]+2
                 for j = 1:n[2]
-                    @simd for i = 1:n[1]
-                        @inbounds out[i, j, k] =
+                    for i = 1:n[1]
+                        out[i, j, k] =
                             a * (tmp[i, j, k] + tmp[i, j, k+1]) +
                             b * (tmp[i, j, k-1] + tmp[i, j, k+2]) +
                             c * (tmp[i, j, k-2] + tmp[i, j, k+3])
@@ -1003,10 +1003,10 @@ function zup(
             return out[:, :, 3:end-3]
         else # order 2
             out = zeros(T, (n[1], n[2], n[3]))
-            for k = 1:n[3]-1
+            @turbo for k = 1:n[3]-1
                 for j = 1:n[2]
-                    @simd for i = 1:n[1]
-                        @inbounds out[i, j, k] = 0.5f0 * (arr[i, j, k] + arr[i, j, k+1])
+                    for i = 1:n[1]
+                        out[i, j, k] = 0.5f0 * (arr[i, j, k] + arr[i, j, k+1])
                     end
                 end
             end
@@ -1058,10 +1058,10 @@ function zup(
             end
 
             slicez = slicez .+ 2
-            for (k,slice) in collect(enumerate(slicez))
+            for (k,slice) in enumerate(slicez)
                 for j = 1:n[2]
-                    @simd for i = 1:n[1]
-                        @inbounds out[i, j, k] =
+                    @turbo for i = 1:n[1]
+                        out[i, j, k] =
                             a * (tmp[i, j, slice] + tmp[i, j, slice+1]) +
                             b * (tmp[i, j, slice-1] + tmp[i, j, slice+2]) +
                             c * (tmp[i, j, slice-2] + tmp[i, j, slice+3])
@@ -1082,11 +1082,11 @@ function zup(
                 slicez = slicez[∉(index).(1:end)]
             end
             
-            for (k,slice) in collect(enumerate(slicez))
+            for (k,slice) in enumerate(slicez)
                 if k < n[3]
-                    for j = 1:n[2]
-                        @simd for i = 1:n[1]
-                            @inbounds out[i, j, k] = 0.5f0 * (arr[i, j, slice] + arr[i, j, slice+1])
+                    @turbo for j = 1:n[2]
+                        for i = 1:n[1]
+                            out[i, j, k] = 0.5f0 * (arr[i, j, slice] + arr[i, j, slice+1])
                         end
                     end
                 end
@@ -1147,10 +1147,10 @@ function dzup(
                 end
             end
 
-            for k = 3:n[3]+2
+            @turbo for k = 3:n[3]+2
                 for j = 1:n[2]
-                    @simd for i = 1:n[1]
-                        @inbounds out[i, j, k] =
+                    for i = 1:n[1]
+                        out[i, j, k] =
                             dz[k-2] * (
                                 a * (tmp[i, j, k+1] - tmp[i, j, k]) +
                                 b * (tmp[i, j, k+2] - tmp[i, j, k-1]) +
@@ -1162,10 +1162,10 @@ function dzup(
             return out[:, :, 3:end-3]
         else # order 2
             out = zeros(T, (n[1], n[2], n[3]))
-            for k = 1:n[3]-1
+            @turbo for k = 1:n[3]-1
                 for j = 1:n[2]
-                    @simd for i = 1:n[1]
-                        @inbounds out[i, j, k] = dz[k] * (arr[i, j, k+1] - arr[i, j, k])
+                    for i = 1:n[1]
+                        out[i, j, k] = dz[k] * (arr[i, j, k+1] - arr[i, j, k])
                     end
                 end
             end
@@ -1224,10 +1224,10 @@ function zdn(
                 end
             end
 
-            for k = 4:n[3]+3
+            @turbo for k = 4:n[3]+3
                 for j = 1:n[2]
-                    @simd for i = 1:n[1]
-                        @inbounds out[i, j, k] =
+                    for i = 1:n[1]
+                        out[i, j, k] =
                             a * (tmp[i, j, k-1] + tmp[i, j, k]) +
                             b * (tmp[i, j, k-2] + tmp[i, j, k+1]) +
                             c * (tmp[i, j, k-3] + tmp[i, j, k+2])
@@ -1237,10 +1237,10 @@ function zdn(
             return out[:, :, 4:end-2]
         else # order 2
             out = zeros(T, (n[1], n[2], n[3]))
-            for k = 2:n[3]
+            @turbo for k = 2:n[3]
                 for j = 1:n[2]
-                    @simd for i = 1:n[1]
-                        @inbounds out[i, j, k] = 0.5f0 * (arr[i, j, k-1] + arr[i, j, k])
+                    for i = 1:n[1]
+                        out[i, j, k] = 0.5f0 * (arr[i, j, k-1] + arr[i, j, k])
                     end
                 end
             end
@@ -1291,10 +1291,10 @@ function zdn(
             end
 
             slicez = slicez .+ 3
-            for (k,slice) in collect(enumerate(slicez))
+            for (k,slice) in enumerate(slicez)
                 for j = 1:n[2]
-                    @simd for i = 1:n[1]
-                        @inbounds out[i, j, k] =
+                    @turbo for i = 1:n[1]
+                        out[i, j, k] =
                             a * (tmp[i, j, slice-1] + tmp[i, j, slice]) +
                             b * (tmp[i, j, slice-2] + tmp[i, j, slice+1]) +
                             c * (tmp[i, j, slice-3] + tmp[i, j, slice+2])
@@ -1315,11 +1315,11 @@ function zdn(
                 slicez = slicez[∉(index).(1:end)]
             end
             
-            for (k,slice) in collect(enumerate(slicez))
+            for (k,slice) in enumerate(slicez)
                 if k > 1
-                    for j = 1:n[2]
-                        @simd for i = 1:n[1]
-                            @inbounds out[i, j, k] = 0.5f0 * (arr[i, j, slice-1] + arr[i, j, slice])
+                    @turbo for j = 1:n[2]
+                        for i = 1:n[1]
+                            out[i, j, k] = 0.5f0 * (arr[i, j, slice-1] + arr[i, j, slice])
                         end
                     end
                 end
@@ -1378,10 +1378,10 @@ function dzdn(
                 end
             end
 
-            for k = 4:n[3]+3
+            @turbo for k = 4:n[3]+3
                 for j = 1:n[2]
-                    @simd for i = 1:n[1]
-                        @inbounds out[i, j, k] =
+                    for i = 1:n[1]
+                        out[i, j, k] =
                             dz[k-3] * (
                                 a * (tmp[i, j, k] - tmp[i, j, k-1]) +
                                 b * (tmp[i, j, k+1] - tmp[i, j, k-2]) +
@@ -1393,10 +1393,10 @@ function dzdn(
             return out[:, :, 4:end-2]
         else # order 2
             out = zeros(T, (n[1], n[2], n[3]))
-            for k = 2:n[3]
+            @turbo for k = 2:n[3]
                 for j = 1:n[2]
-                    @simd for i = 1:n[1]
-                        @inbounds out[i, j, k] = dz[k] * (arr[i, j, k] - arr[i, j, k-1])
+                    for i = 1:n[1]
+                        out[i, j, k] = dz[k] * (arr[i, j, k] - arr[i, j, k-1])
                     end
                 end
             end

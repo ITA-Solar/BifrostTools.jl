@@ -6,6 +6,7 @@ using DelimitedFiles
 using Printf
 using Interpolations
 using Mmap
+using LoopVectorization
 
 include("mesh.jl")
 include("utils.jl")

@@ -290,7 +290,7 @@ function get_var(
     varnr, file_ext = get_varnr_and_file_extension(params, variable)
     
     # Loop over snapshots
-    Threads.@threads for (i,snap) in collect(enumerate(snaps))
+    for (i,snap) in enumerate(snaps)
         
         tmp_file = string(joinpath(expdir,expname),"_",lpad(snap,3,"0"),file_ext)
 
@@ -654,7 +654,7 @@ function get_electron_density(
 
     elseif typeof(snaps) <: AbstractVector{<:Integer}
         var = Vector{Array{Float32,3}}(undef, length(snaps))
-        Threads.@threads for (i,snap) in collect(enumerate(snaps))
+        for (i,snap) in enumerate(snaps)
             var[i] = get_electron_density(xp.expname,snap,xp.expdir;
                         slicex=slicex,slicey=slicey,slicez=slicez,kwargs...)
         end
