@@ -45,12 +45,6 @@ export eos_interpolate
 
 # stagger_operators.jl
 # Basic stagger operations with optional BC extrapolation
-export up
-export dup
-
-export dn
-export ddn 
-
 export xup
 export dxup
 
