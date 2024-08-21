@@ -112,5 +112,5 @@ function eos_interpolate(eos::EOSTables, nvar::Int)
 
     tab = get_eostable(eos)
 
-    return CubicSplineInterpolation((eia, rhoa), tab[:, :, nvar], extrapolation_bc=Line())
+    return cubic_spline_interpolation((eia, rhoa), tab[:, :, nvar], extrapolation_bc=Line())
 end
