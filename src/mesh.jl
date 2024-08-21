@@ -186,19 +186,6 @@ struct BifrostMesh
         end
 end
 
-function fix_mesh(file_name::String)
-    m = BifrostMesh(file_name)
-    m.dxidxdn = 1.0f0 ./ m.dxidxdn;
-    m.dxidxup = 1.0f0 ./ m.dxidxup;
-    
-    m.dyidydn = 1.0f0 ./ m.dyidydn;
-    m.dyidyup = 1.0f0 ./ m.dyidyup;
-    
-    m.dzidzdn = 1.0f0 ./ m.dzidzdn;
-    m.dzidzup = 1.0f0 ./ m.dzidzup;
-    
-    mesh2file(m,file_name * ".fixed");
-end
 
 function mesh2file(M::BifrostMesh, file_name::String ="bifrost.mesh")
     open(file_name,"w") do io
@@ -218,13 +205,6 @@ function mesh2file(M::BifrostMesh, file_name::String ="bifrost.mesh")
         println(io, join([@sprintf "%e" x for x in M.dzidzup], " "))
         println(io, join([@sprintf "%e" x for x in M.dzidzdn], " "))
     end
-end
-
-function arr_ffile(file_name::String, mesh::BifrostMesh; rpos::Int, rtype=Float32)
-    recl = (rtype == Float32) ? mesh.n * 4 : mesh.n * 8
-    f = FortranFile(file_name, "r", access="direct", recl=recl)
-    var = read(f, rec=rpos, (rtype, (mesh.mx, mesh.my, mesh.mz)))
-    return var
 end
 
 

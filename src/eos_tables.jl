@@ -84,71 +84,6 @@ struct EOSTables
     end
 end
 
-function get_ne_epstable(t::EOSTables)
-    f = FortranFile(
-        joinpath(t.tabparamsf_root, t.params["NeTgRadTableFile"]),
-        "r",
-        access="direct",
-        recl=t.NeTgRadTable_recl * 4,
-    )
-    var = read(f, rec=1, (Float32, (t.nTgBin, t.nNeBin, t.nRadBins, 2)))
-    return var
-end
-
-function get_ne_temtable(t::EOSTables)
-    f = FortranFile(
-        joinpath(t.tabparamsf_root, t.params["NeTgRadTableFile"]),
-        "r",
-        access="direct",
-        recl=t.NeTgRadTable_recl * 4,
-    )
-    var = read(f, rec=2, (Float32, (t.nTgBin, t.nNeBin, t.nRadBins, 2)))
-    return var
-end
-
-function get_ne_opatable(t::EOSTables)
-    f = FortranFile(
-        joinpath(t.tabparamsf_root, t.params["NeTgRadTableFile"]),
-        "r",
-        access="direct",
-        recl=t.NeTgRadTable_recl * 4,
-    )
-    var = read(f, rec=3, (Float32, (t.nTgBin, t.nNeBin, t.nRadBins, 2)))
-    return var
-end
-
-function get_epstable(t::EOSTables)
-    f = FortranFile(
-        joinpath(t.tabparamsf_root, t.params["RhoEiRadTableFile"]),
-        "r",
-        access="direct",
-        recl=t.RhoEi_recl * 4,
-    )
-    var = read(f, rec=1, (Float32, (t.nEiBin, t.nRhoBin, t.nRadBins)))
-    return var
-end
-
-function get_temtable(t::EOSTables)
-    f = FortranFile(
-        joinpath(t.tabparamsf_root, t.params["RhoEiRadTableFile"]),
-        "r",
-        access="direct",
-        recl=t.RhoEi_recl * 4,
-    )
-    var = read(f, rec=2, (Float32, (t.nEiBin, t.nRhoBin, t.nRadBins)))
-    return var
-end
-
-function get_opatable(t::EOSTables)
-    f = FortranFile(
-        joinpath(t.tabparamsf_root, t.params["RhoEiRadTableFile"]),
-        "r",
-        access="direct",
-        recl=t.RhoEi_recl * 4,
-    )
-    var = read(f, rec=3, (Float32, (t.nEiBin, t.nRhoBin, t.nRadBins)))
-    return var
-end
 
 function get_eostable(t::EOSTables)
     f = FortranFile(
@@ -161,41 +96,6 @@ function get_eostable(t::EOSTables)
     return var
 end
 
-function get_expieos_err(t::EOSTables)
-    f = FortranFile("expieos_err.dat", "r", access="direct", recl=t.RhoEi_recl * 4)
-    var = read(f, rec=1, (Float32, (t.nEiBin, t.nRhoBin, 4)))
-    return var
-end
-
-function get_lndlnT_table(t::EOSTables, file_name="lndlnT.dat")
-    f = FortranFile(file_name, "r", access="direct", recl=t.nTgBin * t.nRhoBin * 4 * 4)
-    var = read(f, rec=1, (Float32, (t.nTgBin, t.nRhoBin, 4)))
-    return var
-end
-
-function get_theta_rho_table(t::EOSTables, file_name="theta_rho_table.dat")
-    f = FortranFile(file_name, "r", access="direct", recl=t.nTgBin * t.nRhoBin * 4 * 8)
-    var = read(f, rec=1, (Float64, (t.nTgBin, t.nRhoBin, 4)))
-    return var
-end
-
-# --- additional tools
-
-function debug_cell(idl_filename::String, i::Int, j::Int, k::Int, rpos::Int)
-    @sprintf "[dbg] i = %04d, j = %04d, k = %04d :: var = %d" i j k rpos
-    p = read_params(idl_filename)
-    return p
-end
-
-function spitzer_debug_file(file_name::String)
-    ret = open(file_name, "r") do datafile
-        [parse.(Float32, split(line)) for line in eachline(datafile)]
-    end
-    data = vcat(ret...)
-    h = Integer.(data[1:9])
-    data = reshape(data[10:end], (h[1], h[2], h[3]))
-    return OffsetArray(data, h[4]:h[5], h[6]:h[7], h[8]:h[9])
-end
 
 # --- interpolate from eos
 
@@ -214,5 +114,3 @@ function eos_interpolate(eos::EOSTables, nvar::Int)
 
     return CubicSplineInterpolation((eia, rhoa), tab[:, :, nvar], extrapolation_bc=Line())
 end
-
-
