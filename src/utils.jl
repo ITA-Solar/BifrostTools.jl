@@ -90,6 +90,16 @@ given, is is assumed that the directory of the simulation matches the
 experiment name.
 """
 function get_snap_numbers(
+    xp::BifrostExperiment;
+    findall=false,
+    filenames::Vector{String}=String[]
+    )
+
+   get_snap_numbers(xp.expdir,xp.expname,findall=findall,filenames=filenames)
+
+end
+
+function get_snap_numbers(
     expdir::String, 
     expname::String="none"
     ;

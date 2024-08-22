@@ -6,4 +6,8 @@
 
     @test splitpath(snapname)[end] == "en48_001"
     @test splitpath(basename)[end] == "en48"
+
+    @test BifrostTools.get_snap_numbers(xp) == [1]
+    
+
 end

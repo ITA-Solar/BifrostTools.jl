@@ -9,9 +9,9 @@ using Mmap
 using LoopVectorization
 
 include("mesh.jl")
+include("experiment.jl")
 include("utils.jl")
 include("stagger_operators.jl")
-include("experiment.jl")
 include("read_params_snap_aux.jl")
 include("write_params_snap_aux.jl")
 include("eos_tables.jl")
