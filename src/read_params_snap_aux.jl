@@ -661,7 +661,6 @@ function get_electron_density(
     slicex::AbstractVector{<:Integer}=Int[],
     slicey::AbstractVector{<:Integer}=Int[],
     slicez::AbstractVector{<:Integer}=Int[],
-    stack::Bool=true,
     kwargs...)
 
     if typeof(snaps) <: Integer
@@ -676,11 +675,7 @@ function get_electron_density(
                         slicex=slicex,slicey=slicey,slicez=slicez,kwargs...)
         end
 
-        if stack
-            return stack(var)
-        else
-            return var
-        end
+        return var
     end
 
 end
