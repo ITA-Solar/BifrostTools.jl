@@ -268,6 +268,23 @@ function get_var(
         # Check if destagger-operation is passed as a keyword-argument.
         # If not, use default operation corresponding to the requested
         # variable.
+
+        # get correct boundary condition if it is not given
+        # only for b-field and velocity vector
+        if !haskey(kwargs,:periodic)
+            if variable in ["bx","by","px","py"]
+                kwargs = addtokwargs(
+                    ;periodic=true,
+                    kwargs...
+                )
+            elseif variable in ["bz","pz"]
+                kwargs = addtokwargs(
+                    ;periodic=false,
+                    kwargs...
+                )
+            end
+        end
+
         if get(kwargs,:destaggeroperation,false)
             get_function = get_and_destagger_var
         elseif variable in keys(destaggeroperation)
