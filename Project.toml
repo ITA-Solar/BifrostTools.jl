@@ -1,7 +1,7 @@
 name = "BifrostTools"
 uuid = "526b3974-5bd8-47e8-be8d-381be867b53b"
 authors = ["eilifso <e.s.oyre@astro.uio.no>", "meudnaes <eliasudnes@hotmail.com>"]
-version = "0.1.0"
+version = "0.1.1"
 
 [deps]
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
