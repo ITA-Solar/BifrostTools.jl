@@ -13,7 +13,6 @@ include("experiment.jl")
 include("utils.jl")
 include("stagger_operators.jl")
 include("read_params_snap_aux.jl")
-include("write_params_snap_aux.jl")
 include("eos_tables.jl")
 include("unit_conversion.jl")
 
@@ -30,9 +29,6 @@ export EOSTables
 export make_uniform_axes
 export get_axes
 export mesh2file
-
-# utils.jl
-export change_snap_resolution, duplicate_xz_plane
 
 # read_params_snap_aux.jl
 export read_params
