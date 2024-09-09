@@ -1,4 +1,23 @@
+"""
+    BifrostExperiment(
+        expname::String="none",
+        expdir::String=pwd()
+        ;
+        mesh_file=nothing
+        )
+A struct for your Bifrost-experiment.
 
+Fields:
+    ```mesh            ::BifrostMesh
+    expname         ::String
+    expdir          ::String
+    snaps           ::Vector{Int64}
+    snapsize        ::Tuple{Int64, Int64, Int64}
+    num_snaps       ::Int64
+    num_primary_vars::Int64
+```
+***
+"""
 struct BifrostExperiment
     mesh            ::BifrostMesh
     expname         ::String
@@ -19,7 +38,7 @@ struct BifrostExperiment
         end
 
         filenames = readdir(expdir)
-        # Find mesh-file
+        # Find mesh-file if not given.
         if mesh_file == nothing
             mesh_file = ""
             mesh_match = false
@@ -42,7 +61,7 @@ struct BifrostExperiment
         else
             error("Did not find mesh file with expname '$expname' in $expdir")
         end
-        
+
         # Find number of snaps
         snaps = get_snap_numbers(expdir, expname; filenames=filenames,
                                     findall=true)
@@ -53,16 +72,26 @@ struct BifrostExperiment
             "_", lpad(snaps[1],3,"0"),
             ".idl"
         )
-
         params = read_params(params_file)
         snapsize, num_vars = get_snapsize_and_numvars(params)
-   
+
+        # Create struct-instace.
         new(mesh, expname, expdir, sort(snaps), snapsize, length(snaps),
             num_vars[1]
             )
     end
-end     
+end
 
+
+"""
+    get_axes(
+        xp::BifrostExperiment
+        ;
+        units="code"
+        )
+Return a tuple containing the axis of the `BifrostExperiment` in the desired
+units.
+"""
 function get_axes(
     xp::BifrostExperiment
     ;
