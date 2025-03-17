@@ -17,15 +17,15 @@ const destaggeroperation = Dict(
 """
     read_params(file_name::String)
 
-Reads and returns parameters `params` of a Bifrost simulation snapshot given 
+Reads and returns parameters `params` of a Bifrost simulation snapshot given
 the path `file_name` to the simulation snapshot. The input file should have the
-format 'name_xxx.idl' where 'name' is the simulation name and 'xxx' is the 
+format 'name_xxx.idl' where 'name' is the simulation name and 'xxx' is the
 snapshot number
 """
 function read_params(file_name::String)
-    
+
     params = Dict{String,String}()
-  
+
     open(file_name, "r") do file
         for line in eachline(file)
             line = strip(line)
@@ -42,7 +42,7 @@ function read_params(file_name::String)
     if "aux" in keys(params)
         params["aux"] = replace(params["aux"], " ixy1" => "")
     end
-    
+
     return params
 end
 
@@ -57,7 +57,7 @@ function read_params(
 
     isnap = lpad(snap,3,"0")
     idl_file = string(joinpath(expdir,expname),"_",isnap,".idl")
-    
+
     read_params(idl_file)
 end
 
@@ -87,15 +87,15 @@ Assumes single floating point precision by default.
 Variables of `snapdata`:
 
         snapdata[:,:,:,1] : r, density
-        snapdata[:,:,:,2] : px, x-component of momentum 
-        snapdata[:,:,:,3] : py, y-component of momentum 
-        snapdata[:,:,:,4] : pz, z-component of momentum 
+        snapdata[:,:,:,2] : px, x-component of momentum
+        snapdata[:,:,:,3] : py, y-component of momentum
+        snapdata[:,:,:,4] : pz, z-component of momentum
         snapdata[:,:,:,5] : e, energy
-    
+
         if params["do_mhd"] == 1 # numvars = 8, otherwise numvars = 5
-            snapdata[:,:,:,6] : bx, x-component of magnetic field 
-            snapdata[:,:,:,7] : by, y-component of magnetic field 
-            snapdata[:,:,:,8] : bz, z-component of magnetic field 
+            snapdata[:,:,:,6] : bx, x-component of magnetic field
+            snapdata[:,:,:,7] : by, y-component of magnetic field
+            snapdata[:,:,:,8] : bz, z-component of magnetic field
 
 Warning:
     variables in code units.ts
@@ -127,7 +127,7 @@ function get_snap(
     precision::DataType=Float32
     )
     datadims = 4 # 3 spatial dimensions and 1 variable dimension
-    
+
     snapsize, numvars, _ = get_snapsize_and_numvars(params)
 
     file = open(file_name)
@@ -155,7 +155,7 @@ function get_aux(
     snapsize, _, numauxvars = get_snapsize_and_numvars(params)
     if numauxvars == 0
         return
-    else 
+    else
         file = open(file_name)
         # Use Julia standard-library memory-mapping to extract file values
         auxdata = mmap(file, Array{precision, datadims},
@@ -201,7 +201,7 @@ Converts variables to "si" or "cgs" units: `units="si"` or `units="cgs"`.
 
 To load a slice of the variable, give e.g. `slicex=[32, 410]` or `slicey=40:90`
 
-# Example usage: 
+# Example usage:
 
 ```{julia}
 exp_name = "cb24oi"
@@ -225,7 +225,7 @@ function get_var(
     ;
     kwargs...
     )
-    
+
     get_var(xp.expname, snap, xp.expdir, variable, args...; kwargs...)
 end
 
@@ -240,7 +240,7 @@ end
         kwargs...
     )
 
-Load a `variable` from one or multiple snapshots of a Bifrost experiment with 
+Load a `variable` from one or multiple snapshots of a Bifrost experiment with
 experiment directory `expdir` and experiment name `expname`.
 """
 function get_var(
@@ -301,15 +301,16 @@ function get_var(
     else
         get_function = get_var
     end
-    
+
     # What we need in params should be constant for experiment
     params = read_params(expname,snaps[1],expdir)
-    varnr, file_ext = get_varnr_and_file_extension(params, variable)
-    
+    varnr, file_suff = get_varnr_and_file_suffix(params, variable)
+
     # Loop over snapshots
     for (i,snap) in enumerate(snaps)
-        
-        tmp_file = string(joinpath(expdir,expname),"_",lpad(snap,3,"0"),file_ext)
+
+        tmp_file = string(joinpath(expdir,expname),"_",
+                          Printf.format(file_suff, lpad(snap,3,"0")))
 
         data[i] = get_function(
             tmp_file,
@@ -322,8 +323,8 @@ function get_var(
     end
 
     # -------------------------------------------------------------------------
-    #  Below is where you extend the functionality of get_var by handling 
-    #  arbitrary keyword arguments. Please put your new implementation into a 
+    #  Below is where you extend the functionality of get_var by handling
+    #  arbitrary keyword arguments. Please put your new implementation into a
     #  new function.
     # -------------------------------------------------------------------------
 
@@ -376,8 +377,8 @@ end
         slicey         ::AbstractVector{<:Integer}=Int[],
         slicez         ::AbstractVector{<:Integer}=Int[]
         )
-Load variable nr. `varnr` from `filename`. The variable could be either 
-primary or auxiliary. Slicing the snapshot is optional. Assumes single 
+Load variable nr. `varnr` from `filename`. The variable could be either
+primary or auxiliary. Slicing the snapshot is optional. Assumes single
 precision snapshot by default.
 """
 function get_var(
@@ -402,8 +403,8 @@ function get_var(
     if isempty(slicex) && isempty(slicey) && isempty(slicez)
         # do not slice the variable
         data = mmap(file,
-            Array{precision, datadims}, 
-            snapsize, 
+            Array{precision, datadims},
+            snapsize,
             offset
             )
     else
@@ -412,8 +413,8 @@ function get_var(
         isempty(slicez) && ( slicez = 1:snapsize[3] )
         # slice the variable
         data = mmap(file,
-            Array{precision, datadims}, 
-            snapsize, 
+            Array{precision, datadims},
+            snapsize,
             offset
             )[slicex,slicey,slicez]
     end
@@ -424,7 +425,7 @@ end
 function get_time(
     expname::String,
     snap   ::Union{<:Integer, AbstractVector{<:Integer}},
-    expdir ::String 
+    expdir ::String
     ;
     units::String="code",
     kwargs...
@@ -433,7 +434,7 @@ function get_time(
     if typeof(snap) <: Integer
         params = read_params(expname,snap,expdir)
         data = parse(Float64, params["t"])
-    else 
+    else
         data = Vector{Float64}(undef, nsnaps)
         # Load the variable directly from params
         for (i,snap) in enumerate(snap)
@@ -446,7 +447,7 @@ function get_time(
     if units != "code"
         data = convert_timeunits(data, params)
     end
-    
+
     return data
 end
 
@@ -631,7 +632,7 @@ function rotate(
     rotation_axis::String,
     )
 
-    return [rotate(data[i], variable, rotation_axis) for i in eachindex(data)] 
+    return [rotate(data[i], variable, rotation_axis) for i in eachindex(data)]
 end
 
 
@@ -643,7 +644,7 @@ end
 
 Function to calculate the electron density from a snapshot `snap`. Supports
 slicing. Gas density `rho` and internal energy `e` are optional arguments and
-can be passed (but they MUST be in cgs units). If these quantities already 
+can be passed (but they MUST be in cgs units). If these quantities already
 exist, passing them will speed up the calculation of electron density.
 
 `kwargs`:
@@ -708,12 +709,13 @@ function get_electron_density(
     ) where {T<:AbstractFloat}
 
     params = read_params(expname,snap,expdir)
-    
+
     # rho in g/cm^3
     if isempty(rho)
-        
-        varnr, file_ext = get_varnr_and_file_extension(params, "r")
-        tmp_file = string(joinpath(expdir,expname), "_", lpad(snap,3,"0"), file_ext)
+
+        varnr, file_suff = get_varnr_and_file_suffix(params, "r")
+        tmp_file = string(joinpath(expdir,expname),"_",
+                    Printf.format(file_suff, lpad(snap,3,"0")))
 
         rho = get_var(
             tmp_file,
@@ -726,11 +728,12 @@ function get_electron_density(
         rho = convert_units(rho, "r", params, "cgs")
 
     end
-    
+
     # internal energy in ergs
     if isempty(e)
-        varnr, file_ext = get_varnr_and_file_extension(params, "e")
-        tmp_file = string(joinpath(expdir,expname), "_", lpad(snap,3,"0"), file_ext)
+        varnr, file_ext = get_varnr_and_file_suffix(params, "e")
+        tmp_file = string(joinpath(expdir,expname),"_",
+                    Printf.format(file_suff, lpad(snap,3,"0")))
 
         e = get_var(
             tmp_file,
@@ -746,7 +749,7 @@ function get_electron_density(
 
     # Calculate internal energy per mass
     ee = e ./ rho
-    
+
     # construct the EOS tables for interpolation of electron density
     tabfile = joinpath(expdir,tabfile)
     eos = EOSTables(tabfile)
@@ -754,22 +757,22 @@ function get_electron_density(
     if maximum(rho) > parse(Float64,eos.params["RhoMax"])
         @warn "tab_interp: density outside table bounds. "*
         "Table rho max=$(@sprintf("%.3e", parse(Float64,eos.params["RhoMax"]))), requested rho max=$(@sprintf("%.3e", maximum(rho)))"
-    end        
+    end
     if minimum(rho) <parse(Float64,eos.params["RhoMin"])
         @warn "tab_interp: density outside table bounds. "*
         "Table rho min=$(@sprintf("%.3e", parse(Float64,eos.params["RhoMin"]))), requested rho min=$(@sprintf("%.3e", minimum(rho)))"
     end
-    
+
     if maximum(ee) > parse(Float64,eos.params["EiMax"])
         @warn "tab_interp: energy outside table bounds. "*
         "Table Ei max=$(@sprintf("%.3e", parse(Float64,eos.params["EiMax"]))), requested ee max=$(@sprintf("%.3e", maximum(ee)))"
-        
-    end        
+
+    end
     if minimum(ee) < parse(Float64,eos.params["EiMin"])
         @warn "tab_interp: energy outside table bounds. "*
         "Table Ei min=$(@sprintf("%.3e", parse(Float64,eos.params["EiMin"]))), requested ee min=$(@sprintf("%.3e", minimum(ee)))"
     end
-    
+
     # Create interpolation table, takes the log of coordinates
     itp_table = eos_interpolate(eos,3)
 
