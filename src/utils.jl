@@ -1,6 +1,6 @@
 """
     primary_vars
-The primary variables and their order of storage for primary variables in a 
+The primary variables and their order of storage for primary variables in a
 Bifrost .snap binary file.
 """
 const primary_vars = Dict(
@@ -12,6 +12,18 @@ const primary_vars = Dict(
     "bx" => 6,
     "by" => 7,
     "bz" => 8,
+)
+
+const hion_vars = Dict(
+    "ne" => 1,
+    "hiontg" => 2,
+    "n1" => 3,
+    "n2" => 4,
+    "n3" => 5,
+    "n4" => 6,
+    "n5" => 7,
+    "n6" => 8,
+#    "nh2" => 9,  # commented for now to avoid errors (is not always written, needs check)
 )
 
 """
@@ -41,7 +53,7 @@ function get_snapsize(
     my = parse(Int, params["my"])
     mz = parse(Int, params["mz"])
     snapsize::Tuple{Int64, Int64, Int64} = mx, my, mz
-    return snapsize 
+    return snapsize
 end
 
 """
@@ -77,10 +89,10 @@ end
 
 """
     get_snap_numbers(
-        expdir::String, 
+        expdir::String,
         expname::String="none"
         ;
-        findall::Bool=false, 
+        findall::Bool=false,
         filenames::Vector{String}=String[]
         )
 
@@ -100,16 +112,16 @@ function get_snap_numbers(
 end
 
 function get_snap_numbers(
-    expdir::String, 
+    expdir::String,
     expname::String="none"
     ;
-    findall::Bool=false, 
+    findall::Bool=false,
     filenames::Vector{String}=String[]
     )
 
     if expname=="none"
         expname = splitpath(expdir)[end]
-    end 
+    end
 
     if isempty(filenames)
         filenames = readdir(expdir)
@@ -119,7 +131,7 @@ function get_snap_numbers(
         # Regex magic to match the filenames with 'expname' and '.snap'
         pattern = r"^" * expname * r"_(\d+)\.snap$"
     else
-        # wildcard that finds all files on format 'abXYcd_xyz.snap' 
+        # wildcard that finds all files on format 'abXYcd_xyz.snap'
         pattern = r"^.*_(\d+)\.snap$"
     end
 
@@ -141,34 +153,42 @@ end
 
 
 """
-    get_varnr_and_file_ext(
+    get_varnr_and_file_suffix(
         params::Dict{String,String},
         variable::String
         )
 Given the snapshot `params` and desired `variable`, return
-its index in the binary file, as well as the extension of this file.
-(Either ".aux" or ".snap").
+its index in the binary file, as well as the suffix of this file.
+(A format string where the snapshot number is to be inserted).
 """
-function get_varnr_and_file_extension(
+function get_varnr_and_file_suffix(
     params  ::Dict{String,String},
     variable::String,
     )
     if variable in keys(primary_vars)
-        file_ext = ".snap"
+        file_suff = Printf.Format("%s.snap")
         varnr = primary_vars[variable]
     elseif variable in split(params["aux"])
-        file_ext = ".aux"
+        file_suff = Printf.Format("%s.aux")
         indices = findall(x -> x == variable, split(params["aux"]))
-        if length(indices) > 1  
+        if length(indices) > 1
             error("Multiple matches for given aux-variable name.")
         elseif length(indices) == 0
             throw(ErrorException("Auxiliary variable not found in file."))
         end
-        varnr =  indices[1]
+        varnr = indices[1]
+    elseif variable in keys(hion_vars)
+        if parse(Int, params["do_hion"]) == 1
+            file_suff = Printf.Format(".hion%s.snap")
+            varnr = hion_vars[variable]
+        else
+            throw(ErrorException("Variable $variable only available in hion runs, "*
+                "but no hion found"))
+        end
     else
         throw(ErrorException("Variable $variable does not exist"))
     end
-    return varnr, file_ext
+    return varnr, file_suff
 end
 
 """
@@ -202,8 +222,8 @@ end
         snap    ::Union{<:Integer, AbstractVector{<:Integer}},
         expdir  ::String,
         )
-Return the basename of snapshots in the experiment `expname`, located in the 
-directory `expdir`. Also return the filename (withou file extension) of the 
+Return the basename of snapshots in the experiment `expname`, located in the
+directory `expdir`. Also return the filename (withou file extension) of the
 first snapshot of the experiment.
 """
 function get_basename(

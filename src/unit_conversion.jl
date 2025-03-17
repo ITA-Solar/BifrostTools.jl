@@ -41,6 +41,15 @@ const cgs_to_SI_conversion_factors = Dict(
     "qrdiff" => 1e-1,
     "qediff" => 1e-1,
     "qeadv" => 1e-1,
+    # Hion densities: cm^-3 to m^-3
+    "ne" => 1e6,
+    "n1" => 1e6,
+    "n2" => 1e6,
+    "n3" => 1e6,
+    "n4" => 1e6,
+    "n5" => 1e6,
+    "n6" => 1e6,
+    "nh2" => 1e6,
     # Magnetic field: G * 1f-4 T/G = 1f-4 T
     "bx" => 1e-4,
     "by" => 1e-4,
@@ -115,8 +124,10 @@ function code_to_cgs(
         return  parse(Float64, params["u_r"])
     elseif variable == "e"                   # Energy
          return parse(Float64, params["u_e"])
-    elseif variable == "tg"                  # Gas temperature
+    elseif variable in ("tg", "hiontg")      # Gas temperature
         return 1.0 # nothing to do
+    elseif variable in ("ne", "n1", "n2", "n3", "n4", "n5", "n6", "nh2")  # Hion densities
+        return 1.0 # nothing to do, already in cgs
     elseif variable == "p"                   # Pressure
          return parse(Float64, params["u_p"])
     elseif variable in ("px", "py", "pz")    # Momentum
