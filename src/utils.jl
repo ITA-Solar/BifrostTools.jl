@@ -166,10 +166,10 @@ function get_varnr_and_file_suffix(
     variable::String,
     )
     if variable in keys(primary_vars)
-        file_suff = Printf.Format("%s.snap")
+        file_suff = Printf.Format("_%s.snap")
         varnr = primary_vars[variable]
     elseif variable in split(params["aux"])
-        file_suff = Printf.Format("%s.aux")
+        file_suff = Printf.Format("_%s.aux")
         indices = findall(x -> x == variable, split(params["aux"]))
         if length(indices) > 1
             error("Multiple matches for given aux-variable name.")
@@ -179,7 +179,7 @@ function get_varnr_and_file_suffix(
         varnr = indices[1]
     elseif variable in keys(hion_vars)
         if parse(Int, params["do_hion"]) == 1
-            file_suff = Printf.Format(".hion%s.snap")
+            file_suff = Printf.Format(".hion_%s.snap")
             varnr = hion_vars[variable]
         else
             throw(ErrorException("Variable $variable only available in hion runs, "*

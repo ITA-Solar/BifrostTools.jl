@@ -309,7 +309,7 @@ function get_var(
     # Loop over snapshots
     for (i,snap) in enumerate(snaps)
 
-        tmp_file = string(joinpath(expdir,expname),"_",
+        tmp_file = string(joinpath(expdir,expname),
                           Printf.format(file_suff, lpad(snap,3,"0")))
 
         data[i] = get_function(
@@ -397,7 +397,7 @@ function get_var(
     # Calculate offset in file
     offset = get_variable_offset_in_file(precision, snapsize, varnr)
     file = open(filename)
-
+    
     # Do slicing or not (returns the mmap)
     # Use Julia standard-library memory-mapping to extract file values
     if isempty(slicex) && isempty(slicey) && isempty(slicez)
@@ -714,7 +714,7 @@ function get_electron_density(
     if isempty(rho)
 
         varnr, file_suff = get_varnr_and_file_suffix(params, "r")
-        tmp_file = string(joinpath(expdir,expname),"_",
+        tmp_file = string(joinpath(expdir,expname),
                     Printf.format(file_suff, lpad(snap,3,"0")))
 
         rho = get_var(
@@ -731,8 +731,8 @@ function get_electron_density(
 
     # internal energy in ergs
     if isempty(e)
-        varnr, file_ext = get_varnr_and_file_suffix(params, "e")
-        tmp_file = string(joinpath(expdir,expname),"_",
+        varnr, file_suff = get_varnr_and_file_suffix(params, "e")
+        tmp_file = string(joinpath(expdir,expname),
                     Printf.format(file_suff, lpad(snap,3,"0")))
 
         e = get_var(
