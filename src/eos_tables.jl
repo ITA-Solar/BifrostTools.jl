@@ -114,3 +114,103 @@ function eos_interpolate(eos::EOSTables, nvar::Int)
 
     return cubic_spline_interpolation((eia, rhoa), tab[:, :, nvar], extrapolation_bc=Line())
 end
+
+# --- interpolate variables
+
+function interpolate_electron_density(
+    expname::String,
+    snap::Integer,
+    expdir::String,
+    params::Dict{String,String}
+    ;
+    units::String="si",
+    slicex::AbstractVector{<:Integer}=Int[],
+    slicey::AbstractVector{<:Integer}=Int[],
+    slicez::AbstractVector{<:Integer}=Int[],
+    rho::Array{T,3}=Float32[;;;],
+    e::Array{T,3}=Float32[;;;],
+    tabfile::String="tabparam.in"
+    ) where {T<:AbstractFloat}
+
+    # rho in g/cm^3
+    if isempty(rho)
+
+        varnr, file_suff = get_varnr_and_file_suffix(params, "r")
+        tmp_file = string(joinpath(expdir,expname),
+                    Printf.format(file_suff, lpad(snap,3,"0")))
+
+        rho = get_var(
+            tmp_file,
+            params,
+            varnr,
+            slicex=slicex,
+            slicey=slicey,
+            slicez=slicez
+        )
+        rho = convert_units(rho, "r", params, "cgs")
+
+    end
+
+    # internal energy in ergs
+    if isempty(e)
+        varnr, file_suff = get_varnr_and_file_suffix(params, "e")
+        tmp_file = string(joinpath(expdir,expname),
+                    Printf.format(file_suff, lpad(snap,3,"0")))
+
+        e = get_var(
+            tmp_file,
+            params,
+            varnr,
+            slicex=slicex,
+            slicey=slicey,
+            slicez=slicez
+        )
+        e = convert_units(e, "e", params, "cgs")
+
+    end
+
+    # Calculate internal energy per mass, this is interpolation coordinate
+    ee = e ./ rho
+
+    # construct the EOS tables for interpolation of electron density
+    tabfile = joinpath(expdir,tabfile)
+    eos = EOSTables(tabfile)
+
+    if maximum(rho) > parse(Float64,eos.params["RhoMax"])
+        @warn "tab_interp: density outside table bounds. "*
+        "Table rho max=$(@sprintf("%.3e", parse(Float64,eos.params["RhoMax"]))), requested rho max=$(@sprintf("%.3e", maximum(rho)))"
+    end
+    if minimum(rho) <parse(Float64,eos.params["RhoMin"])
+        @warn "tab_interp: density outside table bounds. "*
+        "Table rho min=$(@sprintf("%.3e", parse(Float64,eos.params["RhoMin"]))), requested rho min=$(@sprintf("%.3e", minimum(rho)))"
+    end
+
+    if maximum(ee) > parse(Float64,eos.params["EiMax"])
+        @warn "tab_interp: energy outside table bounds. "*
+        "Table Ei max=$(@sprintf("%.3e", parse(Float64,eos.params["EiMax"]))), requested ee max=$(@sprintf("%.3e", maximum(ee)))"
+
+    end
+    if minimum(ee) < parse(Float64,eos.params["EiMin"])
+        @warn "tab_interp: energy outside table bounds. "*
+        "Table Ei min=$(@sprintf("%.3e", parse(Float64,eos.params["EiMin"]))), requested ee min=$(@sprintf("%.3e", minimum(ee)))"
+    end
+
+    # Create interpolation table, takes the log of coordinates
+    itp_table = eos_interpolate(eos,3)
+
+    x = log.(ee)
+    y = log.(rho)
+
+    ne = itp_table.(x, y)
+
+    # take exp to remove log
+    ne = exp.(ne)
+
+    # Convert to si on request (cm^-3 --> m^-3)
+    # Precision is hard-coded to Float32
+    if lowercase(units) == "si"
+        ne .*= 1f6
+    end
+
+    return ne
+end

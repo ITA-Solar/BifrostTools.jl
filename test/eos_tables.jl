@@ -8,8 +8,8 @@
     ]
 
 
-    ne = get_electron_density(expname,xp.snaps[1],expdir,
-        slicex=[10],slicey=5:24,slicez=[10])
+    ne = get_electron_density(xp,xp.snaps[1];
+        slicex=[10],slicey=5:24,slicez=[10],verbose=false)
 
     @test ne[1,:,1] == tmp_array
 
