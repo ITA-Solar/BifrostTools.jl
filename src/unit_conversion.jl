@@ -60,6 +60,7 @@ const cgs_to_SI_conversion_factors = Dict(
     "ez" => 2.99792458e4,
     # Temperature: K = K
     "tg" => 1.0,
+    "hiontg" => 1.0,
     # Position
     "x" => 1e-2,
     "y" => 1e-2,
