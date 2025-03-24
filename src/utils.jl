@@ -113,13 +113,13 @@ end
 
 function get_snap_numbers(
     expdir::String,
-    expname::String="none"
+    expname::Union{String,Nothing}=nothing
     ;
     findall::Bool=false,
     filenames::Vector{String}=String[]
     )
 
-    if expname=="none"
+    if isnothing(expname)
         expname = splitpath(expdir)[end]
     end
 
@@ -129,25 +129,39 @@ function get_snap_numbers(
 
     if ! findall
         # Regex magic to match the filenames with 'expname' and '.snap'
-        pattern = r"^" * expname * r"_(\d+)\.snap$"
+        snap_pattern = r"^" * expname * r"_(\d+)\.snap$"
+        idl_pattern = r"^" * expname * r"_(\d+)\.idl$"
     else
         # wildcard that finds all files on format 'abXYcd_xyz.snap'
-        pattern = r"^.*_(\d+)\.snap$"
+        snap_pattern = r"^.*_(\d+)\.snap$"
+        idl_pattern = r"^.*_(\d+)\.idl$"
     end
 
     # Initialize an empty list to store the XXX numbers
-    snaps = Vector{Int}()
+    snap_numbers = Set{Int}()
+    idl_numbers = Set{Int}()
+    
 
-    # Loop through the filenames and extract XXX numbers
+    # Loop through the filenames and extract snap numbers
     for filename in filenames
-        match_result = match(pattern, filename)
-        if match_result ≠ nothing
-            isnap = Meta.parse(match_result.captures[1])
-            push!(snaps, isnap)
+        match_snap = match(snap_pattern, filename)
+        match_idl = match(idl_pattern, filename)
+
+        if match_snap ≠ nothing
+            snap_num = parse(Int, match_snap.captures[1])
+            push!(snap_numbers, snap_num)
+        end
+
+        if match_idl ≠ nothing
+            idl_num = parse(Int, match_idl.captures[1])
+            push!(idl_numbers, idl_num)
         end
     end
 
-    return sort(snaps)
+    # Find intersection of snap_numbers and idl_numbers
+    matching_numbers = intersect(snap_numbers, idl_numbers)
+
+    return sort(collect(matching_numbers))
 
 end
 

@@ -63,8 +63,7 @@ struct BifrostExperiment
         end
 
         # Find number of snaps
-        snaps = get_snap_numbers(expdir, expname; filenames=filenames,
-            findall=true)
+        snaps = get_snap_numbers(expdir, expname; filenames=filenames)
 
         # Get some snap-independent parameters
         params_file = string(
