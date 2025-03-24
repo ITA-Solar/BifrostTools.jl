@@ -12,7 +12,7 @@ function p2(x::Real)
     Float32(-0.5x^2 + 2x - 3)
 end
 
-@testset "interpolation" begin
+@testset "interpolations" begin
 
     @testset "Extrapolation" begin   
         x_stagger = Float32.(1:10) .- 0.5f0
@@ -46,6 +46,9 @@ end
         @test zup(p_z,false)[1,1,3:end-3] ≈ p5.(x .+ 0.5)[3:end-3]
         @test zdn(p_z,false)[1,1,4:end-2] ≈ p5.(x .- 0.5)[4:end-2]
     end
+end
+
+@testset "derivatives" begin
 
     @testset "6th order exact derivative" begin   
         x = Float32.(1:10) .- 0.5f0
