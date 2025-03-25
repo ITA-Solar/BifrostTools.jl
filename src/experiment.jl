@@ -83,6 +83,20 @@ end
 
 
 """
+    Base.display(xp::BifrostExperiment)
+Prints information about the `BifrostExperiment`.
+"""
+function Base.display(xp::BifrostExperiment)
+    println("BifrostExperiment: $(xp.expname)")
+    println("  expdir: $(xp.expdir)")
+    println("  snaps: $(xp.snaps)")
+    println("  snapsize: $(xp.snapsize)")
+    println("  num_snaps: $(xp.num_snaps)")
+    println("  num_primary_vars: $(xp.num_primary_vars)")
+end
+
+
+"""
     get_axes(
         xp::BifrostExperiment
         ;
