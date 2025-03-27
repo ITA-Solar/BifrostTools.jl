@@ -110,6 +110,6 @@ function get_axes(
     ;
     units="code"
 )
-    params = read_params(xp, xp.snaps[1])
+    params = read_params(xp, last(xp.snaps))
     return convert_axesunits(xp.mesh, params; units=units)
 end
