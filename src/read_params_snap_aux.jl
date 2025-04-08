@@ -128,7 +128,7 @@ function get_snap(
     )
     datadims = 4 # 3 spatial dimensions and 1 variable dimension
 
-    snapsize, numvars, _ = get_snapsize_and_numvars(params)
+    snapsize, (numvars, _) = get_snapsize_and_numvars(params)
 
     file = open(file_name)
     # Use Julia standard-library memory-mapping to extract file values
@@ -152,7 +152,7 @@ function get_aux(
     precision::DataType=Float32
     )
     datadims = 4
-    snapsize, _, numauxvars = get_snapsize_and_numvars(params)
+    snapsize, (_, numauxvars) = get_snapsize_and_numvars(params)
     if numauxvars == 0
         return
     else
