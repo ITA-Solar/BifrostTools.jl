@@ -70,6 +70,44 @@ struct BifrostMesh
             mx * my * mz
         )
     end
+
+    function BifrostMesh(
+        mesh::BifrostMesh,
+        slicex::AbstractRange{<:Int},
+        slicey::AbstractRange{<:Int},
+        slicez::AbstractRange{<:Int},
+        )
+        new(
+            length(slicex),
+            mesh.x[slicex],
+            mesh.xmdn[slicex],
+            mesh.dxidxup[slicex],
+            mesh.dxidxdn[slicex],
+            length(slicey),
+            mesh.y[slicey],
+            mesh.ymdn[slicey],
+            mesh.dyidyup[slicey],
+            mesh.dyidydn[slicey],
+            length(slicez),
+            mesh.z[slicez],
+            mesh.zmdn[slicez],
+            mesh.dzidzup[slicez],
+            mesh.dzidzdn[slicez],
+            length(slicex) * length(slicey) * length(slicez)
+        )
+    end
+end
+
+
+function Base.display(xp::BifrostMesh)
+    println("BifrostMesh")
+    println("  mx: ", xp.mx)
+    println("  my: ", xp.my)
+    println("  mz: ", xp.mz)
+    println("  n: ", xp.n)
+    println("  x: ", xp.x[1], " ... ", xp.x[end])
+    println("  y: ", xp.y[1], " ... ", xp.y[end])
+    println("  z: ", xp.z[1], " ... ", xp.z[end])
 end
 
 
