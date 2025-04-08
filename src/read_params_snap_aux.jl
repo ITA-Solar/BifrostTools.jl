@@ -111,7 +111,7 @@ function get_snap(
     idl_filename = string(basename, ".idl")
     snap_filename = string(basename, ".snap")
     params = read_params(idl_filename)
-    return get_snap(snap_filename, params, precision), params
+    return get_snap(snap_filename, params, precision)
 end
 
 
@@ -136,6 +136,15 @@ function get_snap(
     close(file)
     return snapdata
 end
+
+
+function get_snap(
+    xp::BifrostExperiment,
+    snap::Int
+)
+    get_snap(xp.expname, snap, xp.expdir)
+end
+
 
 """
     get_aux(
@@ -165,6 +174,30 @@ function get_aux(
         return auxdata
     end
 end
+
+
+function get_aux(
+    expname  ::String,
+    snap     ::Int,
+    expdir   ::String,
+    precision::DataType=Float32
+    )
+    # Parse filenames
+    basename = string(joinpath(expdir, expname),"_$(lpad(snap,3,"0"))")
+    idl_filename = string(basename, ".idl")
+    aux_filename = string(basename, ".aux")
+    params = read_params(idl_filename)
+    return get_aux(aux_filename, params, precision)
+end
+
+
+function get_aux(
+    xp::BifrostExperiment,
+    snap::Int
+)
+    get_aux(xp.expname, snap, xp.expdir)
+end
+
 
 """
     get_var(

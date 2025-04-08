@@ -32,7 +32,12 @@ export mesh2file
 
 # read_params_snap_aux.jl
 export read_params
-export get_var, get_snap_numbers, get_electron_density
+export
+    get_var,
+    get_snap,
+    get_aux,
+    get_snap_numbers,
+    get_electron_density
 
 # eos_tables.jl
 export get_eostable
