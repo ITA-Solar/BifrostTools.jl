@@ -18,15 +18,15 @@ DelimitedFiles = "^1.9"
 FortranFiles = "0.6"
 Interpolations = "^0.15"
 LoopVectorization = "0.12"
-Mmap = "1.11"
+Mmap = "1.11.0"
 OffsetArrays = "^1.14"
-Printf = "1.11"
-Test = "1.11"
+Printf = "1.11.0"
+Test = "1.11.0"
 julia = "^1.9"
 
 [extras]
-Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test"]
+test = ["Aqua", "Test"]

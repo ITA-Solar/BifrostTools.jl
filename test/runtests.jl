@@ -3,7 +3,7 @@ using Test
 using BifrostTools
 using Interpolations
 
-Aqua.test_all(BifrostTools)
+Aqua.test_all(BifrostTools,persistent_tasks=false)
 
 BASE_FOLDER = dirname(dirname(pathof(BifrostTools)))
 
