@@ -3,6 +3,9 @@
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://ITA-Solar.github.io/BifrostTools.jl/dev/)
 [![Build Status](https://github.com/ITA-Solar/BifrostTools.jl/actions/workflows/CI.yml/badge.svg?branch=develop)](https://github.com/ITA-Solar/BifrostTools.jl/actions/workflows/CI.yml?query=branch%3Adevelop)
 [![Coverage](https://codecov.io/gh/ITA-Solar/BifrostTools.jl/branch/develop/graph/badge.svg)](https://codecov.io/gh/ITA-Solar/BifrostTools.jl)
+[![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
+
+
 
 Tools for reading and working with simulation output from [The stellar atmosphere simulation code Bifrost](https://ui.adsabs.harvard.edu/abs/2011A%26A...531A.154G/abstract) in Julia.
 

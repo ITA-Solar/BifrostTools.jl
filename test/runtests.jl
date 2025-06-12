@@ -1,6 +1,9 @@
+using Aqua
 using Test
 using BifrostTools
 using Interpolations
+
+Aqua.test_all(BifrostTools)
 
 BASE_FOLDER = dirname(dirname(pathof(BifrostTools)))
 
