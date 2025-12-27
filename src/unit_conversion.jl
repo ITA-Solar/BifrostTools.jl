@@ -58,6 +58,11 @@ const cgs_to_SI_conversion_factors = Dict(
     "ex" => 2.99792458e4,
     "ey" => 2.99792458e4,
     "ez" => 2.99792458e4,
+    # Electric current density:
+    # StatA/cm^2 * 3.335641f-10 (~1/3f-9) C/StatC * 1f4 cm^2/m^2 = 3.34f-6 A/m^2
+    "ix" => 3.33564095e-6,
+    "iy" => 3.33564095e-6,
+    "iz" => 3.33564095e-6,
     # Temperature: K = K
     "tg" => 1.0,
     "hiontg" => 1.0,
