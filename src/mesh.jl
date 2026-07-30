@@ -20,7 +20,7 @@ struct BifrostMesh
     dzidzup::Vector{Float32}
     dzidzdn::Vector{Float32}
     n::Int64
-    
+
     function BifrostMesh(expdir::String)
 
         # Check if `expdir` is path to mesh_file or folder of experiment

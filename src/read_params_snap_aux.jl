@@ -119,7 +119,7 @@ end
     get_snap(
         file_name::String,
         params   ::Dict{String,String}
-        )
+    )
 """
 function get_snap(
     file_name::String,
@@ -137,7 +137,12 @@ function get_snap(
     return snapdata
 end
 
-
+"""
+    get_snap(
+        xp::BifrostExperiment,
+        snap::Int
+    )
+"""
 function get_snap(
     xp::BifrostExperiment,
     snap::Int
@@ -318,7 +323,7 @@ function get_var(
             end
         end
 
-        if get(kwargs,:destaggeroperation,false)
+        if haskey(kwargs, :destaggeroperation)
             get_function = get_and_destagger_var
         elseif variable in keys(destaggeroperation)
             get_function = get_and_destagger_var
