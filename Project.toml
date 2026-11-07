@@ -1,26 +1,30 @@
 name = "BifrostTools"
 uuid = "526b3974-5bd8-47e8-be8d-381be867b53b"
-authors = ["eilifso <e.s.oyre@astro.uio.no>", "meudnaes <eliasudnes@hotmail.com>"]
 version = "0.2.3"
+authors = ["eilifso <e.s.oyre@astro.uio.no>", "meudnaes <eliasudnes@hotmail.com>"]
 
 [deps]
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 FortranFiles = "c58ffaec-ab22-586d-bfc5-781a99fd0b10"
 Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
+JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 LoopVectorization = "bdcacae8-1622-11e9-2a5c-532679323890"
 Mmap = "a63ad114-7e13-5084-954f-fe012c677804"
 OffsetArrays = "6fe1bfb0-de20-5000-8ca7-80f57d26f881"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
 Aqua = "0.8"
 DelimitedFiles = "1.9"
 FortranFiles = "0.6"
 Interpolations = "0.16"
+JLD2 = "0.6.7"
 LoopVectorization = "0.12"
 Mmap = "1.9"
 OffsetArrays = "1.14"
 Printf = "1.9"
+StaticArrays = "1.9.24"
 Test = "1.9"
 julia = "1.9"
 
