@@ -289,12 +289,16 @@ function get_var(
     args...
     ;
     precision::DataType=Float32,
+    destagger=false,
+    units="code",
+    squeezeresult=false,
+    rotate_about="",
     kwargs...
     )
 
     if variable == "t"
         # The special case of getting the snapshot time
-        return get_time(expname,snaps,expdir;kwargs...)
+        return get_time(expname,snaps,expdir; units=units)
     end
 
     # Allocate space for variable
@@ -302,7 +306,7 @@ function get_var(
 
     # Check if user wants data to be destaggered. If so we have to
     # call get_and_destagger_var. If not, we may call get_var
-    if get(kwargs, :destagger, false)
+    if destagger
         # Check if destagger-operation is passed as a keyword-argument.
         # If not, use default operation corresponding to the requested
         # variable.
@@ -368,18 +372,16 @@ function get_var(
 
     # UNITS: Scale from code units to something else
     #   If multiple snapshots: Assumes the same conversion factor for all
-    if haskey(kwargs,:units)
-        data = convert_units(data, variable, params, kwargs[:units])
-    end
+    data = convert_units(data, variable, params, units)
 
     # ORIENTATION: Rotate coordinate system
-    if haskey(kwargs,:rotate_about)
-        data = rotate(data, variable, kwargs[:rotate_about])
+    if rotate_about != ""
+        data = rotate(data, variable, rotate_about)
     end
 
     # SQUEEZE: Drop empty dimensions
     #   Allocates new data with fewer dims, and copies this into data
-    if get(kwargs,:squeeze,false)
+    if squeezeresult
         # number of non-empty dimension
         dims = count( size(data[1]) .≠ 1 )
 
@@ -420,22 +422,21 @@ primary or auxiliary. Slicing the snapshot is optional. Assumes single
 precision snapshot by default.
 """
 function get_var(
-    filename       ::String,
-    params         ::Dict{String,String},
-    varnr          ::Integer
+    filename::String,
+    params::Dict{String,String},
+    varnr::Integer
     ;
-    precision      ::DataType=Float32,
-    slicex         ::AbstractVector{<:Integer}=Int[],
-    slicey         ::AbstractVector{<:Integer}=Int[],
-    slicez         ::AbstractVector{<:Integer}=Int[],
-    kwargs...
+    precision::DataType=Float32,
+    slicex::AbstractVector{<:Integer}=Int[],
+    slicey::AbstractVector{<:Integer}=Int[],
+    slicez::AbstractVector{<:Integer}=Int[],
     )
     datadims = 3 # 3 spatial dimensions and 1 variable dimension
     snapsize = get_snapsize(params)
     # Calculate offset in file
     offset = get_variable_offset_in_file(precision, snapsize, varnr)
     file = open(filename)
-    
+
     # Do slicing or not (returns the mmap)
     # Use Julia standard-library memory-mapping to extract file values
     if isempty(slicex) && isempty(slicey) && isempty(slicez)
@@ -466,7 +467,6 @@ function get_time(
     expdir ::String
     ;
     units::String="code",
-    kwargs...
     )
     nsnaps = length(snap)
     if typeof(snap) <: Integer
@@ -496,7 +496,6 @@ end
         varnr::Integer,
         ;
         destaggeroperation::Function,
-        units::String="none",
         periodic::Bool=false,
         order::Int=6,
         slicex::AbstractVector{<:Integer}=Int[],
@@ -701,7 +700,7 @@ function get_electron_density(
 
     if typeof(snaps) <: Integer
         var = get_electron_density(xp.expname,snaps,xp.expdir;
-		    kwargs...)
+            kwargs...)
         return var
 
     elseif typeof(snaps) <: AbstractVector{<:Integer}
@@ -740,7 +739,10 @@ function get_electron_density(
     kwargs...
     )
 
-    params = read_params(expname,snap,expdir)
+    params = read_params(expname, snap, expdir)
+    if haskey(kwargs, :destagger) && kwargs.destagger == true
+        error("Electron density is not staggered. Set `destagger=false`")
+    end
 
     # If simulation is Hion, it has electron density in .hion file
     # If simulation is not Hion, we interpolate electron density from EOS
@@ -766,5 +768,4 @@ function get_electron_density(
             rethrow(err)
         end
     end
-
 end
