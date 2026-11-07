@@ -65,6 +65,20 @@ struct BifrostExperiment
         # Find number of snaps
         snaps = get_snap_numbers(expdir, expname; filenames=filenames)
 
+        if isempty(snaps)
+            auxfiles = get_snap_numbers(
+                expdir,
+                expname; filenames=filenames,
+                use_aux=true
+            )
+            if isempty(auxfiles)
+                @error "Did not find any .snap or .aux-files."
+            else
+                @info "Found only .aux-files in $expdir"
+                snaps = auxfiles
+            end
+        end
+
         # Get some snap-independent parameters
         params_file = string(
             joinpath(expdir, expname),

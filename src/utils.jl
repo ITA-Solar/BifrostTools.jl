@@ -104,10 +104,17 @@ experiment name.
 function get_snap_numbers(
     xp::BifrostExperiment;
     findall=false,
-    filenames::Vector{String}=String[]
+    filenames::Vector{String}=String[],
+    use_aux=false
     )
 
-   get_snap_numbers(xp.expdir,xp.expname,findall=findall,filenames=filenames)
+   get_snap_numbers(
+       xp.expdir,
+       xp.expname,
+       findall=findall,
+       filenames=filenames,
+       use_aux=use_aux
+   )
 
 end
 
@@ -116,8 +123,10 @@ function get_snap_numbers(
     expname::Union{String,Nothing}=nothing
     ;
     findall::Bool=false,
-    filenames::Vector{String}=String[]
+    filenames::Vector{String}=String[],
+    use_aux=false
     )
+    ext = use_aux ? "aux" : "snap"
 
     if isnothing(expname)
         expname = splitpath(expdir)[end]
@@ -129,11 +138,11 @@ function get_snap_numbers(
 
     if ! findall
         # Regex magic to match the filenames with 'expname' and '.snap'
-        snap_pattern = r"^" * expname * r"_(\d+)\.snap$"
+        snap_pattern = r"^" * expname * r"_(\d+)\." * ext * r"$"
         idl_pattern = r"^" * expname * r"_(\d+)\.idl$"
     else
         # wildcard that finds all files on format 'abXYcd_xyz.snap'
-        snap_pattern = r"^.*_(\d+)\.snap$"
+        snap_pattern = r"^.*_(\d+)\." * ext * r"$"
         idl_pattern = r"^.*_(\d+)\.idl$"
     end
 
@@ -260,10 +269,57 @@ function addtokwargs(;kwargs...)
 end
 
 """
-    function squeeze(a::AbstractArray)
+    squeeze(a::AbstractArray)
 Drop singleton dimensions of array `a`
 """
 function squeeze(a::AbstractArray)
     shape = size(a)[findall(size(a) .≠ 1)]
     reshape(a, shape)
+end
+
+"""
+    squeeze(axes::Tuple{Vararg{Vector})
+Find and drop all axes with one point.
+"""
+function squeeze(axes::Tuple{Vararg{Union{AbstractVector, Real}}})
+    mask = findall(x -> length(x) != 1, axes)
+    return axes[mask]
+end
+
+"""
+    parse_variables(vars)
+Return a vector of Bifrost variables. Accept `vars` in the formats
+```
+"bx"
+:bx
+["bx, "by"]
+[:bx, :by]
+"bx by"
+```
+"""
+function parse_variables(vars)
+    if vars isa Vector{String}
+        return vars
+    elseif vars isa Vector{Symbol}
+        return string.(vars)
+    elseif vars isa Symbol
+        return [string(vars)]
+    elseif vars isa String
+        if occursin(',', vars)
+            could_not_parse_variables_error()
+        else
+            return [string(s) for s in split(vars)]
+        end
+    else
+        could_not_parse_variables_error()
+    end
+end
+
+function could_not_parse_variables_error()
+    throw(ArgumentError("Could not parse `variables`. Use strings or symbols, e.g"*
+    "' bx by ' or '[:bx, :by]'."))
+end
+
+function isstaggered(var)
+    return var in keys(destaggeroperation)
 end
