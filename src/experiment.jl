@@ -108,8 +108,23 @@ units.
 function get_axes(
     xp::BifrostExperiment
     ;
-    units="code"
+    units="code",
+    slicex::AbstractVector{<:Integer}=Int[],
+    slicey::AbstractVector{<:Integer}=Int[],
+    slicez::AbstractVector{<:Integer}=Int[]
 )
     params = read_params(xp, last(xp.snaps))
-    return convert_axesunits(xp.mesh, params; units=units)
+    conversionfactor = conversionfactor_axes(
+        units,
+        params,
+        eltype(xp.mesh.x),
+    )
+    isempty(slicex) && ( slicex = 1:length(xp.mesh.x) )
+    isempty(slicey) && ( slicey = 1:length(xp.mesh.y) )
+    isempty(slicez) && ( slicez = 1:length(xp.mesh.z) )
+    return (
+        xp.mesh.x[slicex]*conversionfactor,
+        xp.mesh.y[slicey]*conversionfactor,
+        xp.mesh.z[slicez]*conversionfactor
+    )
 end
