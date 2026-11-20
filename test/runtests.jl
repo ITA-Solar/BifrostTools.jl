@@ -20,4 +20,5 @@ params = read_params(expname,xp.snaps[1],expdir)
     include("unit_conversion.jl")
     include("eos_tables.jl")
     include("utils.jl")
+    include("get_itp.jl")
 end

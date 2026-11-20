@@ -177,3 +177,39 @@ or
 ```julia
 read_params(expname,snap,expdir)
 ```
+
+## Interpolating between grid points using `get_itp`
+[`get_itp`](@ref) returns an [Interpolations.jl](https://juliamath.github.io/Interpolations.jl/stable/)-object of Bifrost-snapshot(s) together with some metadata.
+
+The interpolation can be in both space and time, and on both scalar and vector fields.
+See the [docstring](@ref get_itp) for more info.
+
+### Example
+```julia-repl
+julia> using BifrostTools, JLD2
+
+julia> xp = BifrostExperiment("fanspine_exhaust64", "test/fanspine_exhaust64");
+
+julia> itp, metadata = get_itp(xp, 1:5, "ey", :cubic_spline);
+
+julia> itp(18f0, 2.5f0, -5f0, 6.002f0) # itp(x, y, z, t)
+0.00053988147f0
+
+julia> xp = BifrostExperiment("en48", "test/sp.n064");
+
+julia> get_itp(xp, 1, "bx by bz", [:linear, :constant];
+           slicex=24:24,
+           itp_bc=[:periodic, :throw],
+           saveitp=true,
+           name="test"
+       );
+
+julia> @load "test.itp.jld2" itp metadata
+
+julia> itp(1f1, -1f0) # itp(y, z)
+3-element StaticArraysCore.SVector{3, Float32} with indices SOneTo(3):
+ 0.70152
+ 0.00021198636
+ 0.7067044
+```
+"""

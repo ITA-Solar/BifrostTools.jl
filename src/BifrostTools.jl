@@ -1,12 +1,14 @@
 module BifrostTools
 
 using FortranFiles: FortranFile, read, readlines
-using OffsetArrays
 using DelimitedFiles
-using Printf
 using Interpolations
+using JLD2: jldsave
 using Mmap
 using LoopVectorization
+using OffsetArrays
+using Printf
+using StaticArrays: SVector
 
 include("mesh.jl")
 include("experiment.jl")
@@ -15,6 +17,7 @@ include("stagger_operators.jl")
 include("read_params_snap_aux.jl")
 include("eos_tables.jl")
 include("unit_conversion.jl")
+include("get_itp.jl")
 
 #-------------------------------------------------------------------------------
 # Exports
@@ -65,5 +68,7 @@ export zdn
 export dzdn
 
 export destaggeroperation
+
+export get_itp
 
 end # module BifrostTools

@@ -65,6 +65,20 @@ struct BifrostExperiment
         # Find number of snaps
         snaps = get_snap_numbers(expdir, expname; filenames=filenames)
 
+        if isempty(snaps)
+            auxfiles = get_snap_numbers(
+                expdir,
+                expname; filenames=filenames,
+                use_aux=true
+            )
+            if isempty(auxfiles)
+                @error "Did not find any .snap or .aux-files."
+            else
+                @info "Found only .aux-files in $expdir"
+                snaps = auxfiles
+            end
+        end
+
         # Get some snap-independent parameters
         params_file = string(
             joinpath(expdir, expname),
@@ -108,8 +122,23 @@ units.
 function get_axes(
     xp::BifrostExperiment
     ;
-    units="code"
+    units="code",
+    slicex::AbstractVector{<:Integer}=Int[],
+    slicey::AbstractVector{<:Integer}=Int[],
+    slicez::AbstractVector{<:Integer}=Int[]
 )
     params = read_params(xp, last(xp.snaps))
-    return convert_axesunits(xp.mesh, params; units=units)
+    conversionfactor = conversionfactor_axes(
+        units,
+        params,
+        eltype(xp.mesh.x),
+    )
+    isempty(slicex) && ( slicex = 1:length(xp.mesh.x) )
+    isempty(slicey) && ( slicey = 1:length(xp.mesh.y) )
+    isempty(slicez) && ( slicez = 1:length(xp.mesh.z) )
+    return (
+        xp.mesh.x[slicex]*conversionfactor,
+        xp.mesh.y[slicey]*conversionfactor,
+        xp.mesh.z[slicez]*conversionfactor
+    )
 end
