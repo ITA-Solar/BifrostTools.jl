@@ -1,0 +1,215 @@
+; ************************* From main     *************************
+; $Id: [ Git commit: (a6296d35) Mon, 24 Apr 2023 12:05:28 +0200 ] $       
+; ************************* From  fp kind *************************
+; real(kind=bf) :: real(kind=sp) [ iso::real32 ]
+; ************************* From   params *************************
+; $Id: params (1b261916) Sun May 1 15:03:02 2022 by GitHub $              
+mx = 64
+my = 64
+mz = 64
+             mb =    5
+          nstep =  50000000
+     nstepstart =    407443
+          debug =    0
+       time_lim = -1.000E+00
+          tstop =  6.06000000E+00
+ 
+; ************************* From parallel *************************
+; $Id: mpi (c049d567) Tue Apr 11 22:31:56 2023 by M1kol4j $               
+periodic_x = 0
+periodic_y = 0
+periodic_z = 0
+           ndim =    3
+        reorder =    1
+      mpi_debug =    0
+ 
+; ************************* From    units *************************
+; $Id: solar (1b261916) Sun May 1 15:03:02 2022 by GitHub $               
+            u_l =  1.000E+08
+            u_t =  1.000E+02
+            u_r =  1.000E-07
+            u_p =  1.000E+05
+            u_u =  1.000E+06
+           u_kr =  1.000E-01
+           u_ee =  1.000E+12
+            u_e =  1.000E+05
+           u_te =  1.000E+11
+            u_B =  1.121E+03
+ 
+; ************************* From  stagger *************************
+; $Id: stagger_mesh (1b261916) Sun May 1 15:03:02 2022 by GitHub $        
+; $Id: stagger_6th (bbf788db) Fri Jan 21 17:48:36 2022 by GitHub $        
+meshfile = "fanspine_exhaust64.mesh"
+             dx =  1.562E-02
+             dy =  1.562E-02
+             dz =  1.563E-02
+ 
+; ************************* From timestep *************************
+; $Id: hyman (95286317) Fri Aug 12 10:39:55 2022 by M1kol4j $             
+            Cdt =  0.200
+             dt =  1.474E-05
+        constdt =    0
+    msperupdate =    0
+              t =  6.00429288E+00
+  timestepdebug =    0
+ 
+; ************************* From      mhd *************************
+; $Id: mhd (f3a6463f) Fri Feb 11 19:44:51 2022 by Mikolaj $               
+            nu1 =  0.030
+            nu2 =  0.200
+            nu3 =  0.300
+           nu_r =  0.010
+        nu_r_mz =  0.000
+         nu_r_k =        0
+         nu_r_z =     0.00
+         nu_r_w =  0.068
+          nu_ee =  0.010
+       nu_ee_mz =  0.000
+        nu_ee_k =        0
+        nu_ee_z =     0.00
+        nu_ee_w =  0.068
+    symmetric_e =    1
+    symmetric_b =    1
+           grav =  0.000
+           eta3 =  0.030
+         ca_max =  0.000E+00
+       mhddebug =    0
+         do_mhd =    1
+       mhdclean =         0
+    mhdclean_ub =    0
+    mhdclean_lb =    0
+ 
+; ************************* From       io *************************
+; $Id: io (1f45f6fd) Sun Oct 2 22:58:22 2022 by GitHub $                  
+snapname = " fanspine_exhaust64 "
+          isnap =         4
+   large_memory =    1
+          nsnap =  50000000
+           nscr =       500
+aux = " ey "
+         dtsnap =  1.000E-03
+          dtaux =  0.000E+00
+         newaux =    0
+     rereadpars =   1000000
+          dtscr =  1.000E+02
+          tsnap =  6.00429296E+00
+           tscr =  0.00000000E+00
+    boundarychk =    0
+    print_stats =    1
+ 
+; ************************* From     math *************************
+; $Id: math (c049d567) Tue Apr 11 22:31:56 2023 by M1kol4j $              
+          max_r =    5
+       smooth_r =    3
+     div_solver =    1
+      div_niter =   16
+        div_tol =  5.000E-04
+       div_norm = "max"
+  div_sor_niter =   16
+    div_sor_tol =  1.000E-08
+ 
+; ************************* From   quench *************************
+; $Id: quench3 (4adcb058) Tue Nov 24 17:43:44 2020 by GitHub $            
+           qmax =  8.000
+ 
+; ************************* From      eos *************************
+; $Id: ideal_gas (11a35dd0) Tue Aug 30 11:29:29 2022 by oyferder $        
+          gamma =  1.667
+           grph =  2.384E-24
+             mu =  0.616
+    neutral_gas =    0
+ 
+; ************************* From      rad *************************
+ 
+; ************************* From   timing *************************
+; $Id: timing (6350959d) Sun May 1 13:24:40 2022 by Mikolaj $             
+         timing =    0
+ 
+; ************************* From  spitzer *************************
+; $Id: spitzer_conductivity (795a415d) Thu Mar 30 13:41:44 2023 by oyferder $
+        spitzer = "impl"
+  debug_spitzer =    0
+   info_spitzer =    0
+    spitzer_amp =  1.000
+       theta_mg =  0.900
+         dtgerr =  1.000E-05
+       ntest_mg =        10
+           tgb0 =  6.100E+05
+           tgb1 =  6.100E+05
+         tau_tg =  5.000E-03
+    fix_grad_tg =    1
+   fix_grad_tg1 =    1
+        fix_tg1 =    0
+       niter_mg = [   2,   20,   10,   10,   30 ]
+           bmin =  1.000E-05
+         stgmin = -1.000E+00
+    stgmin_impl = -1.000E+00
+        kappaq0 = -1.000E+00
+           ee00 = -1.000E+00
+ 
+; ************************* From  AnomRes *************************
+      arys_type = "false"
+      arys_info =    0
+ 
+; ************************* From External *************************
+  info_external =    0
+ ext_dampl_notb =    0
+ext_dampl_notux =    0
+ext_dampl_notuy =    0
+ext_dampl_notuz =    0
+ ext_dampu_notb =    1
+ext_dampu_notux =    1
+ext_dampu_notuy =    1
+ext_dampu_notuz =    0
+ ext_dampx_notb =    0
+ext_dampx_notux =    0
+ext_dampx_notuy =    0
+ext_dampx_notuz =    0
+   ext_damp_z_0 =   32
+  ext_damp_z_mk = 2016
+   ext_damp_x_0 = -100
+  ext_damp_x_mk = -100
+     ext_damp_w =  2.000E+00
+    ext_damp_wx =  5.000E+00
+   ext_damp_tol =  1.000E-07
+       ext_drdt =  0.000E+00
+       ext_dedt =  0.000E+00
+      ext_dpxdt =  0.000E+00
+      ext_dpydt =  0.000E+00
+      ext_dpzdt =  0.000E+00
+      ext_dbxdt =  0.000E+00
+      ext_dbydt =  0.000E+00
+      ext_dbzdt =  0.000E+00
+     bcx_efield = "n"
+ 
+; ************************* From Nullpoin *************************
+nullpoint_debug =    0
+ 
+; ************************* From bc_lower *************************
+       bcl_erho = "heq_ftem"
+          bcl_u = "a"
+          bcl_b = "j"
+     bcl_efield = "n"
+     bcl_tg_cor =  6.100E+05
+   bcl_udmp_nph =    5
+ 
+; ************************* From bc_upper *************************
+       bcu_erho = "heq_ftem"
+          strtb = "e"
+     bcu_tg_pho =  6.100E+05
+      synt_n_gh =    0
+    synt_n_phys =    1
+    bcu_uz_phys =    0
+        synt_lx = 60.000
+          bcu_u = "a"
+   t_bound_info =    0
+        t_bound =  6.004E+00
+     bcu_efield = "n"
+   synt_driving = "ohf2021a"
+     ohf21a_l_x =  1.600E+01
+     ohf21a_t_s =  0.000E+00
+     ohf21a_t_r =  6.000E+00
+     ohf21a_t_e =  2.400E+01
+     ohf21a_v_p =  5.000E-01
+     ohf21a_exp =  1.000E+01
+ 
